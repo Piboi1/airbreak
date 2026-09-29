@@ -22,10 +22,11 @@ lengths, servo size) was NOT published and is estimated from the screenshots.
 All of those values are collected in the PARAMETERS block below.
 
 Outputs:
-    airbrake_assembly.stl    whole assembly, one mesh
-    airbrake_assembly.step   whole assembly, one body per part instance (for Onshape
-                             mates / motion); curved faces are faceted
-    print/<part>_xN.stl      one print-ready file per unique part, lying flat on
+    airbrake_assembly.step   exact B-rep assembly: one clean solid per part, true
+                             arcs and cylinders, one occurrence per part instance
+                             (open this one in Onshape / SolidWorks / Fusion)
+    airbrake_assembly.stl    whole assembly as one triangle mesh
+    print/<part>_xN.stl      one print-ready mesh per unique part, lying flat on
                              z = 0; N = how many the assembly needs
 
 Usage:
@@ -60,11 +61,13 @@ LEAF_NOTCH_R = 0.17        # semicircular notch in the inner edge that clears th
 LEAF_PIN = (0.40, 0.33)    # leaf-connector pin hole (x, y) in the leaf, beside the notch
 LEAF_LIP_W = 0.10          # raised stop arc: hits the inside of the airframe at full extension
 LEAF_LIP_H = 0.06
+LEAF_LIP_INSET = 0.15      # lip stops short of the leaf's side edges
 
 TRAY_FLOOR_T = 0.06        # SLA tray floor
 TRAY_RAIL_W = 0.20         # guide rail on each side of the leaf channel
 TRAY_CLEAR = 0.01          # side clearance between leaf and rail
 TRAY_HOLE_R = 0.22         # shaft clearance in the tray floor
+TRAY_LEDGE = 0.02          # floor ledge left around the outside of the rails
 
 CONN_T = 0.125             # hex connector / leaf connector thickness
 CONN_W = 0.30              # leaf connector (link) width
@@ -89,10 +92,11 @@ SERVO_OUTPUT_OFFSET = 0.65        # output spline offset from the body centre
 SERVO_EAR_LEN = 0.35              # mounting ear overhang at each end
 SERVO_EAR_T = 0.12
 SERVO_EAR_Z = 0.55                # ear height above the output face
+SERVO_FINS = 9
 BRACKET_H = 0.60                  # bulkhead top to servo output face
 COUPLER_R = 0.30
 
-SEG = 96                   # facets per full circle
+SEG = 96                   # mesh facets per full circle (STL only; the STEP uses true arcs)
 
 # Derived
 TRAY_H = TRAY_FLOOR_T + LEAF_T + WASHER_T + CONN_T + WASHER_T + CONN_T + 0.03
@@ -101,67 +105,100 @@ TRAY_HW = CHANNEL_HW + TRAY_RAIL_W
 
 
 # ---------------------------------------------------------------------------
-# 2D helpers
+# 2D profiles: closed loops of exact segments
+#   ('L', p0, p1)              straight line
+#   ('A', centre, r, a0, a1)   circular arc from angle a0 to a1 (CCW if a1 > a0)
 # ---------------------------------------------------------------------------
-def _area2(poly):
-    return sum(poly[i][0] * poly[(i + 1) % len(poly)][1] -
-               poly[(i + 1) % len(poly)][0] * poly[i][1] for i in range(len(poly)))
+def Ln(p, q):
+    return ("L", (float(p[0]), float(p[1])), (float(q[0]), float(q[1])))
 
 
-def _cross(o, a, b):
-    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+def Ar(c, r, a0, a1):
+    return ("A", (float(c[0]), float(c[1])), float(r), float(a0), float(a1))
 
 
-def _clean(poly, eps=1e-9):
-    """Drop repeated and collinear vertices."""
-    pts = []
-    for p in poly:
-        if not pts or math.hypot(p[0] - pts[-1][0], p[1] - pts[-1][1]) > 1e-7:
-            pts.append((float(p[0]), float(p[1])))
-    if len(pts) > 1 and math.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) <= 1e-7:
-        pts.pop()
-    changed = True
-    while changed and len(pts) > 3:
-        changed = False
-        for i in range(len(pts)):
-            a, b, c = pts[i - 1], pts[i], pts[(i + 1) % len(pts)]
-            if abs(_cross(a, b, c)) < eps:
-                pts.pop(i)
-                changed = True
-                break
-    return pts
+def seg_start(s):
+    if s[0] == "L":
+        return s[1]
+    _, c, r, a0, _ = s
+    return (c[0] + r * math.cos(a0), c[1] + r * math.sin(a0))
 
 
-def arc(r, a0, a1, cx=0.0, cy=0.0, n=None):
-    if n is None:
-        n = max(2, int(math.ceil(abs(a1 - a0) / (2 * math.pi) * SEG)))
-    return [(cx + r * math.cos(a0 + (a1 - a0) * t / n),
-             cy + r * math.sin(a0 + (a1 - a0) * t / n)) for t in range(n + 1)]
+def seg_end(s):
+    if s[0] == "L":
+        return s[2]
+    _, c, r, _, a1 = s
+    return (c[0] + r * math.cos(a1), c[1] + r * math.sin(a1))
 
 
-def circle(r, cx=0.0, cy=0.0, n=SEG):
-    return arc(r, 0, 2 * math.pi, cx, cy, n)[:-1]
+def seg_rev(s):
+    return ("L", s[2], s[1]) if s[0] == "L" else ("A", s[1], s[2], s[4], s[3])
 
 
-def hexagon(af, cx=0.0, cy=0.0):
+def seg_points(s):
+    """Tessellation of a segment: start point included, end point excluded."""
+    if s[0] == "L":
+        return [s[1]]
+    _, c, r, a0, a1 = s
+    n = max(2, int(math.ceil(abs(a1 - a0) / (2 * math.pi) * SEG)))
+    return [(c[0] + r * math.cos(a0 + (a1 - a0) * t / n),
+             c[1] + r * math.sin(a0 + (a1 - a0) * t / n)) for t in range(n)]
+
+
+def loop_poly(loop):
+    return [p for s in loop for p in seg_points(s)]
+
+
+def loop_rev(loop):
+    return [seg_rev(s) for s in reversed(loop)]
+
+
+def loop_xform(loop, ang=0.0, dx=0.0, dy=0.0):
+    def tp(p):
+        x, y = rot2(p[0], p[1], ang)
+        return (x + dx, y + dy)
+    out = []
+    for s in loop:
+        if s[0] == "L":
+            out.append(Ln(tp(s[1]), tp(s[2])))
+        else:
+            out.append(Ar(tp(s[1]), s[2], s[3] + ang, s[4] + ang))
+    return out
+
+
+def poly_loop(pts):
+    return [Ln(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts))]
+
+
+def circle_loop(r, cx=0.0, cy=0.0):
+    return [Ar((cx, cy), r, 0.0, math.pi), Ar((cx, cy), r, math.pi, 2 * math.pi)]
+
+
+def rect_loop(x0, y0, x1, y1):
+    return poly_loop([(x0, y0), (x1, y0), (x1, y1), (x0, y1)])
+
+
+def hex_loop(af, cx=0.0, cy=0.0):
     r = af / math.sqrt(3)
-    return [(cx + r * math.cos(k * math.pi / 3), cy + r * math.sin(k * math.pi / 3))
-            for k in range(6)]
+    return poly_loop([(cx + r * math.cos(k * math.pi / 3), cy + r * math.sin(k * math.pi / 3))
+                      for k in range(6)])
 
 
-def stadium(p, q, w):
+def stadium_loop(p, q, w):
     ang = math.atan2(q[1] - p[1], q[0] - p[0])
     r = w / 2
-    return (arc(r, ang + math.pi / 2, ang + 3 * math.pi / 2, *p, n=SEG // 2) +
-            arc(r, ang - math.pi / 2, ang + math.pi / 2, *q, n=SEG // 2))
+    n = (-math.sin(ang) * r, math.cos(ang) * r)
+    return [Ar(p, r, ang + math.pi / 2, ang + 3 * math.pi / 2),
+            Ln((p[0] - n[0], p[1] - n[1]), (q[0] - n[0], q[1] - n[1])),
+            Ar(q, r, ang - math.pi / 2, ang + math.pi / 2),
+            Ln((q[0] + n[0], q[1] + n[1]), (p[0] + n[0], p[1] + n[1]))]
 
 
-def rect(x0, y0, x1, y1):
-    return [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-
-
-def sector(r_in, r_out, a0, a1):
-    return arc(r_out, a0, a1) + arc(r_in, a1, a0)
+def sector_loop(r_in, r_out, a0, a1):
+    return [Ar((0, 0), r_out, a0, a1),
+            Ln((r_out * math.cos(a1), r_out * math.sin(a1)), (r_in * math.cos(a1), r_in * math.sin(a1))),
+            Ar((0, 0), r_in, a1, a0),
+            Ln((r_in * math.cos(a0), r_in * math.sin(a0)), (r_out * math.cos(a0), r_out * math.sin(a0)))]
 
 
 def cy_(x, r):
@@ -173,23 +210,28 @@ def rot2(x, y, a):
     return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
 
 
-# ---------------------------------------------------------------------------
-# Solids: every part is a set of z-extruded prisms (outline + holes)
-# ---------------------------------------------------------------------------
-class Prism:
-    def __init__(self, outer, z0, z1, holes=()):
-        outer = _clean(outer)
-        if _area2(outer) < 0:
-            outer = outer[::-1]
-        hs = []
-        for h in holes:
-            h = _clean(h)
-            if _area2(h) > 0:
-                h = h[::-1]
-            hs.append(h)
-        self.outer, self.holes, self.z0, self.z1 = outer, hs, z0, z1
+def _area2(poly):
+    return sum(poly[i][0] * poly[(i + 1) % len(poly)][1] -
+               poly[(i + 1) % len(poly)][0] * poly[i][1] for i in range(len(poly)))
 
 
+def _cross(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+
+def _inside(p, poly):
+    inside = False
+    for i in range(len(poly)):
+        a, b = poly[i], poly[i - 1]
+        if (a[1] > p[1]) != (b[1] > p[1]):
+            if p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]):
+                inside = not inside
+    return inside
+
+
+# ---------------------------------------------------------------------------
+# Triangulation (STL only): ear clipping with holes bridged in
+# ---------------------------------------------------------------------------
 def _segments_cross(p1, p2, q1, q2):
     d1, d2 = _cross(q1, q2, p1), _cross(q1, q2, p2)
     d3, d4 = _cross(p1, p2, q1), _cross(p1, p2, q2)
@@ -197,27 +239,14 @@ def _segments_cross(p1, p2, q1, q2):
            ((d3 > 1e-12 and d4 < -1e-12) or (d3 < -1e-12 and d4 > 1e-12))
 
 
-def _inside(p, loop):
-    inside = False
-    for i in range(len(loop)):
-        a, b = loop[i], loop[i - 1]
-        if (a[1] > p[1]) != (b[1] > p[1]):
-            if p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]):
-                inside = not inside
-    return inside
-
-
 def _on_segment(p, a, b):
-    if p == a or p == b:
-        return False
-    if abs(_cross(a, b, p)) > 1e-12:
+    if p == a or p == b or abs(_cross(a, b, p)) > 1e-12:
         return False
     return min(a[0], b[0]) - 1e-12 <= p[0] <= max(a[0], b[0]) + 1e-12 and \
         min(a[1], b[1]) - 1e-12 <= p[1] <= max(a[1], b[1]) + 1e-12
 
 
 def _bridge_holes(outer, holes):
-    """Join holes into the outer loop with zero-width bridges (for ear clipping)."""
     poly = list(outer)
     pending = sorted(holes, key=lambda h: -max(p[0] for p in h))
     for n, h in enumerate(pending):
@@ -247,7 +276,7 @@ def _bridge_holes(outer, holes):
 
 
 def triangulate(outer, holes=()):
-    """Ear clipping (holes bridged in). Returns a list of 2D triangles."""
+    """outer CCW, holes CW. Returns 2D triangles (CCW)."""
     poly = _bridge_holes(outer, holes) if holes else list(outer)
     n = len(poly)
     nxt = [(i + 1) % n for i in range(n)]
@@ -292,29 +321,94 @@ def triangulate(outer, holes=()):
     return [t for t in tris if abs(_cross(*t)) > 1e-14]
 
 
-def prism_mesh(p):
-    out = []
-    for a, b, c in triangulate(p.outer, p.holes):
-        out.append(((a[0], a[1], p.z1), (b[0], b[1], p.z1), (c[0], c[1], p.z1)))
-        out.append(((a[0], a[1], p.z0), (c[0], c[1], p.z0), (b[0], b[1], p.z0)))
-    for loop in [p.outer] + p.holes:
-        for i in range(len(loop)):
-            s, e = loop[i], loop[(i + 1) % len(loop)]
-            a, b = (s[0], s[1], p.z0), (e[0], e[1], p.z0)
-            c, d = (e[0], e[1], p.z1), (s[0], s[1], p.z1)
-            out += [(a, b, c), (a, c, d)]
-    return out
+# ---------------------------------------------------------------------------
+# Solids. A Body is a z-extrusion of a profile (outline + holes). Bodies can be
+# stacked: a child on the top (or bottom) face either sits strictly inside the
+# parent's face (a boss) or strictly contains it (a flange), so every part is a
+# single connected solid with exact planar and cylindrical faces.
+# ---------------------------------------------------------------------------
+class Body:
+    def __init__(self, outline, z0, z1, holes=(), top=(), bottom=()):
+        self.outline = outline if _area2(loop_poly(outline)) > 0 else loop_rev(outline)
+        self.holes = [h if _area2(loop_poly(h)) < 0 else loop_rev(h) for h in holes]
+        self.z0, self.z1 = float(z0), float(z1)
+        self.parent, self.side, self.outer = None, None, False
+        self.top, self.bottom = list(top), list(bottom)
+        for side, kids in (("top", self.top), ("bottom", self.bottom)):
+            for k in kids:
+                k.parent, k.side = self, side
+                k.outer = _inside(loop_poly(self.outline)[0], loop_poly(k.outline))
+                assert abs((k.z0 if side == "top" else k.z1) - (self.z1 if side == "top" else self.z0)) < 1e-9
+            if any(k.outer for k in kids):
+                assert len(kids) == 1, "a flange must be the only child on that face"
+        for loop in [self.outline] + self.holes:
+            for i, s in enumerate(loop):
+                e, b = seg_end(s), seg_start(loop[(i + 1) % len(loop)])
+                assert math.hypot(e[0] - b[0], e[1] - b[1]) < 1e-7, "open profile"
+
+    def nodes(self):
+        out = [self]
+        for k in self.top + self.bottom:
+            out += k.nodes()
+        return out
+
+    def cap(self, which):
+        """Loops (by owner) of the planar face on this body's top/bottom, or None.
+        Returns list of (owner_body, loop_index, level) where level is 'z1' or 'z0'."""
+        up = which == "top"
+        parent_here = self.parent is not None and self.side == ("bottom" if up else "top")
+        kids = self.top if up else self.bottom
+        mine = "z1" if up else "z0"
+        other = "z0" if up else "z1"
+        if parent_here:
+            if not self.outer:
+                return None
+            refs = [(self, i, mine) for i in range(1 + len(self.holes))]
+            return refs + [(self.parent, 0, other)]
+        if kids and kids[0].outer:
+            return None
+        refs = [(self, i, mine) for i in range(1 + len(self.holes))]
+        return refs + [(k, 0, other) for k in kids]
+
+
+def body_loops(b):
+    return [b.outline] + b.holes
 
 
 class Part:
-    def __init__(self, name, prisms, printable=True, note=""):
-        self.name, self.prisms, self.printable, self.note = name, prisms, printable, note
+    def __init__(self, name, bodies, printable=True, note=""):
+        self.name, self.bodies, self.printable, self.note = name, bodies, printable, note
         self._mesh = None
 
     def mesh(self):
         if self._mesh is None:
-            self._mesh = [t for p in self.prisms for t in prism_mesh(p)]
+            self._mesh = [t for b in self.bodies for t in body_mesh(b)]
         return self._mesh
+
+
+def body_mesh(root):
+    out = []
+    for N in root.nodes():
+        for loop in body_loops(N):
+            pts = loop_poly(loop)
+            for i in range(len(pts)):
+                s, e = pts[i], pts[(i + 1) % len(pts)]
+                a, b = (s[0], s[1], N.z0), (e[0], e[1], N.z0)
+                c, d = (e[0], e[1], N.z1), (s[0], s[1], N.z1)
+                out += [(a, b, c), (a, c, d)]
+        for which in ("top", "bottom"):
+            refs = N.cap(which)
+            if refs is None:
+                continue
+            z = N.z1 if which == "top" else N.z0
+            polys = [loop_poly(body_loops(o)[i]) for o, i, _ in refs]
+            outer, inner = polys[0], polys[1:]
+            # loops owned by another body are the far side of the step: flip them
+            inner = [p if o is N else p[::-1] for p, (o, _, _) in zip(inner, refs[1:])]
+            for t in triangulate(outer, inner):
+                tri = tuple((p[0], p[1], z) for p in t)
+                out.append(tri if which == "top" else tri[::-1])
+    return out
 
 
 class Instance:
@@ -385,52 +479,69 @@ def shaft_clearance(rc, l, phi_r, phi_e):
 # Part geometry (local frames, bottom face on z = 0)
 # ---------------------------------------------------------------------------
 def pin_hole(x, y):
-    return circle(PIN_D / 2 + HOLE_CLEAR, x, y, n=32)
+    return circle_loop(PIN_D / 2 + HOLE_CLEAR, x, y)
 
 
 def hex_hole():
-    return hexagon(HEX_AF + 2 * HOLE_CLEAR)
+    return hex_loop(HEX_AF + 2 * HOLE_CLEAR)
 
 
 def make_leaf():
     """Outer edge: arc on the airframe OD (flush when stowed). Inner edge: straight,
-    meeting the opposite leaf at the axis, with a notch around the shaft."""
+    meeting the opposite leaf at the axis, with a notch around the shaft. A raised
+    stop lip hits the inside of the airframe at full extension."""
     hw = LEAF_W / 2
-    top = [(x, cy_(x, LEAF_R)) for x in [hw - LEAF_W * i / 64 for i in range(65)]]
-    notch = arc(LEAF_NOTCH_R, math.pi, 0.0, 0.0, LEAF_GAP, n=24)
-    plate = Prism(top + [(-hw, LEAF_GAP)] + notch + [(hw, LEAF_GAP)], 0, LEAF_T,
-                  [pin_hole(*LEAF_PIN)])
-    wall = (TUBE_OD - TUBE_ID) / 2
-    xs = [-hw + LEAF_W * i / 64 for i in range(65)]
-    stop = [(x, cy_(x, LEAF_R) - LEAF_EXT - wall) for x in xs]
-    back = [(x, max(y - LEAF_LIP_W, LEAF_GAP)) for x, y in stop]
-    lip = Prism(stop[::-1] + back, LEAF_T, LEAF_T + LEAF_LIP_H)
-    return Part("leaf", [plate, lip], note="6061-T6 1/8 in plate in the real build")
+    a = math.atan2(cy_(hw, LEAF_R), hw)
+    rn = LEAF_NOTCH_R
+    outline = [Ar((0, 0), LEAF_R, a, math.pi - a),
+               Ln((-hw, cy_(hw, LEAF_R)), (-hw, LEAF_GAP)),
+               Ln((-hw, LEAF_GAP), (-rn, LEAF_GAP)),
+               Ar((0, LEAF_GAP), rn, math.pi, 0.0),
+               Ln((rn, LEAF_GAP), (hw, LEAF_GAP)),
+               Ln((hw, LEAF_GAP), (hw, cy_(hw, LEAF_R)))]
+    d = LEAF_EXT + (TUBE_OD - TUBE_ID) / 2        # stop arc = skin arc moved inboard
+    xl = hw - LEAF_LIP_INSET
+    c1, c2 = (0.0, -d), (0.0, -d - LEAF_LIP_W)
+    b1 = math.atan2(cy_(xl, LEAF_R), xl)
+    lip = [Ar(c1, LEAF_R, b1, math.pi - b1),
+           Ln((-xl, c1[1] + cy_(xl, LEAF_R)), (-xl, c2[1] + cy_(xl, LEAF_R))),
+           Ar(c2, LEAF_R, math.pi - b1, b1),
+           Ln((xl, c2[1] + cy_(xl, LEAF_R)), (xl, c1[1] + cy_(xl, LEAF_R)))]
+    assert c2[1] + cy_(xl, LEAF_R) > LEAF_GAP + 0.02, "stop lip runs off the leaf"
+    body = Body(outline, 0, LEAF_T, [pin_hole(*LEAF_PIN)],
+                top=[Body(lip, LEAF_T, LEAF_T + LEAF_LIP_H)])
+    return Part("leaf", [body], note="6061-T6 1/8 in plate in the real build")
+
+
+def _clipped_rect(x0, x1, r):
+    """Region x0 <= x <= x1 inside a circle of radius r (ends are true arcs)."""
+    a0, a1 = math.atan2(cy_(x1, r), x1), math.atan2(cy_(x0, r), x0)
+    return [Ln((x1, -cy_(x1, r)), (x1, cy_(x1, r))),
+            Ar((0, 0), r, a0, a1),
+            Ln((x0, cy_(x0, r)), (x0, -cy_(x0, r))),
+            Ar((0, 0), r, -a1, -a0)]
 
 
 def make_tray():
     r = FRAME_OD / 2
-    fw = TRAY_HW - TRAY_RAIL_W / 2          # floor runs under the rails
-    xs = [fw - 2 * fw * i / 32 for i in range(33)]
-    floor = [(x, cy_(x, r)) for x in xs] + [(x, -cy_(x, r)) for x in xs[::-1]]
-    prisms = [Prism(floor, 0, TRAY_FLOOR_T, [circle(TRAY_HOLE_R, n=48)])]
-    for x0, x1 in ((-TRAY_HW, -CHANNEL_HW), (CHANNEL_HW, TRAY_HW)):
-        ya, yb = cy_(x0, r), cy_(x1, r)
-        prisms.append(Prism([(x0, -ya), (x1, -yb), (x1, yb), (x0, ya)], 0, TRAY_H))
-    return Part("tray", prisms, note="SLA resin in the real build")
+    rails = [Body(_clipped_rect(x0, x1, r - TRAY_LEDGE), TRAY_FLOOR_T, TRAY_H)
+             for x0, x1 in ((-TRAY_HW + TRAY_LEDGE, -CHANNEL_HW), (CHANNEL_HW, TRAY_HW - TRAY_LEDGE))]
+    floor = Body(_clipped_rect(-TRAY_HW, TRAY_HW, r), 0, TRAY_FLOOR_T,
+                 [circle_loop(TRAY_HOLE_R)], top=rails)
+    return Part("tray", [floor], note="SLA resin in the real build")
 
 
 def make_tray_frame():
     a = math.acos(TRAY_HW / (FRAME_OD / 2))
     r0, r1 = FRAME_OD / 2 - FRAME_RING_W, FRAME_OD / 2
-    return Part("tray_frame", [Prism(sector(r0, r1, -a, a), 0, TRAY_H),
-                               Prism(sector(r0, r1, math.pi - a, math.pi + a), 0, TRAY_H)],
-                note="two ring segments either side of the tray")
+    return Part("tray_frame", [Body(sector_loop(r0, r1, -a, a), 0, TRAY_H)],
+                note="ring segment either side of each tray")
 
 
 def make_mid_frame():
     r1 = FRAME_OD / 2
-    return Part("frame_middle", [Prism(circle(r1), 0, MID_FRAME_T, [circle(r1 - FRAME_RING_W)])])
+    return Part("frame_middle", [Body(circle_loop(r1), 0, MID_FRAME_T,
+                                      [circle_loop(r1 - FRAME_RING_W)])])
 
 
 def make_bottom_frame(n=6, spoke=0.30, hub=0.60):
@@ -439,10 +550,12 @@ def make_bottom_frame(n=6, spoke=0.30, hub=0.60):
     holes = [hex_hole()]
     do, di = math.asin(spoke / 2 / r0), math.asin(spoke / 2 / hub)
     for k in range(n):
-        a = 2 * math.pi * k / n
-        b = 2 * math.pi * (k + 1) / n
-        holes.append(arc(r0, a + do, b - do, n=16) + arc(hub, b - di, a + di, n=8))
-    return Part("frame_bottom", [Prism(circle(r1), 0, FRAME_T, holes)],
+        a, b = 2 * math.pi * k / n, 2 * math.pi * (k + 1) / n
+        pa_o, pb_o = (r0 * math.cos(a + do), r0 * math.sin(a + do)), (r0 * math.cos(b - do), r0 * math.sin(b - do))
+        pa_i, pb_i = (hub * math.cos(a + di), hub * math.sin(a + di)), (hub * math.cos(b - di), hub * math.sin(b - di))
+        holes.append([Ar((0, 0), r0, a + do, b - do), Ln(pb_o, pb_i),
+                      Ar((0, 0), hub, b - di, a + di), Ln(pa_i, pa_o)])
+    return Part("frame_bottom", [Body(circle_loop(r1), 0, FRAME_T, holes)],
                 note="screws into the mission-package tube")
 
 
@@ -450,91 +563,102 @@ def make_bulkhead(bar_x=0.85, bar_w=0.35, hub=0.55, yb=0.15):
     r1 = FRAME_OD / 2
     r0 = r1 - FRAME_RING_W
     xo, xi = bar_x + bar_w / 2, bar_x - bar_w / 2
-    holes = [circle(COUPLER_R + 0.03, n=48)]
-    for s in (1, -1):
-        xs = [xo + (r0 - 1e-3 - xo) * i / 24 for i in range(25)]
-        side = [(x, cy_(x, r0)) for x in xs] + [(x, -cy_(x, r0)) for x in xs[::-1]]
-        holes.append([(s * x, y) for x, y in side])
-        a0 = math.asin(yb / hub)
-        mid = ([(-xi, yb), (-hub * math.cos(a0), yb)] + arc(hub, math.pi - a0, a0, n=16) +
-               [(xi, yb)] + [(x, cy_(x, r0)) for x in [xi - 2 * xi * i / 16 for i in range(17)]])
-        holes.append([(s * x, s * y) for x, y in mid])
-    return Part("servo_bulkhead", [Prism(circle(r1), 0, FRAME_T, holes)])
+    holes = [circle_loop(COUPLER_R + 0.03)]
+    ao = math.atan2(cy_(xo, r0), xo)
+    side = [Ln((xo, -cy_(xo, r0)), (xo, cy_(xo, r0))), Ar((0, 0), r0, ao, -ao)]
+    a0 = math.asin(yb / hub)
+    xh = hub * math.cos(a0)
+    ai = math.atan2(cy_(xi, r0), xi)
+    mid = [Ln((-xi, yb), (-xh, yb)), Ar((0, 0), hub, math.pi - a0, a0), Ln((xh, yb), (xi, yb)),
+           Ln((xi, yb), (xi, cy_(xi, r0))), Ar((0, 0), r0, ai, math.pi - ai),
+           Ln((-xi, cy_(xi, r0)), (-xi, yb))]
+    for ang in (0.0, math.pi):
+        holes.append(loop_xform(side, ang))
+        holes.append(loop_xform(mid, ang))
+    return Part("servo_bulkhead", [Body(circle_loop(r1), 0, FRAME_T, holes)])
 
 
 def make_spacer():
     r1 = FRAME_OD / 2
     h = math.radians(SPACER_SPAN_DEG) / 2
-    return Part("spacer", [Prism(sector(r1 - FRAME_RING_W, r1, -h, h), 0, SPACER_H)],
+    return Part("spacer", [Body(sector_loop(r1 - FRAME_RING_W, r1, -h, h), 0, SPACER_H)],
                 note="guide rails between the top tray and the servo bulkhead")
 
 
 def make_hex_connector(rc):
     holes = [hex_hole(), pin_hole(rc, 0), pin_hole(-rc, 0)]
-    return Part("hex_connector", [Prism(stadium((-rc, 0), (rc, 0), CRANK_W), 0, CONN_T, holes)])
+    return Part("hex_connector", [Body(stadium_loop((-rc, 0), (rc, 0), CRANK_W), 0, CONN_T, holes)])
 
 
 def make_leaf_connector(l):
-    return Part("leaf_connector", [Prism(stadium((0, 0), (l, 0), CONN_W), 0, CONN_T,
-                                         [pin_hole(0, 0), pin_hole(l, 0)])])
+    return Part("leaf_connector", [Body(stadium_loop((0, 0), (l, 0), CONN_W), 0, CONN_T,
+                                        [pin_hole(0, 0), pin_hole(l, 0)])])
 
 
 def make_pin(length, name):
-    return Part(name, [Prism(circle(PIN_D / 2, n=32), 0, length)], printable=False,
+    return Part(name, [Body(circle_loop(PIN_D / 2), 0, length)], printable=False,
                 note="#10 shoulder bolt")
 
 
 def make_washer():
-    return Part("washer", [Prism(circle(WASHER_R, n=32), 0, WASHER_T, [pin_hole(0, 0)])],
+    return Part("washer", [Body(circle_loop(WASHER_R), 0, WASHER_T, [pin_hole(0, 0)])],
                 printable=False, note="#10 washer")
 
 
 def make_hex_shaft(length):
-    return Part("hex_shaft", [Prism(hexagon(HEX_AF), 0, length)],
+    return Part("hex_shaft", [Body(hex_loop(HEX_AF), 0, length)],
                 note="or cut from 1/4 in steel hex stock")
 
 
 def make_coupler(length):
-    return Part("shaft_coupler", [Prism(circle(COUPLER_R, n=48), 0, length, [hex_hole()])],
+    return Part("shaft_coupler", [Body(circle_loop(COUPLER_R), 0, length, [hex_hole()])],
                 note="hex shaft to servo horn")
 
 
 def make_servo():
+    """One solid: body, mounting-ear flange, heat-sink fins, top cap, output boss."""
     L, W, H = SERVO_BODY
     cx = SERVO_OUTPUT_OFFSET
-    ps = [Prism(rect(cx - L / 2, -W / 2, cx + L / 2, W / 2), 0, H),
-          Prism(rect(cx - L / 2 - SERVO_EAR_LEN, -W / 2, cx + L / 2 + SERVO_EAR_LEN, W / 2),
-                SERVO_EAR_Z, SERVO_EAR_Z + SERVO_EAR_T),
-          Prism(rect(cx - L / 2 + 0.3, -W / 2 + 0.2, cx + L / 2 - 0.3, W / 2 - 0.2), H, H + 0.12),
-          Prism(circle(0.35, n=48), -0.12, 0)]
-    for i in range(9):
-        z = H * 0.35 + i * (H * 0.6 / 9)
-        ps.append(Prism(rect(cx - L / 2 + 0.25, -W / 2 - 0.10, cx + L / 2 - 0.25, W / 2 + 0.10),
-                        z, z + 0.08))
-    return Part("servo", ps, printable=False, note="industrial servo, ~1500 oz-in")
+    body = rect_loop(cx - L / 2, -W / 2, cx + L / 2, W / 2)
+    ears = rect_loop(cx - L / 2 - SERVO_EAR_LEN, -W / 2 - 0.02, cx + L / 2 + SERVO_EAR_LEN, W / 2 + 0.02)
+    fin = rect_loop(cx - L / 2 - 0.08, -W / 2 - 0.10, cx + L / 2 + 0.08, W / 2 + 0.10)
+    cap = rect_loop(cx - L / 2 + 0.3, -W / 2 + 0.2, cx + L / 2 - 0.3, W / 2 - 0.2)
+    pitch = H * 0.6 / SERVO_FINS
+    levels = [(ears, SERVO_EAR_Z, SERVO_EAR_Z + SERVO_EAR_T)]
+    z = SERVO_EAR_Z + SERVO_EAR_T
+    for i in range(SERVO_FINS):
+        zf = H * 0.35 + i * pitch
+        levels += [(body, z, zf), (fin, zf, zf + 0.08)]
+        z = zf + 0.08
+    levels.append((body, z, H))
+    node = Body(cap, H, H + 0.12)
+    for loop, z0, z1 in reversed(levels):
+        node = Body(loop, z0, z1, top=[node])
+    root = Body(body, 0, SERVO_EAR_Z, top=[node],
+                bottom=[Body(circle_loop(0.35), -0.12, 0)])
+    return Part("servo", [root], printable=False, note="industrial servo, ~1500 oz-in")
 
 
 def make_bracket():
     W = SERVO_BODY[1]
     top = BRACKET_H + SERVO_EAR_Z
-    ps = [Prism(rect(-0.2, -W / 2, 0.2, W / 2), 0, 0.12)]
-    for sy in (-1, 1):
-        ps.append(Prism(circle(0.12, 0, sy * (W / 2 - 0.25), n=32), 0, top))
-    return Part("servo_bracket", ps, note="servo standoffs")
+    posts = [Body(circle_loop(0.12, 0, sy * (W / 2 - 0.25)), 0.12, top) for sy in (-1, 1)]
+    return Part("servo_bracket", [Body(rect_loop(-0.2, -W / 2, 0.2, W / 2), 0, 0.12, top=posts)],
+                note="servo standoffs")
 
 
 def make_tube(slots, z0, z1):
     ri, ro = TUBE_ID / 2, TUBE_OD / 2
     half = math.asin((LEAF_W / 2 + 0.02) / ro)
-    ps, z = [], z0
+    bodies, z = [], z0
     for sz0, sz1, rot in sorted(slots):
-        ps.append(Prism(circle(ro), z, sz0, [circle(ri)]))
+        bodies.append(Body(circle_loop(ro), z, sz0, [circle_loop(ri)]))
         for k in range(2):
             c = rot + math.pi / 2 + k * math.pi
-            ps.append(Prism(sector(ri, ro, c + half, c + math.pi - half), sz0, sz1))
+            bodies.append(Body(sector_loop(ri, ro, c + half, c + math.pi - half), sz0, sz1))
         z = sz1
-    ps.append(Prism(circle(ro), z, z1, [circle(ri)]))
-    return Part("airframe_tube", ps, printable=False, note="mission-package tube")
+    bodies.append(Body(circle_loop(ro), z, z1, [circle_loop(ri)]))
+    return Part("airframe_tube", bodies, printable=False, note="mission-package tube")
 
 
 # ---------------------------------------------------------------------------
@@ -558,7 +682,8 @@ def build(deploy, with_tube=False):
     z += FRAME_T
     tube_slots = []
     for level, rot in (("A", 0.0), ("B", math.pi / 2)):
-        inst.append(Instance(tframe, rot, z=z, label="tray_frame_" + level))
+        inst.append(Instance(tframe, rot, z=z, label="tray_frame_%s1" % level))
+        inst.append(Instance(tframe, rot + math.pi, z=z, label="tray_frame_%s2" % level))
         inst.append(Instance(tray, rot, z=z, label="tray_" + level))
         zf = z + TRAY_FLOOR_T                 # leaf bottom
         zl = zf + LEAF_T + WASHER_T           # leaf connector bottom
@@ -568,7 +693,7 @@ def build(deploy, with_tube=False):
             a = rot + (0 if sgn > 0 else math.pi)
             tag = "%s%d" % (level, k + 1)
             dx, dy = rot2(0, travel, a)
-            lp = rot2(e, s, a)                                 # leaf pin
+            lp = rot2(e, s, a)                                   # leaf pin
             c = rot2(rc * math.cos(phi), rc * math.sin(phi), a)  # crank pin
             ang = math.atan2(lp[1] - c[1], lp[0] - c[0])
             inst.append(Instance(leaf, a, dx, dy, zf, label="leaf_" + tag))
@@ -652,9 +777,9 @@ def write_print_parts(outdir, instances, scale):
 
 
 # ---------------------------------------------------------------------------
-# STEP (AP214): an assembly with one product per part and one occurrence per
-# instance, so Onshape imports it as an assembly whose parts can be mated.
-# Every solid is a prism, so every face is planar; arcs are faceted.
+# STEP (AP214). One product per part, one occurrence per instance, so CAD tools
+# import it as an assembly. Each part is one MANIFOLD_SOLID_BREP with exact
+# geometry: PLANE / CYLINDRICAL_SURFACE faces, LINE / CIRCLE edges.
 # ---------------------------------------------------------------------------
 class _Step:
     def __init__(self, scale):
@@ -666,7 +791,9 @@ class _Step:
 
     @staticmethod
     def r(v):
-        s = "%.9g" % v
+        if abs(v) < 1e-12:
+            v = 0.0
+        s = "%.10g" % v
         if "e" in s:
             m, x = s.split("e")
             return (m if "." in m else m + ".") + "E" + x
@@ -678,53 +805,85 @@ class _Step:
     def dir(self, d):
         return self.add("DIRECTION('',(%s));" % ",".join(self.r(c) for c in d))
 
-    def axis(self, p, z, x):
+    def axis(self, p, z=(0.0, 0.0, 1.0), x=(1.0, 0.0, 0.0)):
         return self.add("AXIS2_PLACEMENT_3D('',%s,%s,%s);" % (self.pt(p), self.dir(z), self.dir(x)))
 
-    def edge(self, pa, pb, va, vb):
+    def line_edge(self, pa, pb, va, vb):
         d = [pb[k] - pa[k] for k in range(3)]
         ln = math.sqrt(sum(c * c for c in d))
         vec = self.add("VECTOR('',%s,%s);" % (self.dir([c / ln for c in d]), self.r(ln * self.scale)))
         line = self.add("LINE('',%s,%s);" % (self.pt(pa), vec))
         return self.add("EDGE_CURVE('',%s,%s,%s,.T.);" % (va, vb, line))
 
-    def face(self, loops, plane):
+    def arc_edge(self, seg, z, va, vb):
+        _, c, r, a0, a1 = seg
+        circ = self.add("CIRCLE('',%s,%s);" % (self.axis((c[0], c[1], z)), self.r(r * self.scale)))
+        return self.add("EDGE_CURVE('',%s,%s,%s,%s);" % (va, vb, circ, ".T." if a1 > a0 else ".F."))
+
+    def face(self, loops, surface, sense=True):
         bounds = []
         for k, oes in enumerate(loops):
             refs = [self.add("ORIENTED_EDGE('',*,*,%s,%s);" % (e, ".T." if fwd else ".F."))
                     for e, fwd in oes]
             el = self.add("EDGE_LOOP('',(%s));" % ",".join(refs))
-            bounds.append(self.add("%s('',%s,.T.);" % ("FACE_OUTER_BOUND" if k == 0 else "FACE_BOUND", el)))
-        return self.add("ADVANCED_FACE('',(%s),%s,.T.);" % (",".join(bounds), plane))
+            kind = "FACE_OUTER_BOUND" if k == 0 else "FACE_BOUND"
+            bounds.append(self.add("%s('',%s,.T.);" % (kind, el)))
+        return self.add("ADVANCED_FACE('',(%s),%s,%s);" % (",".join(bounds), surface,
+                                                           ".T." if sense else ".F."))
 
-    def prism(self, pr, name):
-        faces, data = [], []
-        for loop in [pr.outer] + pr.holes:
-            n = len(loop)
-            vb = [self.add("VERTEX_POINT('',%s);" % self.pt((p[0], p[1], pr.z0))) for p in loop]
-            vt = [self.add("VERTEX_POINT('',%s);" % self.pt((p[0], p[1], pr.z1))) for p in loop]
-            eb, et, ev = [], [], []
-            for i in range(n):
-                j = (i + 1) % n
-                p, q = loop[i], loop[j]
-                eb.append(self.edge((p[0], p[1], pr.z0), (q[0], q[1], pr.z0), vb[i], vb[j]))
-                et.append(self.edge((p[0], p[1], pr.z1), (q[0], q[1], pr.z1), vt[i], vt[j]))
-                ev.append(self.edge((p[0], p[1], pr.z0), (p[0], p[1], pr.z1), vb[i], vt[i]))
-            for i in range(n):
-                j = (i + 1) % n
-                p, q = loop[i], loop[j]
-                dx, dy = q[0] - p[0], q[1] - p[1]
-                ln = math.hypot(dx, dy)
-                plane = self.add("PLANE('',%s);" % self.axis((p[0], p[1], pr.z0),
-                                                              (dy / ln, -dx / ln, 0.0),
-                                                              (dx / ln, dy / ln, 0.0)))
-                faces.append(self.face([[(eb[i], True), (ev[j], True), (et[i], False), (ev[i], False)]],
-                                       plane))
-            data.append((n, eb, et))
-        top = self.add("PLANE('',%s);" % self.axis((0, 0, pr.z1), (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)))
-        faces.append(self.face([[(et[i], True) for i in range(n)] for n, eb, et in data], top))
-        bot = self.add("PLANE('',%s);" % self.axis((0, 0, pr.z0), (0.0, 0.0, -1.0), (1.0, 0.0, 0.0)))
-        faces.append(self.face([[(eb[i], False) for i in range(n - 1, -1, -1)] for n, eb, et in data], bot))
+    def body(self, root, name):
+        """Write one connected solid (a Body tree) and return its MANIFOLD_SOLID_BREP."""
+        edges = {}   # (id(node), loop index) -> dict(z0=[...], z1=[...], v=[...])
+        faces = []
+        for N in root.nodes():
+            for li, loop in enumerate(body_loops(N)):
+                n = len(loop)
+                starts = [seg_start(s) for s in loop]
+                vb = [self.add("VERTEX_POINT('',%s);" % self.pt((p[0], p[1], N.z0))) for p in starts]
+                vt = [self.add("VERTEX_POINT('',%s);" % self.pt((p[0], p[1], N.z1))) for p in starts]
+                eb, et, ev = [], [], []
+                for i, s in enumerate(loop):
+                    j = (i + 1) % n
+                    for z, vv, lst in ((N.z0, vb, eb), (N.z1, vt, et)):
+                        if s[0] == "L":
+                            lst.append(self.line_edge((s[1][0], s[1][1], z), (s[2][0], s[2][1], z), vv[i], vv[j]))
+                        else:
+                            lst.append(self.arc_edge(s, z, vv[i], vv[j]))
+                    p = starts[i]
+                    ev.append(self.line_edge((p[0], p[1], N.z0), (p[0], p[1], N.z1), vb[i], vt[i]))
+                edges[(id(N), li)] = {"z0": eb, "z1": et}
+                for i, s in enumerate(loop):
+                    j = (i + 1) % n
+                    loop_edges = [(eb[i], True), (ev[j], True), (et[i], False), (ev[i], False)]
+                    if s[0] == "L":
+                        (x0, y0), (x1, y1) = s[1], s[2]
+                        dx, dy = x1 - x0, y1 - y0
+                        ln = math.hypot(dx, dy)
+                        surf = self.add("PLANE('',%s);" % self.axis((x0, y0, N.z0), (dy / ln, -dx / ln, 0.0),
+                                                                    (dx / ln, dy / ln, 0.0)))
+                        faces.append(self.face([loop_edges], surf))
+                    else:
+                        _, c, r, a0, a1 = s
+                        surf = self.add("CYLINDRICAL_SURFACE('',%s,%s);"
+                                        % (self.axis((c[0], c[1], N.z0)), self.r(r * self.scale)))
+                        faces.append(self.face([loop_edges], surf, sense=a1 > a0))
+        for N in root.nodes():
+            for which in ("top", "bottom"):
+                refs = N.cap(which)
+                if refs is None:
+                    continue
+                up = which == "top"
+                loops = []
+                for owner, li, level in refs:
+                    es = edges[(id(owner), li)][level]
+                    # the face's own loops run forward seen from outside; loops borrowed
+                    # from the body across the step run the other way
+                    fwd = (owner is N) == up
+                    loops.append([(e, True) for e in es] if fwd else
+                                 [(e, False) for e in reversed(es)])
+                z = N.z1 if up else N.z0
+                surf = self.add("PLANE('',%s);" % self.axis((0.0, 0.0, z), (0.0, 0.0, 1.0 if up else -1.0)))
+                faces.append(self.face(loops, surf))
         shell = self.add("CLOSED_SHELL('',(%s));" % ",".join(faces))
         return self.add("MANIFOLD_SOLID_BREP('%s',%s);" % (name, shell))
 
@@ -763,14 +922,14 @@ def write_step(path, instances, scale):
         if part.name in reps:
             continue
         pd, pds = product(part.name)
-        origin = st.axis((0, 0, 0), (0.0, 0.0, 1.0), (1.0, 0.0, 0.0))
-        solids = [st.prism(pr, part.name) for pr in part.prisms]
+        origin = st.axis((0.0, 0.0, 0.0))
+        solids = [st.body(b, part.name) for b in part.bodies]
         rep = st.add("ADVANCED_BREP_SHAPE_REPRESENTATION('%s',(%s),%s);"
                      % (part.name, ",".join([origin] + solids), ctx))
         st.add("SHAPE_DEFINITION_REPRESENTATION(%s,%s);" % (pds, rep))
         reps[part.name] = (pd, rep, origin)
 
-    root_origin = st.axis((0, 0, 0), (0.0, 0.0, 1.0), (1.0, 0.0, 0.0))
+    root_origin = st.axis((0.0, 0.0, 0.0))
     places = [st.axis(i.pos, (0.0, 0.0, 1.0), (math.cos(i.angle), math.sin(i.angle), 0.0))
               for i in instances]
     root_rep = st.add("SHAPE_REPRESENTATION('airbrake_assembly',(%s),%s);"

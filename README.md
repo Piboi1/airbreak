@@ -14,7 +14,7 @@ python3 airbrake_stl.py --units in      # inches instead of mm
 |---|---|
 | `airbrake_assembly.stl` | Whole assembly as one mesh (extended) |
 | `airbrake_retracted.stl` | Same, with the leaves retracted |
-| `airbrake_assembly.step` | Whole assembly with one body per part (42 instances), for Onshape mates and motion |
+| `airbrake_assembly.step` | **Open this one in CAD.** Exact geometry (true arcs, circles and cylinders, not facets); every part is one connected solid; 44 part instances, ready for Onshape mates and motion |
 | `print/<part>_xN.stl` | One print-ready file per unique part, lying flat on the bed. `xN` is how many to print |
 | `preview/motion.gif` | Rendered deployment cycle |
 
@@ -25,7 +25,7 @@ All files are in **millimetres**.
 | File | Qty | Notes |
 |---|---|---|
 | `frame_bottom_x1` | 1 | spoked frame that mounts in the tube |
-| `tray_frame_x2` | 2 | each file has two ring segments |
+| `tray_frame_x4` | 4 | ring segment either side of each tray |
 | `tray_x2` | 2 | leaf guide tray (SLA resin in the real build) |
 | `frame_middle_x1` | 1 | thin ring between the two trays |
 | `leaf_x4` | 4 | 6061-T6 1/8 in plate in the real build |
@@ -72,5 +72,7 @@ All estimates are in the `PARAMETERS` block at the top of the script. The linkag
 re-solved automatically when you change them, and the script warns if a link would
 hit the shaft.
 
-Not modelled: radial screw holes into the airframe, fasteners, and the servo horn. In
-the STEP file, curved faces are made of flat facets.
+Not modelled: radial screw holes into the airframe, fasteners, and the servo horn.
+
+STL files are always triangle meshes, so they show triangle lines in any CAD tool. Use
+them for printing, and use the STEP file for viewing and editing in CAD.
