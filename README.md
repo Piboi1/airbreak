@@ -44,7 +44,24 @@ Hardware you'll need to buy:
 
 Printed holes have 0.005 in (0.13 mm) radial clearance; change `HOLE_CLEAR` if your printer needs more.
 
-## Making it move in Onshape
+## Onshape FeatureScript (`airbrake.fs`)
+
+`airbrake.fs` builds the same air brake natively in Onshape, as real Onshape parts in meters.
+
+1. In an Onshape document, create a **Feature Studio**. Replace its contents with `airbrake.fs` and commit.
+2. Open a **Part Studio**. Add **MyCustomPart** from the custom features menu on the toolbar.
+3. Adjust the options:
+   * **Deployment (0–1):** 0 is stowed, 1 is fully out. Changing it rebuilds the model with the cranks, links and leaves moved to that position.
+   * **Include servo / pins and washers / airframe tube:** toggles for those parts.
+   * **Add mate connectors:** puts mate connectors on the shaft axis, every pin hole, and each leaf's slide direction.
+4. For mates, insert the Part Studio into an Assembly and snap the mate connectors together:
+   * **Revolute:** shaft to bottom frame; each leaf connector to its hex connector pin and its leaf pin.
+   * **Fastened:** hex connectors to the shaft.
+   * **Slider:** each leaf's slide connector to its tray's.
+
+If Onshape reports a version error, replace the first two lines with the header from a newly created Feature Studio.
+
+## Making it move in Onshape (STEP import)
 
 Import `airbrake_assembly.step`. Onshape creates an Assembly tab with every part in its extended position. Then add these mates:
 
