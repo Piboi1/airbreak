@@ -262,3 +262,47 @@ def fig_compare(p1, p2, name):
     dr.text((20, 10), 'V1 (inline, OD 66.04 housing)', font=render.font(46), fill=(0, 0, 0))
     dr.text((imgs[0][0].size[0] + gap + 20, 10), 'V2 (compact head inside upper tube)', font=render.font(46), fill=(0, 0, 0))
     out.save(OUT + name)
+
+
+def fig_dz(parts, name, drops=(0, 14, 22), az=-38, el=16):
+    """Cut-away preview: trim the top of the V2 head by dz and re-align so the head tops line up."""
+    cols = []
+    top0 = 78.4
+    for dz in drops:
+        ztop = top0 - dz
+        items = []
+        for nm, m in parts.items():
+            t = tok(nm)
+            if t.startswith('REF') or t.startswith('TP'):
+                continue
+            mm = m
+            if m.bounds[1][2] > ztop:
+                try:
+                    mm = trimesh.intersections.slice_mesh_plane(m.copy(), plane_normal=[0, 0, -1], plane_origin=[0, 0, ztop], cap=True)
+                except Exception:
+                    mm = m
+            if len(mm.faces) == 0:
+                continue
+            items.append(dict(mesh=mm, offset=np.array([0, 0, dz], float), color=color_of(t), tok=t))
+        img, meta = render.render(items, az=az, el=el, size=(900, 1350), scale=6.4, center=np.array([0, 0, -8]))
+        cols.append((dz, img, meta))
+    gap = 20
+    W = sum(c[1].size[0] for c in cols) + gap * (len(cols) - 1)
+    H = cols[0][1].size[1] + 150
+    out = Image.new('RGB', (W, H), (255, 255, 255))
+    dr = ImageDraw.Draw(out)
+    x0 = 0
+    for dz, img, meta in cols:
+        out.paste(img, (x0, 150))
+        title = 'V2 now' if dz == 0 else f'latch stack down {dz} mm'
+        dr.text((x0 + 20, 10), title, font=render.font(44), fill=(0, 0, 0))
+        dr.text((x0 + 20, 62), f'printed stack {171.9 - dz:.1f} mm  (V1: 178.5)', font=render.font(30), fill=(40, 40, 40))
+        dr.text((x0 + 20, 100), f'fin top to head top: {28.4 - dz:.1f} mm', font=render.font(30), fill=(190, 40, 40))
+        # horizontal guide at the fin top (z=50 -> shifted by dz) and at the head top
+        for z, col in ((50 + dz, (190, 40, 40)), (top0, (40, 40, 200))):
+            _, y = render.project(meta, (0, 0, z))
+            y += 150
+            dr.line([(x0 + 10, y), (x0 + img.size[0] - 10, y)], fill=col, width=2)
+        x0 += img.size[0] + gap
+    dr.text((20, H - 40), 'Cut-away preview of the real V2 model: red = fin top, blue = head top. Latch stack not yet re-engineered (see text).', font=render.font(26), fill=(60, 60, 60))
+    out.save(OUT + name)
