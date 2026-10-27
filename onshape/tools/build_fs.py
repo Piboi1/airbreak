@@ -103,19 +103,38 @@ P('''  definition.cords is boolean;
  // and the glued 0.52 mm BT80 cut-out brings it back to 66.04 mm.
  var dr=compact?-0.72:0;
  var rOut=33.02+dr;
- var camMax=compact?28.6:29;''')
+ var camMax=compact?28.6:29;
+ // V2: the latch stack (hook, crown arms, top bearing, knob) drops 22 mm into the fin height; the catch is an inward lug on the fin.
+ var dzT=compact?22:0;
+ var topZ=compact?58.8:67;''')
 
 P(''' var carrier=tubeMM(context,id+"carrier",33.02,30.2,-15,67);
  var base=tubeMM(context,id+"base",33.02,18,-15,-11);
  var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,-33,-14.9);
  var upper=tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,85);''',
-  ''' var carrier=tubeMM(context,id+"carrier",rOut,30.2+dr,-15,67);
+  ''' var carrier=tubeMM(context,id+"carrier",rOut,30.2+dr,-15,topZ);
  var base=tubeMM(context,id+"base",33.02,18,-15,-11);
  var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,-33,-14.9);
- var upper=tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,compact?73:85);''')
+ var joinParts=[carrier,base,lower];
+ if(!compact) joinParts=append(joinParts,tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,85));''')
 
-P('tubeMM(context,id+"recessCatchBelt",31,28.4,54.6,57.4)', 'tubeMM(context,id+"recessCatchBelt",31+dr,28.4+dr,54.6,57.4)')
+P(''' var catchBelt=tubeMM(context,id+"recessCatchBelt",31,28.4,54.6,57.4);
+ opBoolean(context,id+"recessCatchBeltJoin",{"tools":qUnion([carrier,catchBelt]),"operationType":BooleanOperationType.UNION});''',
+  ''' if(!compact) {
+  var catchBelt=tubeMM(context,id+"recessCatchBelt",31+dr,28.4+dr,54.6,57.4);
+  opBoolean(context,id+"recessCatchBeltJoin",{"tools":qUnion([carrier,catchBelt]),"operationType":BooleanOperationType.UNION});
+ }''')
 
+P('var ring=cylinderMM(context,id+"rotorShaft",5,-10.5,78);', 'var ring=cylinderMM(context,id+"rotorShaft",5,-10.5,78-dzT);')
+P('cylinderMM(context,id+"crownHub",9,58.6,61.6)', 'cylinderMM(context,id+"crownHub",9,58.6-dzT,61.6-dzT)')
+P('cylinderMM(context,id+"highThrust",7,65.5,67.5)', 'cylinderMM(context,id+"highThrust",7,65.5-dzT,67.5-dzT)')
+P('cylinderMM(context,id+"knob",10,74,78)', 'cylinderMM(context,id+"knob",10,74-dzT,78-dzT)')
+P('sector(context,id+"finger",8,16,4,74,4)', 'sector(context,id+"finger",8,16,4,74-dzT,4)')
+P('tubeMM(context,id+"topBearing",18,5.4,68,73)', 'tubeMM(context,id+"topBearing",18,5.4,68-dzT,73-dzT)')
+P('radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68,4,a)', 'radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68-dzT,4,a)')
+P('sector(context,id+("knobStop"~j),12,18,4,72.5,5.9)', 'sector(context,id+("knobStop"~j),12,18,4,72.5-dzT,5.9)')
+P('sector(context,id+("bearingRelief"~i),8.5,15.5,29,70,3.1)', 'sector(context,id+("bearingRelief"~i),8.5,15.5,29,70-dzT,3.1)')
+P('cylinderMM(context,id+"rotorLightTool",3,-8,78.1)', 'cylinderMM(context,id+"rotorLightTool",3,-8,78.1-dzT)')
 P('''  if(phase>24 && phase<60) r=21+8*(phase-24)/36;
   if(phase>=60 && phase<=66) r=29;
   if(phase>66 && phase<78) r=29-8*(phase-66)/12;''',
@@ -123,10 +142,24 @@ P('''  if(phase>24 && phase<60) r=21+8*(phase-24)/36;
   if(phase>=60 && phase<=66) r=camMax;
   if(phase>66 && phase<78) r=camMax-(camMax-21)*(phase-66)/12;''')
 
+P('"tools":qUnion([carrier,base,lower,upper])', '"tools":qUnion(joinParts)')
+
 # ------------------------------------------------------------------ panel loop
 P('sector(context,sub+"window",29.5,34,33.5,-9.2,63.8)', 'sector(context,sub+"window",29.5+dr,34,33.5,-9.2,63.8)')
-P('sector(context,sub+"tipSlot",27.6,38,8,50.8,8.6)', 'sector(context,sub+"tipSlot",27.6+dr,38,8,50.8,8.6)')
-P('sector(context,sub+"crownSlot",29.5,37,41,57.3,6.1)', 'sector(context,sub+"crownSlot",29.5+dr,37,41,57.3,6.1)')
+P('''  var tipSlot=sector(context,sub+"tipSlot",27.6,38,8,50.8,8.6);
+  turn(context,sub+"tipSlotTurn",tipSlot,a);subtract(context,sub+"tipSlotCut",carrier,tipSlot);
+  // Crown arms sweep above the fixed anchor belt; four remaining pillars carry the top.
+  var sweepSlot=sector(context,sub+"crownSlot",29.5,37,41,57.3,6.1);
+  turn(context,sub+"crownSlotTurn",sweepSlot,a+32.5*degree);
+  subtract(context,sub+"crownSlotCut",carrier,sweepSlot);''',
+  '''  if(!compact) {
+   var tipSlot=sector(context,sub+"tipSlot",27.6+dr,38,8,50.8,8.6);
+   turn(context,sub+"tipSlotTurn",tipSlot,a);subtract(context,sub+"tipSlotCut",carrier,tipSlot);
+   // Crown arms sweep above the fixed anchor belt; four remaining pillars carry the top.
+   var sweepSlot=sector(context,sub+"crownSlot",29.5+dr,37,41,57.3,6.1);
+   turn(context,sub+"crownSlotTurn",sweepSlot,a+32.5*degree);
+   subtract(context,sub+"crownSlotCut",carrier,sweepSlot);
+  }''')
 
 P('''  var catchArm=radialBox(context,sub+"catchArm",6,30,-2.5,2.5,58.6,3,0*degree);
   turn(context,sub+"catchTurn",catchArm,a);
@@ -139,23 +172,34 @@ P('''  var catchArm=radialBox(context,sub+"catchArm",6,30,-2.5,2.5,58.6,3,0*degr
   subtract(context,sub+"catchSocketCut",catchCap,catchSocket);
   turn(context,sub+"capPosition",catchCap,a+definition.release*degree);
   label(context,catchCap,"L"~(i+1)~" Recessed catch cap - R32.8 outer limit - bond to rotor arm",[.20,.58,.34]);''',
-  '''  var catchArm=radialBox(context,sub+"catchArm",6,30+dr,-2.5,2.5,58.6,3,0*degree);
+  '''  var armEnd=compact?24.1:30+dr;var armZ=compact?58.6-dzT:58.6;var capR=compact?20.4:24.3;
+  var catchArm=radialBox(context,sub+"catchArm",6,armEnd,-2.5,2.5,armZ,3,0*degree);
   turn(context,sub+"catchTurn",catchArm,a);
   opBoolean(context,sub+"rotorCatchJoin",{"tools":qUnion([ring,catchArm]),"operationType":BooleanOperationType.UNION});
-  // M3 clearance hole through the rotor arm for the cap screw (axis Z, R24.3).
-  drill(context,sub+"armHole",ring,vector(24.3*cos(a),24.3*sin(a),0),vector(0,0,1),58.0,62.2,M3_CLR);
+  // M3 clearance hole through the rotor arm for the cap screw (axis Z).
+  drill(context,sub+"armHole",ring,vector(capR*cos(a),capR*sin(a),0),vector(0,0,1),armZ-0.6,armZ+3.6,M3_CLR);
   // Open-top clip: the arm drops into the socket with the housing halves open; a boss under the arm takes the screw.
-  var catchCap=radialBox(context,sub+"catchCap",22,32.6+dr,-4.2,4.2,57.4,5.4,0*degree);
-  var catchHook=sector(context,sub+"catchHook",30.9+dr,32.8+dr,5.2,55.2,5.0);
-  var catchBoss=radialBox(context,sub+"catchBoss",21.8,26.6,-4.2,4.2,53.4,4.0,0*degree);
-  opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchHook,catchBoss]),"operationType":BooleanOperationType.UNION});
-  var catchSocket=radialBox(context,sub+"catchSocket",21.9,30.4+dr,-2.75,2.75,58.4,5.0,0*degree);
+  var catchCap=undefined;var catchSocket=undefined;
+  if(compact) {
+   // V2: hook finger stands inside R26 and hooks the lug on the fin from inside (see fin lug), so it clears the fin shell.
+   catchCap=radialBox(context,sub+"catchCap",18.0,26.0,-4.2,4.2,35.4,5.4,0*degree);
+   var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,40.8,5.2,0*degree);
+   var catchBoss=radialBox(context,sub+"catchBoss",18.0,24.2,-4.2,4.2,31.4,4.0,0*degree);
+   opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchFinger,catchBoss]),"operationType":BooleanOperationType.UNION});
+   catchSocket=radialBox(context,sub+"catchSocket",17.9,24.2,-2.75,2.75,36.4,5.0,0*degree);
+  } else {
+   catchCap=radialBox(context,sub+"catchCap",22,32.6+dr,-4.2,4.2,57.4,5.4,0*degree);
+   var catchHook=sector(context,sub+"catchHook",30.9+dr,32.8+dr,5.2,55.2,5.0);
+   var catchBoss=radialBox(context,sub+"catchBoss",21.8,26.6,-4.2,4.2,53.4,4.0,0*degree);
+   opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchHook,catchBoss]),"operationType":BooleanOperationType.UNION});
+   catchSocket=radialBox(context,sub+"catchSocket",21.9,30.4+dr,-2.75,2.75,58.4,5.0,0*degree);
+  }
   subtract(context,sub+"catchSocketCut",catchCap,catchSocket);
-  drill(context,sub+"capPilot",catchCap,vector(24.3,0,0),vector(0,0,1),54.0,58.5,M3_PILOT);
+  drill(context,sub+"capPilot",catchCap,vector(capR,0,0),vector(0,0,1),compact?32.0:54.0,compact?36.5:58.5,M3_PILOT);
   turn(context,sub+"capPosition",catchCap,a+definition.release*degree);
-  label(context,catchCap,"L"~(i+1)~" Catch cap - open-top clip, 1 x M3x8 screw to rotor arm",[.20,.58,.34]);
+  label(context,catchCap,"L"~(i+1)~(compact?" Catch cap - open-top clip with inner hook finger, 1 x M3x8 screw to rotor arm":" Catch cap - open-top clip, 1 x M3x8 screw to rotor arm"),[.20,.58,.34]);
   if(definition.hardware) {
-   var cs=screwHW(context,sub+"capScrew",vector(24.3,0,61.6),vector(0,0,-1),"M3BH",8,"HW L"~(i+1)~" cap screw - M3x8 button head");
+   var cs=screwHW(context,sub+"capScrew",vector(capR,0,armZ+3.0),vector(0,0,-1),"M3BH",8,"HW L"~(i+1)~" cap screw - M3x8 button head");
    turn(context,sub+"capScrewTurn",cs,a+definition.release*degree);
   }''')
 
@@ -167,9 +211,24 @@ P('sector(context,sub+"shell",30.62,33.02,32.5,4,50)', 'sector(context,sub+"shel
 P('radialBox(context,sub+"landing",29,32.4,-6,6,4,4,0*degree)', 'radialBox(context,sub+"landing",29,32.4+dr,-6,6,4,4,0*degree)')
 P('radialBox(context,sub+"landingTool",32.4,35,-6,6,4,4,0*degree)', 'radialBox(context,sub+"landingTool",32.4+dr,35,-6,6,4,4,0*degree)')
 P('yc(context,sub+"leafTool",2.45,-7.5,7.5)', 'yc(context,sub+"leafTool",M4_CLR,-7.5,7.5)')
-P('sector(context,sub+"tipRecessTool",30.42,34,5.8,51,3.1)', 'sector(context,sub+"tipRecessTool",30.42+dr,34,5.8,51,3.1)')
-P('sector(context,sub+"tip",27.9,30.42,5,51,6.0)', 'sector(context,sub+"tip",27.9+dr,30.42+dr,5,51,6.0)')
-P('sector(context,sub+"recessTipRoot",27.9,33.02,6.8,47,4.2)', 'sector(context,sub+"recessTipRoot",27.9+dr,rOut,6.8,47,4.2)')
+P('''  subtract(context,sub+"tipRecessCut",panel,sector(context,sub+"tipRecessTool",30.42,34,5.8,51,3.1));
+  var tip=sector(context,sub+"tip",27.9,30.42,5,51,6.0);
+  var tipRoot=sector(context,sub+"recessTipRoot",27.9,33.02,6.8,47,4.2);
+  opBoolean(context,sub+"recessTipRootJoin",{"tools":qUnion([panel,tipRoot]),"operationType":BooleanOperationType.UNION});''',
+  '''  var tip=undefined;
+  if(compact) {
+   // V2 catch: an inward lug (plate + inner wall) inside the fin height. The rotor finger stands outside the wall,
+   // so the fin cannot move out until the rotor swings the finger away (about 16 deg).
+   var lugWall=radialBox(context,sub+"lugWall",20.0,22.8,-3,3,41.6,8.4,0*degree);
+   var lugPlate=radialBox(context,sub+"lugPlate",20.0,30.6,-3,3,47,3,0*degree);
+   opBoolean(context,sub+"lugJoin",{"tools":qUnion([lugPlate,lugWall]),"operationType":BooleanOperationType.UNION});
+   tip=lugPlate;
+  } else {
+   subtract(context,sub+"tipRecessCut",panel,sector(context,sub+"tipRecessTool",30.42+dr,34,5.8,51,3.1));
+   tip=sector(context,sub+"tip",27.9+dr,30.42+dr,5,51,6.0);
+   var tipRoot=sector(context,sub+"recessTipRoot",27.9+dr,rOut,6.8,47,4.2);
+   opBoolean(context,sub+"recessTipRootJoin",{"tools":qUnion([panel,tipRoot]),"operationType":BooleanOperationType.UNION});
+  }''')
 
 P('''  label(context,panel,"P"~(i+1)~" Cam-driven BT80 panel - solid shell - reinforced root - 90 degree stop",orange);
   var pin=yc(context,sub+"pin",2.1,-12.5,16);
@@ -194,6 +253,7 @@ P('''  label(context,panel,"P"~(i+1)~" Cam-driven BT80 panel - solid shell - rei
   }''')
 
 P('sector(context,sub+"recessHookTrack",30.65,34,40,55.0,2.5)', 'sector(context,sub+"recessHookTrack",30.65+dr,34,40,55.0,2.5)')
+P(' for(var i=0;i<4;i+=1) {\n  var sub=id+("finalHookTrack"~i);', ' for(var i=0;i<(compact?0:4);i+=1) {\n  var sub=id+("finalHookTrack"~i);')
 
 P('''  var h=yc(context,id+("headPocket"~i),3.7,-15.1,-12.1);
   var c=yc(context,id+("capPocket"~i),3.7,12.2,17.1);
@@ -212,7 +272,7 @@ P('''  var up=sector(context,id+("upperRelief"~i),29.8,30.7,17,69,13.5);
 
 # ------------------------------------------------------------------ screw bosses, supports (before the split)
 BOSSES = r''' // ---- screw bosses: seam clamp ribs, V1 sleeve pads, V2 thick supports between the fins ----
- for(var side=0;side<2;side+=1) for(var lv=0;lv<2;lv+=1) {
+ for(var side=0;side<2;side+=1) for(var lv=0;lv<(compact?1:2);lv+=1) {
   var rsa=(45+side*180)*degree;var rzc=lv==0?8:44;
   var rib=radialBox(context,id+("seamRib"~side~lv),23.8,30.8+dr,-6.5,6.5,rzc-5,10,rsa);
   opBoolean(context,id+("seamRibJoin"~side~lv),{"tools":qUnion([carrier,rib]),"operationType":BooleanOperationType.UNION});
@@ -230,28 +290,29 @@ BOSSES = r''' // ---- screw bosses: seam clamp ribs, V1 sleeve pads, V2 thick su
   // V2: thick supports in the solid strips between the fins. Two pieces leave the cam sweep band z 18.5..29.5 clear.
   var ssa=(45+90*s)*degree;
   for(var part=0;part<2;part+=1) {
-   var sup=sector(context,id+("support"~s~part),26.8,30.6+dr,10.5,part==0?-11:29.5,part==0?29.5:25);
+   var sup=sector(context,id+("support"~s~part),27.4,30.6+dr,11.0,part==0?-11:29.5,part==0?29.5:25);
    turn(context,id+("supportTurn"~s~part),sup,ssa);
    opBoolean(context,id+("supportJoin"~s~part),{"tools":qUnion([carrier,sup]),"operationType":BooleanOperationType.UNION});
   }
   for(var lv=0;lv<2;lv+=1) {
    var saz=supportAz(s,lv);var sz=lv==0?12:36;
-   radialDrill(context,id+("supportPilot"~s~lv),carrier,saz,sz,27.4,33.5,M3_PILOT);
+   radialDrill(context,id+("supportPilot"~s~lv),carrier,saz,sz,28.0,33.5,M3_PILOT);
    if(definition.hardware)
-    screwHW(context,id+("supportScrew"~s~lv),vector(33.02*cos(saz),33.02*sin(saz),sz),vector(-cos(saz),-sin(saz),0),"M3BH",6,"HW top-tube support screw "~(s*2+lv+1)~" - M3x6 button head");
+    screwHW(context,id+("supportScrew"~s~lv),vector(33.02*cos(saz),33.02*sin(saz),sz),vector(-cos(saz),-sin(saz),0),"M3BH",5,"HW top-tube support screw "~(s*2+lv+1)~" - M3x5 button head");
   }
  }
  // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.'''
 P(' // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.', BOSSES)
 
-P('radialBox(context,id+("seamBoss"~side),26,32.5,-3.5,3.5,63,4,a)', 'radialBox(context,id+("seamBoss"~side),26,32.5+dr,-3.5,3.5,63.5,3.5,a)')
+P('radialBox(context,id+("seamBoss"~side),26,32.5,-3.5,3.5,63,4,a)', 'radialBox(context,id+("seamBoss"~side),26,32.5+dr,-3.5,3.5,compact?51.5:63.5,3.5,a)')
+P('var r=level==0?24:29;var z=level==0?-13:65;', 'var r=level==0?24:29;var z=level==0?-13:(compact?53:65);')
 P('" Split BT80 housing - align and bond stationary seams"', '" Split BT80 housing - clamp with 4 x M3 seam screws, peg-aligned"')
 
 # ------------------------------------------------------------------ seam screws, tube references (after pegs)
 AFTER = r''' // Seam clamp screws: counterbore + clearance in the negative half, thread-forming pilot in the positive half.
  for(var side=0;side<2;side+=1) for(var lv=0;lv<2;lv+=1) {
   var ssa2=(45+side*180)*degree;var szc=lv==0?8:44;
-  var sp0=vector(27*cos(ssa2),27*sin(ssa2),szc);var ssub=id+("seamScrew"~side~lv);
+  var srr=(compact&&lv==1)?29.6:27;var sp0=vector(srr*cos(ssa2),srr*sin(ssa2),szc);var ssub=id+("seamScrew"~side~lv);
   drill(context,ssub+"cb",negative,sp0,seamNormal,-7,-3.1,M3_CB);
   drill(context,ssub+"clr",negative,sp0,seamNormal,-3.2,0.3,M3_CLR);
   drill(context,ssub+"pilot",positive,sp0,seamNormal,-0.3,6.0,M3_PILOT);

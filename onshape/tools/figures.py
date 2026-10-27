@@ -248,7 +248,7 @@ def fig_compare(p1, p2, name):
     dr = ImageDraw.Draw(out)
     f = render.font(44)
     sets = [(0, [(-15, 67, 'exposed: 82 mm', (200, 40, 40), 470), (-33, 85, 'printed: 118 mm', (40, 40, 200), 0)]),
-            (imgs[0][0].size[0] + gap, [(-15, -11, 'exposed: 4 mm', (200, 40, 40), 470), (-33, 78.4, 'printed: 111.4 mm', (40, 40, 200), 0)])]
+            (imgs[0][0].size[0] + gap, [(-15, -11, 'exposed: 4 mm', (200, 40, 40), 470), (-33, 58.8, 'printed: 91.8 mm', (40, 40, 200), 0)])]
     for (img, meta), (x0, spans) in zip(imgs, sets):
         for z0, z1, txt, col, xo in spans:
             _, y0 = render.project(meta, (0, 0, z0)); _, y1 = render.project(meta, (0, 0, z1))
@@ -306,3 +306,32 @@ def fig_dz(parts, name, drops=(0, 14, 22), az=-38, el=16):
         x0 += img.size[0] + gap
     dr.text((20, H - 40), 'Cut-away preview of the real V2 model: red = fin top, blue = head top. Latch stack not yet re-engineered (see text).', font=render.font(26), fill=(60, 60, 60))
     out.save(OUT + name)
+
+
+def fig_latch_plan(path, state_closed, state_released, z=43.5, zoom=(-4, 34, -22, 22)):
+    """Plan section of the V2 latch at z (looks down): closed vs released."""
+    import matplotlib; matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import sections
+    fig, axs = plt.subplots(1, 2, figsize=(7.2, 3.6))
+    for ax, (parts, title) in zip(axs, ((state_closed, 'rotor 0\u00b0 (locked): finger outside the lug wall'), (state_released, 'rotor 20\u00b0 (released): finger swung clear'))):
+        # draw with the shared helper into a temp image then embed: simpler to draw sections directly
+        import numpy as np
+        from matplotlib.collections import LineCollection
+        for i, (nm, m) in enumerate(parts.items()):
+            t = tok(nm)
+            if not (t in ('P1', 'L1', 'R') or t.startswith('HW_L1')):
+                continue
+            try:
+                sec = m.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
+            except Exception:
+                sec = None
+            if sec is None: continue
+            segs = [sec.vertices[e.points][:, :2] for e in sec.entities]
+            col = {'P1': '#e8762b', 'L1': '#2e8b57', 'R': '#5aa469'}.get(t, '#555555')
+            ax.add_collection(LineCollection(segs, colors=col, linewidths=1.4))
+            ax.text(*(np.concatenate(segs).mean(0)), t.replace('HW_', ''), fontsize=7, color=col)
+        ax.set_xlim(zoom[0], zoom[1]); ax.set_ylim(zoom[2], zoom[3]); ax.set_aspect('equal'); ax.grid(alpha=.25)
+        ax.set_title(title, fontsize=8); ax.tick_params(labelsize=6)
+    fig.suptitle('Section at z = %.1f mm, looking down. Orange: fin lug wall; green: cap finger and rotor arm' % z, fontsize=8)
+    fig.tight_layout(); fig.savefig(path, dpi=220); plt.close(fig)

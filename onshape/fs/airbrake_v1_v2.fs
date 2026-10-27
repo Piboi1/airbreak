@@ -175,17 +175,23 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  var dr=compact?-0.72:0;
  var rOut=33.02+dr;
  var camMax=compact?28.6:29;
+ // V2: the latch stack (hook, crown arms, top bearing, knob) drops 22 mm into the fin height; the catch is an inward lug on the fin.
+ var dzT=compact?22:0;
+ var topZ=compact?58.8:67;
  // Inline BT80 housing. Two 18 mm glue shoulders, 64.6 mm OD.
- var carrier=tubeMM(context,id+"carrier",rOut,30.2+dr,-15,67);
+ var carrier=tubeMM(context,id+"carrier",rOut,30.2+dr,-15,topZ);
  var base=tubeMM(context,id+"base",33.02,18,-15,-11);
  var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,-33,-14.9);
- var upper=tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,compact?73:85);
- opBoolean(context,id+"baseJoin",{"tools":qUnion([carrier,base,lower,upper]),"operationType":BooleanOperationType.UNION});
+ var joinParts=[carrier,base,lower];
+ if(!compact) joinParts=append(joinParts,tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,85));
+ opBoolean(context,id+"baseJoin",{"tools":qUnion(joinParts),"operationType":BooleanOperationType.UNION});
  // Inward belt preserves a substantial fixed load path behind the recessed hook track.
- var catchBelt=tubeMM(context,id+"recessCatchBelt",31+dr,28.4+dr,54.6,57.4);
- opBoolean(context,id+"recessCatchBeltJoin",{"tools":qUnion([carrier,catchBelt]),"operationType":BooleanOperationType.UNION});
+ if(!compact) {
+  var catchBelt=tubeMM(context,id+"recessCatchBelt",31+dr,28.4+dr,54.6,57.4);
+  opBoolean(context,id+"recessCatchBeltJoin",{"tools":qUnion([carrier,catchBelt]),"operationType":BooleanOperationType.UNION});
+ }
  // Single rotor: 10 mm shaft, root cams, top capture crown, accessible knob.
- var ring=cylinderMM(context,id+"rotorShaft",5,-10.5,78);
+ var ring=cylinderMM(context,id+"rotorShaft",5,-10.5,78-dzT);
  var points=[];
  for(var k=0;k<720;k+=1) {
   var theta=k*.5;var phase=90-(theta%90);if(phase==90) phase=0;
@@ -196,25 +202,25 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   points=append(points,vector(r*cos(theta*degree),r*sin(theta*degree)));
  }
  var cam=polygonMM(context,id+"camProfile",points,22,3);
- var crownHub=cylinderMM(context,id+"crownHub",9,58.6,61.6);
+ var crownHub=cylinderMM(context,id+"crownHub",9,58.6-dzT,61.6-dzT);
  var lowThrust=cylinderMM(context,id+"lowThrust",7,-5.5,-3.5);
- var highThrust=cylinderMM(context,id+"highThrust",7,65.5,67.5);
- var knob=cylinderMM(context,id+"knob",10,74,78);
- var finger=sector(context,id+"finger",8,16,4,74,4);
+ var highThrust=cylinderMM(context,id+"highThrust",7,65.5-dzT,67.5-dzT);
+ var knob=cylinderMM(context,id+"knob",10,74-dzT,78-dzT);
+ var finger=sector(context,id+"finger",8,16,4,74-dzT,4);
  opBoolean(context,id+"rotorJoin",{"tools":qUnion([ring,cam,crownHub,lowThrust,highThrust,knob,finger]),"operationType":BooleanOperationType.UNION});
  // Split fixed bearing bridge and bottom bearing, assembled around the rotor.
- var topBearing=tubeMM(context,id+"topBearing",18,5.4,68,73);
+ var topBearing=tubeMM(context,id+"topBearing",18,5.4,68-dzT,73-dzT);
  var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,-15,-6);
  for(var i=0;i<4;i+=1) {
   var a=(45+i*90)*degree;
-  var spoke=radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68,4,a);
+  var spoke=radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68-dzT,4,a);
   var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,20,-2.5,2.5,-15,4,a);
   opBoolean(context,id+("topSpokeJoin"~i),{"tools":qUnion([topBearing,spoke]),"operationType":BooleanOperationType.UNION});
   opBoolean(context,id+("lowSpokeJoin"~i),{"tools":qUnion([lowBearing,lowSpoke]),"operationType":BooleanOperationType.UNION});
  }
  opBoolean(context,id+"bearingsJoin",{"tools":qUnion([carrier,topBearing,lowBearing]),"operationType":BooleanOperationType.UNION});
  for(var j=0;j<2;j+=1) {
-  var stop=sector(context,id+("knobStop"~j),12,18,4,72.5,5.9);
+  var stop=sector(context,id+("knobStop"~j),12,18,4,72.5-dzT,5.9);
   turn(context,id+("knobStopTurn"~j),stop,(j==0?-8:73)*degree);
   opBoolean(context,id+("knobStopJoin"~j),{"tools":qUnion([carrier,stop]),"operationType":BooleanOperationType.UNION});
  }
@@ -223,29 +229,42 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   var window=sector(context,sub+"window",29.5+dr,34,33.5,-9.2,63.8);
   turn(context,sub+"windowTurn",window,a);subtract(context,sub+"windowCut",carrier,window);
   // A narrow passage admits only the raised panel tab through the fixed upper rim.
-  var tipSlot=sector(context,sub+"tipSlot",27.6+dr,38,8,50.8,8.6);
-  turn(context,sub+"tipSlotTurn",tipSlot,a);subtract(context,sub+"tipSlotCut",carrier,tipSlot);
-  // Crown arms sweep above the fixed anchor belt; four remaining pillars carry the top.
-  var sweepSlot=sector(context,sub+"crownSlot",29.5+dr,37,41,57.3,6.1);
-  turn(context,sub+"crownSlotTurn",sweepSlot,a+32.5*degree);
-  subtract(context,sub+"crownSlotCut",carrier,sweepSlot);
-  var catchArm=radialBox(context,sub+"catchArm",6,30+dr,-2.5,2.5,58.6,3,0*degree);
+  if(!compact) {
+   var tipSlot=sector(context,sub+"tipSlot",27.6+dr,38,8,50.8,8.6);
+   turn(context,sub+"tipSlotTurn",tipSlot,a);subtract(context,sub+"tipSlotCut",carrier,tipSlot);
+   // Crown arms sweep above the fixed anchor belt; four remaining pillars carry the top.
+   var sweepSlot=sector(context,sub+"crownSlot",29.5+dr,37,41,57.3,6.1);
+   turn(context,sub+"crownSlotTurn",sweepSlot,a+32.5*degree);
+   subtract(context,sub+"crownSlotCut",carrier,sweepSlot);
+  }
+  var armEnd=compact?24.1:30+dr;var armZ=compact?58.6-dzT:58.6;var capR=compact?20.4:24.3;
+  var catchArm=radialBox(context,sub+"catchArm",6,armEnd,-2.5,2.5,armZ,3,0*degree);
   turn(context,sub+"catchTurn",catchArm,a);
   opBoolean(context,sub+"rotorCatchJoin",{"tools":qUnion([ring,catchArm]),"operationType":BooleanOperationType.UNION});
-  // M3 clearance hole through the rotor arm for the cap screw (axis Z, R24.3).
-  drill(context,sub+"armHole",ring,vector(24.3*cos(a),24.3*sin(a),0),vector(0,0,1),58.0,62.2,M3_CLR);
+  // M3 clearance hole through the rotor arm for the cap screw (axis Z).
+  drill(context,sub+"armHole",ring,vector(capR*cos(a),capR*sin(a),0),vector(0,0,1),armZ-0.6,armZ+3.6,M3_CLR);
   // Open-top clip: the arm drops into the socket with the housing halves open; a boss under the arm takes the screw.
-  var catchCap=radialBox(context,sub+"catchCap",22,32.6+dr,-4.2,4.2,57.4,5.4,0*degree);
-  var catchHook=sector(context,sub+"catchHook",30.9+dr,32.8+dr,5.2,55.2,5.0);
-  var catchBoss=radialBox(context,sub+"catchBoss",21.8,26.6,-4.2,4.2,53.4,4.0,0*degree);
-  opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchHook,catchBoss]),"operationType":BooleanOperationType.UNION});
-  var catchSocket=radialBox(context,sub+"catchSocket",21.9,30.4+dr,-2.75,2.75,58.4,5.0,0*degree);
+  var catchCap=undefined;var catchSocket=undefined;
+  if(compact) {
+   // V2: hook finger stands inside R26 and hooks the lug on the fin from inside (see fin lug), so it clears the fin shell.
+   catchCap=radialBox(context,sub+"catchCap",18.0,26.0,-4.2,4.2,35.4,5.4,0*degree);
+   var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,40.8,5.2,0*degree);
+   var catchBoss=radialBox(context,sub+"catchBoss",18.0,24.2,-4.2,4.2,31.4,4.0,0*degree);
+   opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchFinger,catchBoss]),"operationType":BooleanOperationType.UNION});
+   catchSocket=radialBox(context,sub+"catchSocket",17.9,24.2,-2.75,2.75,36.4,5.0,0*degree);
+  } else {
+   catchCap=radialBox(context,sub+"catchCap",22,32.6+dr,-4.2,4.2,57.4,5.4,0*degree);
+   var catchHook=sector(context,sub+"catchHook",30.9+dr,32.8+dr,5.2,55.2,5.0);
+   var catchBoss=radialBox(context,sub+"catchBoss",21.8,26.6,-4.2,4.2,53.4,4.0,0*degree);
+   opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchHook,catchBoss]),"operationType":BooleanOperationType.UNION});
+   catchSocket=radialBox(context,sub+"catchSocket",21.9,30.4+dr,-2.75,2.75,58.4,5.0,0*degree);
+  }
   subtract(context,sub+"catchSocketCut",catchCap,catchSocket);
-  drill(context,sub+"capPilot",catchCap,vector(24.3,0,0),vector(0,0,1),54.0,58.5,M3_PILOT);
+  drill(context,sub+"capPilot",catchCap,vector(capR,0,0),vector(0,0,1),compact?32.0:54.0,compact?36.5:58.5,M3_PILOT);
   turn(context,sub+"capPosition",catchCap,a+definition.release*degree);
-  label(context,catchCap,"L"~(i+1)~" Catch cap - open-top clip, 1 x M3x8 screw to rotor arm",[.20,.58,.34]);
+  label(context,catchCap,"L"~(i+1)~(compact?" Catch cap - open-top clip with inner hook finger, 1 x M3x8 screw to rotor arm":" Catch cap - open-top clip, 1 x M3x8 screw to rotor arm"),[.20,.58,.34]);
   if(definition.hardware) {
-   var cs=screwHW(context,sub+"capScrew",vector(24.3,0,61.6),vector(0,0,-1),"M3BH",8,"HW L"~(i+1)~" cap screw - M3x8 button head");
+   var cs=screwHW(context,sub+"capScrew",vector(capR,0,armZ+3.0),vector(0,0,-1),"M3BH",8,"HW L"~(i+1)~" cap screw - M3x8 button head");
    turn(context,sub+"capScrewTurn",cs,a+definition.release*degree);
   }
   var ears=[];
@@ -279,10 +298,20 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   subtract(context,sub+"earClearA",panel,yc(context,sub+"earClearToolA",5.5,-12.3,-7.7));
   subtract(context,sub+"earClearB",panel,yc(context,sub+"earClearToolB",5.5,7.7,12.3));
   // Set the narrow held tab 2.6 mm inward; retain full thickness with a stepped root.
-  subtract(context,sub+"tipRecessCut",panel,sector(context,sub+"tipRecessTool",30.42+dr,34,5.8,51,3.1));
-  var tip=sector(context,sub+"tip",27.9+dr,30.42+dr,5,51,6.0);
-  var tipRoot=sector(context,sub+"recessTipRoot",27.9+dr,rOut,6.8,47,4.2);
-  opBoolean(context,sub+"recessTipRootJoin",{"tools":qUnion([panel,tipRoot]),"operationType":BooleanOperationType.UNION});
+  var tip=undefined;
+  if(compact) {
+   // V2 catch: an inward lug (plate + inner wall) inside the fin height. The rotor finger stands outside the wall,
+   // so the fin cannot move out until the rotor swings the finger away (about 16 deg).
+   var lugWall=radialBox(context,sub+"lugWall",20.0,22.8,-3,3,41.6,8.4,0*degree);
+   var lugPlate=radialBox(context,sub+"lugPlate",20.0,30.6,-3,3,47,3,0*degree);
+   opBoolean(context,sub+"lugJoin",{"tools":qUnion([lugPlate,lugWall]),"operationType":BooleanOperationType.UNION});
+   tip=lugPlate;
+  } else {
+   subtract(context,sub+"tipRecessCut",panel,sector(context,sub+"tipRecessTool",30.42+dr,34,5.8,51,3.1));
+   tip=sector(context,sub+"tip",27.9+dr,30.42+dr,5,51,6.0);
+   var tipRoot=sector(context,sub+"recessTipRoot",27.9+dr,rOut,6.8,47,4.2);
+   opBoolean(context,sub+"recessTipRootJoin",{"tools":qUnion([panel,tipRoot]),"operationType":BooleanOperationType.UNION});
+  }
   // Broad inward follower: root cam acts here, well below the airflow opening.
   var follower=radialBox(context,sub+"follower",23,31.3,-4,4,20,9,0*degree);
   opBoolean(context,sub+"solidPanelJoin",{"tools":qUnion([panel,tip,follower]),"operationType":BooleanOperationType.UNION});
@@ -303,7 +332,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   }
  }
  // Clear the complete hook path AFTER fixed cord anchors have been joined.
- for(var i=0;i<4;i+=1) {
+ for(var i=0;i<(compact?0:4);i+=1) {
   var sub=id+("finalHookTrack"~i);var a=i*90*degree;
   // Recessed hook travels inside the skin; leave the inner belt intact.
   var hookTrack=sector(context,sub+"recessHookTrack",30.65+dr,34,40,55.0,2.5);
@@ -332,7 +361,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  for(var i=0;i<4;i+=1) {
   var a=i*90*degree;
   // Bearing diaphragm has a 2 mm skin, radial spokes and a full shaft boss.
-  var topPocket=sector(context,id+("bearingRelief"~i),8.5,15.5,29,70,3.1);
+  var topPocket=sector(context,id+("bearingRelief"~i),8.5,15.5,29,70-dzT,3.1);
   turn(context,id+("bearingReliefTurn"~i),topPocket,a);subtract(context,id+("bearingReliefCut"~i),carrier,topPocket);
   // Between hinge brackets: blind underside pockets leave a 2 mm base skin.
   var bottomPocket=sector(context,id+("baseRelief"~i),18.5,29,15,-15.1,2.1);
@@ -345,9 +374,9 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   turn(context,id+("camReliefTurn"~i),camPocket,a);subtract(context,id+("camReliefCut"~i),ring,camPocket);
  }
  // Open axial bore is printable without trapped support; solid D extension is added later.
- subtract(context,id+"rotorLightBore",ring,cylinderMM(context,id+"rotorLightTool",3,-8,78.1));
+ subtract(context,id+"rotorLightBore",ring,cylinderMM(context,id+"rotorLightTool",3,-8,78.1-dzT));
  // ---- screw bosses: seam clamp ribs, V1 sleeve pads, V2 thick supports between the fins ----
- for(var side=0;side<2;side+=1) for(var lv=0;lv<2;lv+=1) {
+ for(var side=0;side<2;side+=1) for(var lv=0;lv<(compact?1:2);lv+=1) {
   var rsa=(45+side*180)*degree;var rzc=lv==0?8:44;
   var rib=radialBox(context,id+("seamRib"~side~lv),23.8,30.8+dr,-6.5,6.5,rzc-5,10,rsa);
   opBoolean(context,id+("seamRibJoin"~side~lv),{"tools":qUnion([carrier,rib]),"operationType":BooleanOperationType.UNION});
@@ -365,21 +394,21 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   // V2: thick supports in the solid strips between the fins. Two pieces leave the cam sweep band z 18.5..29.5 clear.
   var ssa=(45+90*s)*degree;
   for(var part=0;part<2;part+=1) {
-   var sup=sector(context,id+("support"~s~part),26.8,30.6+dr,10.5,part==0?-11:29.5,part==0?29.5:25);
+   var sup=sector(context,id+("support"~s~part),27.4,30.6+dr,11.0,part==0?-11:29.5,part==0?29.5:25);
    turn(context,id+("supportTurn"~s~part),sup,ssa);
    opBoolean(context,id+("supportJoin"~s~part),{"tools":qUnion([carrier,sup]),"operationType":BooleanOperationType.UNION});
   }
   for(var lv=0;lv<2;lv+=1) {
    var saz=supportAz(s,lv);var sz=lv==0?12:36;
-   radialDrill(context,id+("supportPilot"~s~lv),carrier,saz,sz,27.4,33.5,M3_PILOT);
+   radialDrill(context,id+("supportPilot"~s~lv),carrier,saz,sz,28.0,33.5,M3_PILOT);
    if(definition.hardware)
-    screwHW(context,id+("supportScrew"~s~lv),vector(33.02*cos(saz),33.02*sin(saz),sz),vector(-cos(saz),-sin(saz),0),"M3BH",6,"HW top-tube support screw "~(s*2+lv+1)~" - M3x6 button head");
+    screwHW(context,id+("supportScrew"~s~lv),vector(33.02*cos(saz),33.02*sin(saz),sz),vector(-cos(saz),-sin(saz),0),"M3BH",5,"HW top-tube support screw "~(s*2+lv+1)~" - M3x5 button head");
   }
  }
  // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.
  for(var side=0;side<2;side+=1) {
   var a=(45+side*180)*degree;
-  var seamBoss=radialBox(context,id+("seamBoss"~side),26,32.5+dr,-3.5,3.5,63.5,3.5,a);
+  var seamBoss=radialBox(context,id+("seamBoss"~side),26,32.5+dr,-3.5,3.5,compact?51.5:63.5,3.5,a);
   opBoolean(context,id+("seamBossJoin"~side),{"tools":qUnion([carrier,seamBoss]),"operationType":BooleanOperationType.UNION});
  }
  var seamNormal=normalize(vector(1,-1,0));
@@ -390,7 +419,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  var negative=halves[0];var positive=halves[1];
  if(dot(evApproximateCentroid(context,{"entities":negative})/millimeter,seamNormal)>0) {negative=halves[1];positive=halves[0];}
  for(var side=0;side<2;side+=1) for(var level=0;level<2;level+=1) {
-  var a=(45+side*180)*degree;var r=level==0?24:29;var z=level==0?-13:65;
+  var a=(45+side*180)*degree;var r=level==0?24:29;var z=level==0?-13:(compact?53:65);
   var p=vector(r*cos(a),r*sin(a),z);var sub=id+("key"~side~level);
   fCylinder(context,sub+"peg",{"bottomCenter":(p-1.6*seamNormal)*millimeter,"topCenter":(p+2.2*seamNormal)*millimeter,"radius":1.5*millimeter});
   opBoolean(context,sub+"pegJoin",{"tools":qUnion([negative,solid(sub+"peg")]),"operationType":BooleanOperationType.UNION});
@@ -400,7 +429,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  // Seam clamp screws: counterbore + clearance in the negative half, thread-forming pilot in the positive half.
  for(var side=0;side<2;side+=1) for(var lv=0;lv<2;lv+=1) {
   var ssa2=(45+side*180)*degree;var szc=lv==0?8:44;
-  var sp0=vector(27*cos(ssa2),27*sin(ssa2),szc);var ssub=id+("seamScrew"~side~lv);
+  var srr=(compact&&lv==1)?29.6:27;var sp0=vector(srr*cos(ssa2),srr*sin(ssa2),szc);var ssub=id+("seamScrew"~side~lv);
   drill(context,ssub+"cb",negative,sp0,seamNormal,-7,-3.1,M3_CB);
   drill(context,ssub+"clr",negative,sp0,seamNormal,-3.2,0.3,M3_CLR);
   drill(context,ssub+"pilot",positive,sp0,seamNormal,-0.3,6.0,M3_PILOT);

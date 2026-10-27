@@ -17,6 +17,24 @@ DOCS = ROOT / 'docs'
 DOCS.mkdir(exist_ok=True)
 (DOCS / 'img').mkdir(exist_ok=True)
 
+SCAN = json.load(open(WORK / 'scan.json')) if (WORK / 'scan.json').exists() else {}
+
+
+def latch_free_angle():
+    free = [r for (o, r, ov) in SCAN.get('latch', []) if o == 3.0 and not ov]
+    return min(free) if free else None
+
+
+def latch_blocked_from():
+    blocked = [o for (o, r, ov) in SCAN.get('latch', []) if r == 0 and ov]
+    return min(blocked) if blocked else None
+
+
+def cam_first_contact():
+    hit = [r for (r, ov) in SCAN.get('cam', []) if ov]
+    return min(hit) if hit else None
+
+
 DOC_URL = 'https://cad.onshape.com/documents/857ab7b483eda80939870e15/w/0766f9a969602884d82183a8'
 
 ss = getSampleStyleSheet()
@@ -107,7 +125,7 @@ def hardware_rows(v2):
             ['HW L1-L4 cap screw', 'M3 x 8 button head (ISO 7380)', 4, 'Rotor arm → catch cap boss (vertical)', '2.0 mm hex'],
             ['HW H1-H4 hinge screw', 'M4 x 25 button head (ISO 7380)', 4, 'Through -Y ear and fin barrel, threads into +Y ear (replaces printed pin H and cap K)', '2.5 mm hex']]
     if v2:
-        rows.append(['HW top-tube support screw 1-8', 'M3 x 6 button head', 8, 'Upper BT80 tube → thick supports between the fins (z=12 and z=36)', '2.0 mm hex'])
+        rows.append(['HW top-tube support screw 1-8', 'M3 x 5 button head', 8, 'Upper BT80 tube → thick supports between the fins (z=12 and z=36)', '2.0 mm hex'])
     else:
         rows.append(['HW upper sleeve screw 1-4', 'M3 x 6 button head', 4, 'Upper BT80 tube → pads behind the upper sleeve (z=76)', '2.0 mm hex'])
     rows += [['HW dock ring screw 1-3', 'M3 x 10 button head', 3, 'Lower BT80 tube → housing sleeve → dock ring pad (z=-26.5)', '2.0 mm hex'],
@@ -117,8 +135,9 @@ def hardware_rows(v2):
 
 
 def hardware_totals(v2):
-    m36 = 8 if v2 else 4
-    return (f'<b>Totals:</b> M3x6 × {m36}, M3x8 × 8 (4 socket + 4 button), M3x10 × 10, M4x25 × 4 = {m36 + 8 + 10 + 4} screws. '
+    short = 'M3x5 × 8' if v2 else 'M3x6 × 4'
+    n = 8 if v2 else 4
+    return (f'<b>Totals:</b> {short}, M3x8 × 8 (4 socket + 4 button), M3x10 × 10, M4x25 × 4 = {n + 8 + 10 + 4} screws. '
             'Not printed or screwed: 1 SG90 servo with horn, 2 BT80 airframe tubes, epoxy for Q, G, the return-leaf root and the horn saddle J.')
 
 
@@ -219,36 +238,61 @@ def v1():
 
 
 # ------------------------------------------------------------------------------------------------ V2
+def print_rows_v2():
+    rows = [list(r) for r in PRINT_ROWS]
+    for r in rows:
+        if r[0].startswith('P_fin'): r[3] = 'Identical x4; hinge bore 4.5 mm; inward catch lug (plate + wall) on the top of the shell.'
+        if r[0].startswith('L_catch_cap'): r[3] = 'Identical x4; open-top clip with an upward hook finger; print boss down so the 2.6 mm pilot is vertical.'
+        if r[0].startswith('C1_'): r[2] = 'C1 housing half (fins 1 and 4, pilot holes of the seam, 4 thick strips)'
+    return rows
+
+
 def v2():
+    free = latch_free_angle(); blocked = latch_blocked_from(); cam = cam_first_contact()
     s = []
     s += [P('V2 – Compact head assembly guide', H1),
-          P('Same mechanism and fins as V1, but the fins live in a smaller-diameter head that slides <i>inside</i> the upper BT80 tube. '
-            'You cut four slits in that tube; each cut-out piece is glued onto its fin and rides with it.', B),
+          P('Same mechanism, hardware and fins as V1, but the fins live in a smaller-diameter head that slides <i>inside</i> the upper BT80 tube, '
+            'and the whole latch stack (hook, crown arms, top bearing, knob) now sits <b>inside the fin height</b>: the fin top is only 6.4 mm below the head top. '
+            'You cut four slits in the tube; each cut-out piece is glued onto its fin and rides with it.', B),
           P(f'Onshape: <a href="{DOC_URL}" color="blue">ARC BT80 Airbrake - V1 Screwed + V2 Compact (Claude build)</a>. Elements: <b>V2-A</b> closed, <b>V2-B</b> fully open, <b>ASM-V2</b> assembly, '
             'Feature Studio parameter <i>V2 compact head</i> = on.', SM),
           fig('v2_assembled.png', 70, 'V2 closed. The upper tube covers the fin zone; only a 4 mm stop ring of the airbrake is exposed between the tubes.', 110)]
     s += [P('1 &nbsp; The idea and the numbers', H2),
-          P('Your sketches: the upper BT80 tube is cut with slits around the fins, the cut-out pieces are glued to the fins and the sleeve fit stays at the bottom. '
-            'For the top connection, supports come back in the four solid strips between the fins.', B),
-          table([['Item', 'V1', 'V2'],
+          P('Your sketches: slit the upper BT80 tube around the fins, glue the cut-outs to the fins, keep the sleeve fit at the bottom, put supports in the solid strips between the fins. '
+            'Your fin-position drawing: the fin goes up to the top rim and everything under it moves up with it, so the whole piece is shorter than V1.', B),
+          table([['Item', 'V1', 'V2 (22 mm drop)'],
                  ['Fin shell radii (printed)', 'R30.62 – 33.02', 'R29.9 – 32.3 (64.6 mm OD = your sleeve OD)'],
                  ['Outer skin', 'printed, flush with the tube (66.04 mm)', 'glued BT80 cut-out R32.5 – 33.02 (0.52 mm wall); 0.2 mm glue gap to the fin'],
-                 ['Head / housing OD', '66.04 mm (flush)', '64.6 mm inside the tube (tube ID 65.0 mm, 0.2 mm radial clearance)'],
-                 ['Upper sleeve', '18 mm, z=67..85', 'removed: replaced by the 8 supports + 6 mm top ring (z 66.9..73)'],
-                 ['Supports', 'none (thin 2.8 mm pillars)', '4 thick strips between the fins R26.8–32.3 (two pieces, clear of the cam band z 18.5..29.5) + the 4 under-fin stop blocks R27–32.3'],
+                 ['Head OD', '66.04 mm (flush)', '64.6 mm inside the tube (tube ID 65.0 mm)'],
+                 ['Fin catch', 'tab above the fin tip, hook outside the skin (z 51–63)', 'inward lug on the fin (plate z 47–50, inner wall z 41.6–50) hooked from inside by a finger on the catch cap (z 40.8–46)'],
+                 ['Latch stack on the rotor', 'crown arms z 58.6–61.6, top bearing 68–73, knob 74–78', 'all 22 mm lower: arms 36.6–39.6, top bearing 46–51, knob 52–56'],
+                 ['Upper sleeve', '18 mm, z 67..85', 'removed; 4.2 mm top ring z 54.6..58.8'],
+                 ['Supports', 'none (thin 2.8 mm pillars)', '4 thick strips between the fins R27.4–32.3 (two pieces, clear of the cam band z 18.5..29.5) + the 4 under-fin stop blocks R27–32.3'],
                  ['Lower sleeve', '18 mm, OD 64.6 mm', 'unchanged (sleeve fit)'],
+                 ['Fin top to head top', '35 mm', '6.4 mm'],
                  ['Exposed airbrake between tubes', '82 mm (z −15..67)', '<b>4 mm</b> stop ring (z −15..−11)'],
-                 ['Printed stack, housing incl. sleeve', '118 mm (z −33..85)', '111.4 mm (z −33..78.4)'],
-                 ['Whole printed assembly incl. cradle', '178.5 mm', '171.9 mm'],
-                 ['Cam peak radius', '29.0', '28.6 (keeps 0.9 mm to the pillars)']], [46, 52, 82]),
-          Spacer(1, 4), fig('compare_length.png', 165, 'V1 vs V2 side by side (tubes cut in half for the view). The exposed band the airbrake takes up in the rocket drops from 82 mm to 4 mm because the upper tube now covers the fins.', 110),
+                 ['Printed housing incl. sleeve', '118 mm (z −33..85)', '91.8 mm (z −33..58.8)'],
+                 ['Whole printed assembly incl. cradle', '178.5 mm', '<b>149.9 mm</b> (28.6 mm shorter than V1)'],
+                 ['Cam peak radius', '29.0', '28.6 (keeps 0.9 mm to the pillars)']], [44, 54, 82]),
+          Spacer(1, 4), fig('compare_length.png', 165, 'V1 vs V2 side by side (tubes cut in half for the view). The exposed band drops from 82 mm to 4 mm and the printed housing from 118 to 91.8 mm.', 110),
           P('<b>Why supports are still needed:</b> a flush butt joint between two tubes has no load path and nothing to retain it. In V1 the pillar wall and the 18 mm glue sleeves carry that; in V2 the thin wall is gone, so the thick strips (screwed to the tube) and the sleeve fit take over.', NOTE),
-          fig('v2_radial.png', 110, 'Radial stack at a seam strip (z=36): fin, 0.2 mm gap, glued tube piece, support strip. All radii in the CAD are checked against this.', 100)]
-    s += [PageBreak(), P('2 &nbsp; Print list', H2),
-          P('STLs: <font face="Courier">onshape/exports/v2/print</font>. Identical to V1 except the housing halves (supports and top ring) and the fins (thinner shell). Cut-out pieces TP1–TP4 are <b>not printed</b>.', B),
-          table(PRINT_ROWS, [48, 11, 62, 59], font=7.8)]
-    s += [P('3 &nbsp; Hardware and tools', H2), table(hardware_rows(True), [36, 40, 9, 77, 18], font=7.8), Spacer(1, 3), P(hardware_totals(True), B)]
-    s += [P('4 &nbsp; Prepare the upper tube (slits) and the cut-outs', H2),
+          fig('v2_radial.png', 110, 'Radial stack at a seam strip (z=36): fin, 0.2 mm glue gap, glued tube piece, support strip.', 100)]
+    s += [PageBreak(), P('2 &nbsp; The new latch (what changed to get the fin to the rim)', H2),
+          P('In V1 the fin tip carried a tab that a hook on the rotor grabbed from outside, above the fin. That hook swings sideways through the fin’s own window, so it cannot sit inside the fin height. '
+            'In V2 the catch is turned inside out: the fin carries a small <b>lug</b> that reaches inward (plate at z 47–50 and an inner wall to z 41.6). '
+            'The catch cap on each rotor arm carries a <b>finger</b> that stands just outside that wall (0.8 mm gap). The fin cannot move out until the rotor swings the finger away; '
+            'the finger runs at R23.6–26, inside the support strips (R27.4+), so it can sweep past them.', B)]
+    bullets_l = [f'Hold: at rotor 0° the fin can move about 1° (0.8 mm at the lug) and is blocked from {blocked:g}° (interference scan of the CAD).' if blocked else 'Hold: see scan.',
+                 f'Release: with the fin held at 3°, the fin is free once the rotor is at {free:g}° or more (tested 0, 10, 14, 16, 18, 20°).' if free else 'Release: see scan.',
+                 f'Timing: the cams first touch the fins at about {cam:g}° (tested 18–30°), so the fins are released before they are pushed.' if cam else 'Timing: see scan.',
+                 'Finger and wall are 6 mm wide, finger 2.4 mm thick: the latch is a printed hook, so it is thinner than the V1 hook was strong; run it empty first.']
+    s += bullets(bullets_l)
+    s += [fig('v2_latch_plan.png', 175, 'Plan section at z=43.5: locked (left) and released (right). Orange: fin lug wall; green: finger on the catch cap and the rotor arm.', 90)]
+    s += [P('3 &nbsp; Print list', H2),
+          P('STLs: <font face="Courier">onshape/exports/v2/print</font>. Same files as V1 except the housing halves, fins (lug) and catch caps (finger). Cut-outs TP1–TP4 are <b>not printed</b>.', B),
+          table(print_rows_v2(), [48, 11, 62, 59], font=7.8)]
+    s += [P('4 &nbsp; Hardware and tools', H2), table(hardware_rows(True), [36, 40, 9, 77, 18], font=7.8), Spacer(1, 3), P(hardware_totals(True), B)]
+    s += [P('5 &nbsp; Prepare the upper tube (slits) and the cut-outs', H2),
           P('Cut the four windows (38.6 × 60.2 mm, centred on 0/90/180/270°, starting 1.8 mm from the end that meets the airbrake). '
             'From each piece of waste trim a <b>37.5 × 42 mm</b> cut-out (the dashed outline), edges square, ~0.3 mm sanded off the corners. '
             'That leaves about 0.6 mm of kerf at each side and 1 mm above, and about 17 mm of open window below the cut-out so the fin can swing down and out. '
@@ -258,40 +302,43 @@ def v2():
           table([['Tube', 'Feature', 'd (mm)', 'Azimuth', 'Note'],
                  ['Upper', '4 windows', '1.8 → 62.0', '0, 90, 180, 270° ±33.5°', '38.6 wide at the OD'],
                  ['Upper', '4 cut-outs', '19 → 61', 'same centres, ±32.5°', '37.5 × 42 mm, glued to the fins'],
-                 ['Upper', '8 holes (M3x6)', '23 and 47', '45, 135, 225, 315° (both rows)', 'centred on each strip'],
+                 ['Upper', '8 holes (M3x5)', '23 and 47', '45, 135, 225, 315° (both rows)', 'centred on each strip'],
                  ['Lower', '3 holes (M3x10)', '11.5', '90, 200, 340°', 'ring screws'],
                  ['Lower', '4 holes (M3x10)', '52.2', '45, 135, 225, 315°', 'cradle screws']], [18, 32, 30, 55, 45]),
           fig('v2_tube_cutout.png', 105, 'The upper tube with its four slits, the four cut-out pieces (tan) and the fins (orange) they are glued to.', 100)]
-    s += [PageBreak(), P('5 &nbsp; Assembly sequence', H2),
-          P('Steps 1–4 are the same as V1 (rotor group, fins on the halves, close the housing, cartridge and cradle): see the V1 guide for the rotor/cap, hinge and seam-screw procedure; '
-            'the parts and screw positions are identical. Differences:', B)]
-    s += bullets(['<b>Seam screws</b> are at z=8 and z=44 inside the thick strips; both seam strips also take the tube screws at z=12 and z=36 centred on the seam, so those threads bite across the clamped halves.',
-                  '<b>Fins</b> have R29.9–32.3 shells: the cut-out pieces are added later (step 6), not now.',
-                  '<b>Top ring</b> (z 66.9–73) replaces the 18 mm upper sleeve; the rotor knob sits 5 mm above it inside the tube.'])
-    s += [fig('v2_halves.png', 130, 'V2 housing halves apart: the thick strips and the short top ring replace the upper sleeve.', 100),
+    s += [PageBreak(), P('6 &nbsp; Assembly sequence', H2),
+          P('The order is the same as the V1 guide (rotor group, fins on the halves, close the housing, cartridge and cradle, module into the lower tube). Differences:', B)]
+    s += bullets(['<b>Catch caps:</b> the finger points up. Offer each cap from below with the finger on the <b>outer</b> side of the arm tip; the screw is M3x8 at R20.4 (a clip with the arm in the open-top socket, boss under it).',
+                  '<b>Latch set-up:</b> with the rotor at 0° each finger must stand outside the lug wall of its fin. Swing a fin out by hand: it should stop after about 1 mm. Turn the rotor to the release angle: the fin must then swing free.',
+                  '<b>Seam screws:</b> the lower pair sit on ribs at z=8 as in V1; the upper pair (z=44) are M3x8 in the thick strips at R29.6, counterbore in the strip face at the window edge of the C2 side. Swing fin 2 (for the 45° seam) and fin 3 (225° seam) open to reach them.',
+                  '<b>Fins</b> have R29.9–32.3 shells with the lug at the top; the cut-out pieces are added in step 7.',
+                  '<b>Top ring</b> (z 54.6–58.8) replaces the 18 mm upper sleeve; the rotor knob (z 52–56) sits in it and the top bearing is at z 46–51.'])
+    s += [fig('v2_rotor_caps.png', 120, 'Caps offered up under the arms (fingers up), screws above.', 85),
+          fig('v2_halves.png', 130, 'V2 housing halves apart: the thick strips and the short top ring replace the upper sleeve.', 100),
           P('Step 5 – Module and lower tube', H3),
           P('Exactly as V1 step 5 (3 ring screws and 4 cradle screws M3x10 through the lower tube).', B),
-          P('Step 6 – Upper tube and the glued cut-outs', H3),
-          P('Close all four fins. Slide the airbrake head into the <b>upper tube from its cut end</b> (the tube butts the 4 mm stop ring at z=−11) and rotate it so the windows sit over the fins. '
-            'Fit the 8 M3x6 button-head screws through the tube into the strips: with the tube on, you should be able to see all eight pilot holes through the tube holes.', B),
+          P('Step 7 – Upper tube and the glued cut-outs', H3),
+          P('Close all four fins and lock the latch (rotor at 0°). Slide the airbrake head into the <b>upper tube from its cut end</b> (the tube butts the 4 mm stop ring at z=−11) and rotate it so the windows sit over the fins. '
+            'Fit the 8 M3x5 button-head screws through the tube into the strips: with the tube on you should see all eight pilot holes through the tube holes.', B),
           P('Now glue each cut-out onto its fin: wipe the fin’s outer face, put a thin layer of epoxy or CA gel on the fin (0.2 mm gap = glue line), place the cut-out in the window, '
             'and hold it with masking tape across the window until cured. <b>Keep glue off the window edges and the surrounding tube</b> (a strip of tape or wax on the tube edges) '
             'or the fin will be glued shut. After curing, cut any glue bridge and check that the fin lifts out of its window.', WARN),
-          P('Step 7 – Function check', H3)]
+          P('Step 8 – Function check', H3)]
     s += bullets(['Fins open to 90° carrying their cut-outs: the cut-out lower edge swings down through the open lower part of the window and clears the tube (checked at 15/40/65/90°, no interference).',
-                  'Rotor 0–65°; hooks release the tabs; cams kick the fins; trigger and return leaf as in V1.',
+                  'Latch: rotor 0° holds the fins; at the release angle the fins are free; the cams then kick them (rotor up to 65°).',
                   'Eight tube screws and seven lower-tube screws snug (15 screws touch the tubes in total).'])
     s += [fig('v2_overview_exploded.png', 100, 'V2 exploded: upper tube with its eight screws, rotor, fins with hinge screws and glued cut-outs, housing with supports, cartridge, cradle, lower tube.', 215),
           fig('v2_open.png', 75, 'V2-B: fins at 90° carrying their cut-outs, rotor at 65° (Onshape render).', 120)]
-    s += [P('6 &nbsp; Checks run on this model', H2),
+    s += [P('7 &nbsp; Checks run on this model', H2),
           table([['Check', 'Result'],
                  ['V2-A closed', verification_text('V2 closed')],
                  ['V2-B open (90°, 65°, 4.5 mm)', verification_text('V2 open')],
+                 ['Latch hold / release / cam timing', (f'blocked from {blocked:g}° fin opening at rotor 0°; free from rotor {free:g}°; cams first touch at {cam:g}°' if (blocked and free and cam) else 'see scan')],
                  ['Cut-outs TP1–4 vs housing, fins and tube at 15/40/65/90°', 'No overlap (they start at z=8 so the lower edge clears the stop block)'],
                  ['Diameters', 'Fin OD 64.6; tube ID 65.0; tube OD 66.04; support OD 64.6; stop ring OD 66.04 (all read from the CAD)'],
                  ['Seam screw access', 'Straight 2.5 mm hex key reaches all four heads with fins 2 and 3 open (ray test)'],
                  ['Assembly mates', '28 features (adds a group per fin with its cut-out): all solve OK']], [60, 120]),
-          P('<b>Open points for you:</b> (1) exposed band 4 mm vs printed stack 111 mm: the printed stack only shortens by 6.6 mm because the housing still has to carry the same mechanism. '
+          P('<b>Open points for you:</b> (1) The new catch is a different mechanism from your tab-and-hook; its strength and the 16° release angle have not been tested on a print. '
             '(2) The tube keeps only a 1.8 mm ring below the windows: epoxy it to the stop ring and rely on the eight screws. '
             '(3) Cam peak was reduced 29 → 28.6 mm for pillar clearance, which trims the kick slightly. (4) Mate motion not scripted: drag a fin in ASM-V2 to confirm.', WARN)]
     build_pdf(DOCS / 'V2_assembly_guide.pdf', 'V2 compact head assembly guide - ARC BT80 airbrake', s)
