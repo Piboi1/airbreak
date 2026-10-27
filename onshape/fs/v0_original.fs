@@ -1,0 +1,614 @@
+FeatureScript 3095;
+import(path : "onshape/std/geometry.fs", version : "3095.0");
+
+// Screw-free cam kick-out prototype; all angles are physical, not a force simulation.
+function solid(id is Id) returns Query
+{
+    return qBodyType(qCreatedBy(id, EntityType.BODY), BodyType.SOLID);
+}
+
+function cylinderMM(context is Context, id is Id, radius is number, z0 is number, z1 is number) returns Query
+{
+    fCylinder(context, id, { "bottomCenter" : vector(0, 0, z0) * millimeter,
+        "topCenter" : vector(0, 0, z1) * millimeter, "radius" : radius * millimeter });
+    return solid(id);
+}
+
+function subtract(context is Context, id is Id, target is Query, tools is Query)
+{
+    try { opBoolean(context, id, { "targets" : target, "tools" : tools,
+        "operationType" : BooleanOperationType.SUBTRACTION }); } catch { throw regenError("Subtraction failed at " ~ id); }
+}
+
+function tubeMM(context is Context, id is Id, ro is number, ri is number, z0 is number, z1 is number) returns Query
+{
+    var outer = cylinderMM(context, id + "outer", ro, z0, z1);
+    var inner = cylinderMM(context, id + "inner", ri, z0 - 0.1, z1 + 0.1);
+    subtract(context, id + "bore", outer, inner);
+    return outer;
+}
+
+function polygonMM(context is Context, id is Id, points is array, z is number, height is number) returns Query
+{
+    var verts = [];
+    for (var p in points)
+        verts = append(verts, p * millimeter);
+    verts = append(verts, verts[0]);
+    var sketch = newSketchOnPlane(context, id + "sketch", {
+        "sketchPlane" : plane(vector(0, 0, z) * millimeter, vector(0, 0, 1), vector(1, 0, 0)) });
+    skPolyline(sketch, "outline", { "points" : verts });
+    skSolve(sketch);
+    opExtrude(context, id + "extrude", { "entities" : qSketchRegion(id + "sketch"),
+        "direction" : vector(0, 0, 1), "endBound" : BoundingType.BLIND,
+        "endDepth" : height * millimeter });
+    opDeleteBodies(context, id + "deleteSketch", { "entities" : qCreatedBy(id + "sketch", EntityType.BODY) });
+    return solid(id + "extrude");
+}
+
+function rotate2(p is Vector, angle is ValueWithUnits) returns Vector
+{
+    return vector(p[0] * cos(angle) - p[1] * sin(angle), p[0] * sin(angle) + p[1] * cos(angle));
+}
+
+function radialBox(context is Context, id is Id, r0 is number, r1 is number,
+    y0 is number, y1 is number, z is number, h is number, angle is ValueWithUnits) returns Query
+{
+    var points = [];
+    for (var p in [vector(r0, y0), vector(r1, y0), vector(r1, y1), vector(r0, y1)])
+        points = append(points, rotate2(p, angle));
+    return polygonMM(context, id, points, z, h);
+}
+
+function label(context is Context, q is Query, name is string, rgb is array)
+{
+    setProperty(context, { "entities" : q, "propertyType" : PropertyType.NAME, "value" : name });
+    setProperty(context, { "entities" : q, "propertyType" : PropertyType.APPEARANCE,
+        "value" : color(rgb[0], rgb[1], rgb[2]) });
+}
+
+
+
+function yc(context is Context,id is Id,r is number,y0 is number,y1 is number) returns Query {
+ fCylinder(context,id,{"bottomCenter":vector(25,y0,0)*millimeter,"topCenter":vector(25,y1,0)*millimeter,"radius":r*millimeter});return solid(id);
+}
+function sector(context is Context,id is Id,ri is number,ro is number,half is number,z is number,h is number) returns Query {
+ var pts=[];
+ for(var k=0;k<=80;k+=1) {var t=(-half+2*half*k/80)*degree;pts=append(pts,vector(ro*cos(t),ro*sin(t)));}
+ for(var k=80;k>=0;k-=1) {var t=(-half+2*half*k/80)*degree;pts=append(pts,vector(ri*cos(t),ri*sin(t)));}
+ return polygonMM(context,id,pts,z,h);
+}
+function arcRootBrace(context is Context,id is Id) returns Query {
+ var sk=newSketchOnPlane(context,id+"sk",{"sketchPlane":plane(vector(0,7,0)*millimeter,vector(0,-1,0),vector(1,0,0))});
+ var points=[];for(var p in [vector(25.5,1.5),vector(31.5,4),vector(31.5,18),vector(25.5,5),vector(25.5,1.5)]) points=append(points,p*millimeter);
+ skPolyline(sk,"p",{"points":points});skSolve(sk);
+ opExtrude(context,id+"ex",{"entities":qSketchRegion(id+"sk"),"direction":vector(0,-1,0),"endBound":BoundingType.BLIND,"endDepth":14*millimeter});
+ opDeleteBodies(context,id+"del",{"entities":qCreatedBy(id+"sk",EntityType.BODY)});return solid(id+"ex");
+}
+function turn(context is Context,id is Id,b is Query,a is ValueWithUnits) {
+ opTransform(context,id,{"bodies":b,"transform":rotationAround(line(vector(0,0,0)*millimeter,vector(0,0,1)),a)});
+}
+annotation { "Feature Type Name" : "Positive cam kick-out and cord-limited BT80 airbrake" }
+export const camKickBrake = defineFeature(function(context is Context,id is Id,definition is map)
+ precondition {
+  annotation { "Name" : "Opening angle (degrees)", "Default" : 0 }
+  isReal(definition.opening, { (unitless) : [0,0,90] } as RealBoundSpec);
+  annotation { "Name" : "Top knob rotation - 0 locked, 65 kick", "Default" : 0 }
+  isReal(definition.release, { (unitless) : [0,0,65] } as RealBoundSpec);
+  annotation { "Name" : "Show cord reference lines", "Default" : false }
+  definition.cords is boolean;
+ }
+ {
+ var blue=[.18,.45,.65];var orange=[.95,.46,.12];var gold=[.8,.69,.25];
+ // Inline BT80 housing. Two 18 mm glue shoulders, 64.6 mm OD.
+ var carrier=tubeMM(context,id+"carrier",33.02,30.2,-15,67);
+ var base=tubeMM(context,id+"base",33.02,18,-15,-11);
+ var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,-33,-14.9);
+ var upper=tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,85);
+ opBoolean(context,id+"baseJoin",{"tools":qUnion([carrier,base,lower,upper]),"operationType":BooleanOperationType.UNION});
+ // Inward belt preserves a substantial fixed load path behind the recessed hook track.
+ var catchBelt=tubeMM(context,id+"recessCatchBelt",31,28.4,54.6,57.4);
+ opBoolean(context,id+"recessCatchBeltJoin",{"tools":qUnion([carrier,catchBelt]),"operationType":BooleanOperationType.UNION});
+ // Single rotor: 10 mm shaft, root cams, top capture crown, accessible knob.
+ var ring=cylinderMM(context,id+"rotorShaft",5,-10.5,78);
+ var points=[];
+ for(var k=0;k<720;k+=1) {
+  var theta=k*.5;var phase=90-(theta%90);if(phase==90) phase=0;
+  var r=21.0;
+  if(phase>24 && phase<60) r=21+8*(phase-24)/36;
+  if(phase>=60 && phase<=66) r=29;
+  if(phase>66 && phase<78) r=29-8*(phase-66)/12;
+  points=append(points,vector(r*cos(theta*degree),r*sin(theta*degree)));
+ }
+ var cam=polygonMM(context,id+"camProfile",points,22,3);
+ var crownHub=cylinderMM(context,id+"crownHub",9,58.6,61.6);
+ var lowThrust=cylinderMM(context,id+"lowThrust",7,-5.5,-3.5);
+ var highThrust=cylinderMM(context,id+"highThrust",7,65.5,67.5);
+ var knob=cylinderMM(context,id+"knob",10,74,78);
+ var finger=sector(context,id+"finger",8,16,4,74,4);
+ opBoolean(context,id+"rotorJoin",{"tools":qUnion([ring,cam,crownHub,lowThrust,highThrust,knob,finger]),"operationType":BooleanOperationType.UNION});
+ // Split fixed bearing bridge and bottom bearing, assembled around the rotor.
+ var topBearing=tubeMM(context,id+"topBearing",18,5.4,68,73);
+ var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,-15,-6);
+ for(var i=0;i<4;i+=1) {
+  var a=(45+i*90)*degree;
+  var spoke=radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68,4,a);
+  var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,20,-2.5,2.5,-15,4,a);
+  opBoolean(context,id+("topSpokeJoin"~i),{"tools":qUnion([topBearing,spoke]),"operationType":BooleanOperationType.UNION});
+  opBoolean(context,id+("lowSpokeJoin"~i),{"tools":qUnion([lowBearing,lowSpoke]),"operationType":BooleanOperationType.UNION});
+ }
+ opBoolean(context,id+"bearingsJoin",{"tools":qUnion([carrier,topBearing,lowBearing]),"operationType":BooleanOperationType.UNION});
+ for(var j=0;j<2;j+=1) {
+  var stop=sector(context,id+("knobStop"~j),12,18,4,72.5,5.9);
+  turn(context,id+("knobStopTurn"~j),stop,(j==0?-8:73)*degree);
+  opBoolean(context,id+("knobStopJoin"~j),{"tools":qUnion([carrier,stop]),"operationType":BooleanOperationType.UNION});
+ }
+ for(var i=0;i<4;i+=1) {
+  var sub=id+("panel"~i);var a=i*90*degree;
+  var window=sector(context,sub+"window",29.5,34,33.5,-9.2,63.8);
+  turn(context,sub+"windowTurn",window,a);subtract(context,sub+"windowCut",carrier,window);
+  // A narrow passage admits only the raised panel tab through the fixed upper rim.
+  var tipSlot=sector(context,sub+"tipSlot",27.6,38,8,50.8,8.6);
+  turn(context,sub+"tipSlotTurn",tipSlot,a);subtract(context,sub+"tipSlotCut",carrier,tipSlot);
+  // Crown arms sweep above the fixed anchor belt; four remaining pillars carry the top.
+  var sweepSlot=sector(context,sub+"crownSlot",29.5,37,41,57.3,6.1);
+  turn(context,sub+"crownSlotTurn",sweepSlot,a+32.5*degree);
+  subtract(context,sub+"crownSlotCut",carrier,sweepSlot);
+  var catchArm=radialBox(context,sub+"catchArm",6,30,-2.5,2.5,58.6,3,0*degree);
+  turn(context,sub+"catchTurn",catchArm,a);
+  opBoolean(context,sub+"rotorCatchJoin",{"tools":qUnion([ring,catchArm]),"operationType":BooleanOperationType.UNION});
+  // Install these four keyed catch caps radially AFTER closing the housing around the rotor.
+  var catchCap=radialBox(context,sub+"catchCap",22,32.6,-4.2,4.2,57.4,5.4,0*degree);
+  var catchHook=sector(context,sub+"catchHook",30.9,32.8,5.2,55.2,5.0);
+  opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchHook]),"operationType":BooleanOperationType.UNION});
+  var catchSocket=radialBox(context,sub+"catchSocket",21.9,30.4,-2.75,2.75,58.4,3.4,0*degree);
+  subtract(context,sub+"catchSocketCut",catchCap,catchSocket);
+  turn(context,sub+"capPosition",catchCap,a+definition.release*degree);
+  label(context,catchCap,"L"~(i+1)~" Recessed catch cap - R32.8 outer limit - bond to rotor arm",[.20,.58,.34]);
+  var ears=[];
+  for(var j=0;j<2;j+=1) {
+   var y0=j==0?-12:7.8;var y1=y0+4.2;
+   var ear=yc(context,sub+("ear"~j),5.2,y0,y1);
+   var arm=radialBox(context,sub+("arm"~j),20.5,28.5,y0,y1,-15,15,0*degree);
+   opBoolean(context,sub+("earJoin"~j),{"tools":qUnion([ear,arm]),"operationType":BooleanOperationType.UNION});
+   subtract(context,sub+("earBore"~j),ear,yc(context,sub+("earTool"~j),2.45,y0-.1,y1+.1));
+   ears=append(ears,ear);
+  }
+  var stop=radialBox(context,sub+"stop",22,28,-13,13,-15,8.5,0*degree);
+  opBoolean(context,sub+"bracketJoin",{"tools":qUnion(append(ears,stop)),"operationType":BooleanOperationType.UNION});
+  var stopPad=radialBox(context,sub+"wideStop",26,28.8,-7,7,-15,8.5,0*degree);
+  opBoolean(context,sub+"wideStopJoin",{"tools":qUnion([ears[0],stopPad]),"operationType":BooleanOperationType.UNION});
+  var outerStop=radialBox(context,sub+"outerCompressionStop",27,32.8,-6,6,-15,7.6,0*degree);
+  opBoolean(context,sub+"outerStopJoin",{"tools":qUnion([ears[0],outerStop]),"operationType":BooleanOperationType.UNION});
+  var bracket=ears[0];turn(context,sub+"bracketTurn",bracket,a);
+  opBoolean(context,sub+"carrierJoin",{"tools":qUnion([carrier,bracket]),"operationType":BooleanOperationType.UNION});
+  var panel=sector(context,sub+"shell",30.62,33.02,32.5,4,50);
+  var barrel=yc(context,sub+"barrel",4.8, -7.4,7.4);
+  var web=radialBox(context,sub+"web",24,31.5,-7.4,7.4,0,10,0*degree);
+  var pad=sector(context,sub+"rootPad",28.8,31.3,22,4,14);
+  var brace=arcRootBrace(context,sub+"brace");
+  opBoolean(context,sub+"leafJoin",{"tools":qUnion([panel,barrel,web,pad,brace]),"operationType":BooleanOperationType.UNION});
+  // A recessed flat root landing transfers 90-degree load to the broad outer stop.
+  var landing=radialBox(context,sub+"landing",29,32.4,-6,6,4,4,0*degree);
+  opBoolean(context,sub+"landingJoin",{"tools":qUnion([panel,landing]),"operationType":BooleanOperationType.UNION});
+  subtract(context,sub+"landingFlat",panel,radialBox(context,sub+"landingTool",32.4,35,-6,6,4,4,0*degree));
+  subtract(context,sub+"leafBore",panel,yc(context,sub+"leafTool",2.45,-7.5,7.5));
+  subtract(context,sub+"earClearA",panel,yc(context,sub+"earClearToolA",5.5,-12.3,-7.7));
+  subtract(context,sub+"earClearB",panel,yc(context,sub+"earClearToolB",5.5,7.7,12.3));
+  // Set the narrow held tab 2.6 mm inward; retain full thickness with a stepped root.
+  subtract(context,sub+"tipRecessCut",panel,sector(context,sub+"tipRecessTool",30.42,34,5.8,51,3.1));
+  var tip=sector(context,sub+"tip",27.9,30.42,5,51,6.0);
+  var tipRoot=sector(context,sub+"recessTipRoot",27.9,33.02,6.8,47,4.2);
+  opBoolean(context,sub+"recessTipRootJoin",{"tools":qUnion([panel,tipRoot]),"operationType":BooleanOperationType.UNION});
+  // Broad inward follower: root cam acts here, well below the airflow opening.
+  var follower=radialBox(context,sub+"follower",23,31.3,-4,4,20,9,0*degree);
+  opBoolean(context,sub+"solidPanelJoin",{"tools":qUnion([panel,tip,follower]),"operationType":BooleanOperationType.UNION});
+  opTransform(context,sub+"open",{"bodies":panel,"transform":rotationAround(line(vector(25,0,0)*millimeter,vector(0,1,0)),definition.opening*degree)});
+  turn(context,sub+"leafTurn",panel,a);
+  label(context,panel,"P"~(i+1)~" Cam-driven BT80 panel - solid shell - reinforced root - 90 degree stop",orange);
+  var pin=yc(context,sub+"pin",2.1,-12.5,16);
+  var head=yc(context,sub+"head",3.4,-14.7,-12.3);
+  opBoolean(context,sub+"pinJoin",{"tools":qUnion([pin,head]),"operationType":BooleanOperationType.UNION});
+  turn(context,sub+"pinTurn",pin,a);label(context,pin,"H"~(i+1)~" Printed hinge pin - 4.2 mm shaft",gold);
+  var cap=yc(context,sub+"cap",3.4,12.5,16.8);
+  subtract(context,sub+"capBore",cap,yc(context,sub+"capTool",2.35,12.4,16.2));
+  turn(context,sub+"capTurn",cap,a);label(context,cap,"K"~(i+1)~" Deep pin end cap - 3.5 mm bond overlap - bond pin only",gold);
+ }
+ // Clear the complete hook path AFTER fixed cord anchors have been joined.
+ for(var i=0;i<4;i+=1) {
+  var sub=id+("finalHookTrack"~i);var a=i*90*degree;
+  // Recessed hook travels inside the skin; leave the inner belt intact.
+  var hookTrack=sector(context,sub+"recessHookTrack",30.65,34,40,55.0,2.5);
+  turn(context,sub+"recessHookTrackTurn",hookTrack,a+32.5*degree);
+  subtract(context,sub+"recessHookTrackCut",carrier,hookTrack);
+ }
+ // Local access pockets for larger pin heads and deep caps, inside the tube envelope.
+ for(var i=0;i<4;i+=1) {
+  var a=i*90*degree;
+  var h=yc(context,id+("headPocket"~i),3.7,-15.1,-12.1);
+  var c=yc(context,id+("capPocket"~i),3.7,12.2,17.1);
+  turn(context,id+("hpTurn"~i),h,a);turn(context,id+("cpTurn"~i),c,a);
+  subtract(context,id+("hpCut"~i),carrier,h);subtract(context,id+("cpCut"~i),carrier,c);
+ }
+ // Lightweight internal relief. Exterior skins, hinge brackets and stop faces remain.
+ for(var i=0;i<8;i+=1) {
+  var a=(22.5+45*i)*degree;
+  // Leave axial ribs and full end bands on the tube glue shoulders.
+  var up=sector(context,id+("upperRelief"~i),29.8,30.7,17,69,13.5);
+  turn(context,id+("upperReliefTurn"~i),up,a);subtract(context,id+("upperReliefCut"~i),carrier,up);
+  // Lower collar bond occupies z=-35..-20; do not thin that interface.
+  var lo=sector(context,id+("lowerRelief"~i),29.8,30.7,17,-19.5,3);
+  turn(context,id+("lowerReliefTurn"~i),lo,a);subtract(context,id+("lowerReliefCut"~i),carrier,lo);
+ }
+ for(var i=0;i<4;i+=1) {
+  var a=i*90*degree;
+  // Bearing diaphragm has a 2 mm skin, radial spokes and a full shaft boss.
+  var topPocket=sector(context,id+("bearingRelief"~i),8.5,15.5,29,70,3.1);
+  turn(context,id+("bearingReliefTurn"~i),topPocket,a);subtract(context,id+("bearingReliefCut"~i),carrier,topPocket);
+  // Between hinge brackets: blind underside pockets leave a 2 mm base skin.
+  var bottomPocket=sector(context,id+("baseRelief"~i),18.5,29,15,-15.1,2.1);
+  turn(context,id+("baseReliefTurn"~i),bottomPocket,a+45*degree);subtract(context,id+("baseReliefCut"~i),carrier,bottomPocket);
+  // Remove only the central underside of each stop block; retain a 3.5 mm roof.
+  var pocket=radialBox(context,id+("stopRelief"~i),23.5,26.5,-8,8,-15.1,5.1,a);
+  subtract(context,id+("stopReliefCut"~i),carrier,pocket);
+  // Cam windows leave an 8 mm hub, four spokes and at least 3 mm outer track.
+  var camPocket=sector(context,id+("camRelief"~i),8,18,30,21.9,3.2);
+  turn(context,id+("camReliefTurn"~i),camPocket,a);subtract(context,id+("camReliefCut"~i),ring,camPocket);
+ }
+ // Open axial bore is printable without trapped support; solid D extension is added later.
+ subtract(context,id+"rotorLightBore",ring,cylinderMM(context,id+"rotorLightTool",3,-8,78.1));
+ // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.
+ for(var side=0;side<2;side+=1) {
+  var a=(45+side*180)*degree;
+  var seamBoss=radialBox(context,id+("seamBoss"~side),26,32.5,-3.5,3.5,63,4,a);
+  opBoolean(context,id+("seamBossJoin"~side),{"tools":qUnion([carrier,seamBoss]),"operationType":BooleanOperationType.UNION});
+ }
+ var seamNormal=normalize(vector(1,-1,0));
+ opSplitPart(context,id+"housingSplit",{"targets":carrier,"tool":plane(vector(0,0,0)*millimeter,seamNormal)});
+ var halves=evaluateQuery(context,carrier);
+ for(var j=0;j<size(halves);j+=1) label(context,halves[j],"C"~(j+1)~" Split BT80 housing - align and bond stationary seams",blue);
+ // Identify the two sides using their volume centroids, independent of topology order.
+ var negative=halves[0];var positive=halves[1];
+ if(dot(evApproximateCentroid(context,{"entities":negative})/millimeter,seamNormal)>0) {negative=halves[1];positive=halves[0];}
+ for(var side=0;side<2;side+=1) for(var level=0;level<2;level+=1) {
+  var a=(45+side*180)*degree;var r=level==0?24:29;var z=level==0?-13:65;
+  var p=vector(r*cos(a),r*sin(a),z);var sub=id+("key"~side~level);
+  fCylinder(context,sub+"peg",{"bottomCenter":(p-1.6*seamNormal)*millimeter,"topCenter":(p+2.2*seamNormal)*millimeter,"radius":1.5*millimeter});
+  opBoolean(context,sub+"pegJoin",{"tools":qUnion([negative,solid(sub+"peg")]),"operationType":BooleanOperationType.UNION});
+  fCylinder(context,sub+"socket",{"bottomCenter":(p-.1*seamNormal)*millimeter,"topCenter":(p+2.6*seamNormal)*millimeter,"radius":1.8*millimeter});
+  subtract(context,sub+"socketCut",positive,solid(sub+"socket"));
+ }
+ turn(context,id+"releaseTurn",ring,definition.release*degree);
+ label(context,ring,"R Top knob + keyed crown arms + four kick cams - 0 LOCK 65 OPEN",[.28,.68,.42]);
+ // Reference lines are schematic loaded cord paths, not printable parts or elastic ropes.
+ if(definition.cords) for(var i=0;i<4;i+=1) for(var side=0;side<2;side+=1) {
+  var a=i*90*degree;var sign=side==0?-1:1;var t=definition.opening*degree;
+  var xp=25+2*cos(t)+40*sin(t);var zp=-2*sin(t)+40*cos(t);
+  var start=vector(25.3*cos(a)-sign*12*sin(a),25.3*sin(a)+sign*12*cos(a),52)*millimeter;
+  var end=vector(xp*cos(a)-sign*13.5*sin(a),xp*sin(a)+sign*13.5*cos(a),zp)*millimeter;
+  fCylinder(context,id+("cordRef"~i~"s"~side),{"bottomCenter":start,"topCenter":end,"radius":.35*millimeter});
+  label(context,solid(id+("cordRef"~i~"s"~side)),"V CORD REFERENCE - not for printing",[.7,.2,.65]);
+ }
+ });
+
+function atC(context is Context,id is Id,r is number,z0 is number,z1 is number,x is number,y is number) returns Query {
+ fCylinder(context,id,{"bottomCenter":vector(x,y,z0)*millimeter,"topCenter":vector(x,y,z1)*millimeter,"radius":r*millimeter});return solid(id);
+}
+function dKey(context is Context,id is Id,r is number,flat is number,z0 is number,z1 is number) returns Query {
+ var b=cylinderMM(context,id+"body",r,z0,z1);
+ subtract(context,id+"flatCut",b,radialBox(context,id+"flat",flat,r+1,-r-1,r+1,z0-.1,z1-z0+.2,0*degree));return b;
+}
+function springCore(context is Context,id is Id,q is number,t is number,printable is boolean) returns Query {
+ var frame=tubeMM(context,id+"rim",20.5,19,90,98);
+ var hub=cylinderMM(context,id+"hub",10,90,98);
+ var left=[];var right=[];
+ for(var k=0;k<=240;k+=1) {
+  var u=k/240;var r=10.5+7.5*u;var a=(720*u+q*(1-u))*degree;var da=(720-q)*degree/radian;
+  var tangent=vector(7.5*cos(a)-r*da*sin(a),7.5*sin(a)+r*da*cos(a));var n=normalize(vector(-tangent[1],tangent[0]));var p=vector(r*cos(a),r*sin(a));
+  left=append(left,p+t/2*n);right=append(right,p-t/2*n);
+ }
+ var outline=left;for(var k=size(right)-1;k>=0;k-=1)outline=append(outline,right[k]);
+ var beam=polygonMM(context,id+"beam",outline,90,8);
+ var anchor=radialBox(context,id+"anchor",17,20.4,-2,2,90,8,0*degree);
+ try { opBoolean(context,id+"join",{"tools":qUnion([frame,hub,beam,anchor]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"join"); }
+ var key=dKey(context,id+"socket",6.3,5.1,89.9,98.1);turn(context,id+"keyTurn",key,q*degree);subtract(context,id+"socketCut",frame,key);
+ for(var k=0;k<3;k+=1) {
+  var tab=radialBox(context,id+("tab"~k),19.5,21.7,-1.4,1.4,90,8,k*120*degree);
+  try { opBoolean(context,id+("tabJoin"~k),{"tools":qUnion([frame,tab]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+("tabJoin"~k)); }
+ }
+ label(context,frame,(printable?"S UNLOADED PRINTABLE spiral - ":"V LOADED SPIRAL REFERENCE - NOT FOR PRINT - ")~t~" mm beam",[.58,.35,.8]);return frame;
+}
+function returnLeaf(context is Context,id is Id,stroke is number) returns Query {
+ var dir=normalize(vector(24,19,0));var normal=normalize(vector(19,-24,0));var length=sqrt(24*24+19*19);
+ var points=[];
+ for(var k=0;k<=40;k+=1) {var t=k/40;points=append(points,vector(length*t,-stroke*(3*t*t-t*t*t)/2)*millimeter);}
+ for(var k=40;k>=0;k-=1) {var t=k/40;points=append(points,vector(length*t,.8-stroke*(3*t*t-t*t*t)/2)*millimeter);}
+ points=append(points,points[0]);
+ var sk=newSketchOnPlane(context,id+"sk",{"sketchPlane":plane((vector(-6,-19,121)-normal*3.5)*millimeter,normal,dir)});
+ skPolyline(sk,"p",{"points":points});skSolve(sk);
+ opExtrude(context,id+"ex",{"entities":qSketchRegion(id+"sk"),"direction":normal,"endBound":BoundingType.BLIND,"endDepth":7*millimeter});
+ opDeleteBodies(context,id+"del",{"entities":qCreatedBy(id+"sk",EntityType.BODY)});
+ var b=solid(id+"ex");subtract(context,id+"fork",b,atC(context,id+"forkTool",2.4,115,123,18,0));
+ label(context,b,"W Button return leaf - flat at rest - elastic motion not solved",[.58,.35,.8]);return b;
+}
+annotation { "Feature Type Name" : "BT80 modular spring or direct SG90 drive" }
+export const modularBrake = defineFeature(function(context is Context,id is Id,definition is map)
+ precondition {
+  annotation {"Name":"Module: 0 spring, 1 direct servo, 2 unloaded spring samples","Default":0} isInteger(definition.mode,{(unitless):[0,0,2]} as IntegerBoundSpec);
+  annotation {"Name":"Panel opening degrees","Default":0} isReal(definition.opening,{(unitless):[0,0,90]} as RealBoundSpec);
+  annotation {"Name":"Drive rotation degrees","Default":0} isReal(definition.release,{(unitless):[0,0,65]} as RealBoundSpec);
+  annotation {"Name":"Upward trigger stroke mm","Default":0} isReal(definition.button,{(unitless):[0,0,4.5]} as RealBoundSpec);
+ }
+ {
+ var stage="initial";try {
+ if(definition.mode==2) {
+  for(var k=0;k<3;k+=1) {
+   var b=springCore(context,id+("sample"~k),90,1.6+.4*k,true);
+   opTransform(context,id+("sampleMove"~k),{"bodies":b,"transform":transform(vector(65*k,0,-90)*millimeter)});
+  }
+  var leaf=returnLeaf(context,id+"unloadedReturn",1);
+  label(context,leaf,"W UNLOADED return leaf - 1 mm installation preload - bond root only",[.58,.35,.8]);
+  opTransform(context,id+"unloadedReturnMove",{"bodies":leaf,"transform":transform(vector(195,0,-120)*millimeter)});
+  return;
+ }
+ stage="base feature";
+ camKickBrake(context,id+"brake",{"opening":definition.opening,"release":definition.release,"cords":false});
+ stage="base query";
+ var baseBodies=qUnion(evaluateQuery(context,qBodyType(qEverything(EntityType.BODY),BodyType.SOLID)));
+ var rotor=solid(id+"brake"+"rotorShaft");
+ stage="shaft extension";
+ var key=dKey(context,id+"commonKey",5,3.8,-24,-10.4);turn(context,id+"commonKeyTurn",key,definition.release*degree);
+ try { opBoolean(context,id+"commonKeyJoin",{"tools":qUnion([rotor,key]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"commonKeyJoin"); }
+ label(context,rotor,"R Ribbed lightweight cam rotor - 2 mm shaft wall - solid bottom D-drive",[.28,.68,.42]);
+ // Stationary common dock. Bond its four feet onto the fixed bearing bridge.
+ stage="dock";
+ var dock=tubeMM(context,id+"dock",29.5,27.8,80,94);
+ for(var k=0;k<4;k+=1) {
+  var a=(45+90*k)*degree;
+  var foot=radialBox(context,id+("dockFoot"~k),30,32,-2.5,2.5,77,34,a);
+  var bridge=radialBox(context,id+("dockBridge"~k),27,32,-2.5,2.5,80,3,a);
+  var top=radialBox(context,id+("dockTop"~k),27,32,-2.5,2.5,108,3,a);
+  opBoolean(context,id+("dockFootJoin"~k),{"tools":qUnion([dock,foot,bridge,top]),"operationType":BooleanOperationType.UNION});
+ }
+ var bondRing=tubeMM(context,id+"dockBondRing",29.4,26.8,110,125);
+ opBoolean(context,id+"dockBondJoin",{"tools":qUnion([dock,bondRing]),"operationType":BooleanOperationType.UNION});
+ subtract(context,id+"bayonetChannel",dock,tubeMM(context,id+"channelTool",30,28.5,89.5,92.5));
+ for(var k=0;k<3;k+=1) {
+  var slot=sector(context,id+("entry"~k),26.8,30,8,89.4,4.7);turn(context,id+("entryTurn"~k),slot,k*90*degree);subtract(context,id+("entryCut"~k),dock,slot);
+ }
+ subtract(context,id+"indexSlot",dock,radialBox(context,id+"indexTool",26.8,30,-2.3,2.3,83.8,10.3,180*degree));
+ stage="retainer";
+ var lock=tubeMM(context,id+"lockRing",32,30,88,98.5);
+ var flange=tubeMM(context,id+"lockFlange",32,27.8,96.5,98.5);
+ try { opBoolean(context,id+"lockFlangeJoin",{"tools":qUnion([lock,flange]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"lockFlangeJoin"); }
+ for(var k=0;k<3;k+=1) {
+  var lug=sector(context,id+("lockLug"~k),28.8,30.5,6,90,2);turn(context,id+("lockLugTurn"~k),lug,(20+90*k)*degree);
+  try { opBoolean(context,id+("lockLugJoin"~k),{"tools":qUnion([lock,lug]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+("lockLugJoin"~k)); }
+ }
+ for(var k=0;k<4;k+=1) {
+ var tool=sector(context,id+("legTool"~k),29.7,33,16,87.9,10.8);
+ turn(context,id+("legToolTurn"~k),tool,(55+90*k)*degree);
+ subtract(context,id+("legClear"~k),lock,tool);
+ }
+
+ var px=28.7*cos(90*degree);var py=28.7*sin(90*degree);
+ subtract(context,id+"dockLockHole",dock,atC(context,id+"dockDrill",1.9,92.4,94.1,px,py));
+ subtract(context,id+"ringLockHole",lock,atC(context,id+"ringDrill",1.9,89,99,px,py));
+ var lockPin=atC(context,id+"lockPin",1.6,92.8,99,px,py);
+ var pinHead=atC(context,id+"lockHead",3.2,98.6,99.8,px,py);
+ try { opBoolean(context,id+"lockPinJoin",{"tools":qUnion([lockPin,pinHead]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"lockPinJoin"); }
+ label(context,dock,"D Shared stationary cartridge dock - bond feet to fixed bridge",[.18,.45,.65]);
+ label(context,lock,"N Independent bayonet retaining collar - turn 20 deg to unlock",[.8,.69,.25]);
+ label(context,lockPin,"I Quarter-turn cartridge locking pin - wing capture - witness mark",[.8,.69,.25]);
+ // Same casing and mounting datums for both cartridges.
+ stage="casing";
+ var casing=tubeMM(context,id+"caseFloor",23,8.4,84,87);
+ var wall=tubeMM(context,id+"caseWall",23,20.8,86.5,100);
+ var rim=tubeMM(context,id+"caseFlange",28.6,20.8,94,96);
+ var index=radialBox(context,id+"caseIndex",22,28.4,-2,2,84,5,180*degree);
+ try { opBoolean(context,id+"caseJoin",{"tools":qUnion([casing,wall,rim,index]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"caseJoin"); }
+ subtract(context,id+"caseLockHole",casing,atC(context,id+"caseDrill",1.9,92.4,100.1,px,py));
+ subtract(context,id+"lockHeadAccess",casing,atC(context,id+"headAccessTool",3.5,98.4,100.1,px,py));
+ // Quarter-turn keyed pin: align wing with slot to insert, then turn 90 degrees.
+ var wing=radialBox(context,id+"lockWing",px-3.1,px+3.1,py-.8,py+.8,95,1.2,0*degree);
+ opBoolean(context,id+"lockWingJoin",{"tools":qUnion([lockPin,wing]),"operationType":BooleanOperationType.UNION});
+ subtract(context,id+"wingCaseClear",casing,atC(context,id+"wingCaseTool",3.5,94.8,96.4,px,py));
+ subtract(context,id+"wingCollarSweep",lock,atC(context,id+"wingSweepTool",3.4,94.8,96.4,px,py));
+ subtract(context,id+"wingEntry",lock,radialBox(context,id+"wingEntryTool",px-1.1,px+1.1,py-3.4,py+3.4,96.3,2.3,0*degree));
+ // Rigid locating posts: lid slips on and is bonded; no forced PLA snaps.
+ for(var k=0;k<3;k+=1) {
+  var a=(60+120*k)*degree;
+  var post=radialBox(context,id+("post"~k),19.5,23,-2.5,2.5,98.8,6.7,a);
+  opBoolean(context,id+("postJoin"~k),{"tools":qUnion([casing,post]),"operationType":BooleanOperationType.UNION});
+  var a2=k*120*degree;
+  subtract(context,id+("springKeySlot"~k),casing,radialBox(context,id+("springKeyTool"~k),20.3,23.1,-1.7,1.7,89.8,10.3,a2));
+ }
+ stage="lid";
+ var lid=tubeMM(context,id+"lid",23,definition.mode==1?14:8.4,100,104);
+ for(var k=0;k<3;k+=1) subtract(context,id+("lidClipSlot"~k),lid,radialBox(context,id+("lidClipTool"~k),19.2,23.3,-2.8,2.8,99.9,4.2,(60+120*k)*degree));
+ label(context,casing,"M Interchangeable cartridge casing - common mounting flange",[.23,.55,.70]);
+ stage="drive hub";
+ var drive=cylinderMM(context,id+"driveSleeve",8,81,90);
+ var bottomLip=tubeMM(context,id+"bottomLip",10,8.25,81,83.5);
+ label(context,bottomLip,"Q Separate lower thrust collar - bond to hub after insertion",[.28,.68,.42]);
+ var topLip=tubeMM(context,id+"topLip",10,7.9,87.5,89.5);
+ try { opBoolean(context,id+"driveLipJoin",{"tools":qUnion([drive,topLip]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"driveLipJoin"); }
+ subtract(context,id+"driveSocket",drive,dKey(context,id+"driveTool",5.3,4.1,80.9,89.2));
+ stage="spring branch";
+ if(definition.mode==0) {
+  var stem=dKey(context,id+"springDriveStem",6,4.8,89.5,120);
+  // Separate adapter permits lid and winding cap installation over the 12 mm D stem.
+  var coupler=cylinderMM(context,id+"upperCoupler",8.5,113.5,120.5);
+  var nose=cylinderMM(context,id+"couplerNose",7,120.4,129.5);
+  opBoolean(context,id+"couplerNoseJoin",{"tools":qUnion([coupler,nose]),"operationType":BooleanOperationType.UNION});
+  subtract(context,id+"upperSocket",coupler,dKey(context,id+"upperSocketTool",5.3,4.1,120.5,129.6));
+  subtract(context,id+"lowerSocket",coupler,dKey(context,id+"lowerSocketTool",6.25,5.05,113.4,120.2));
+  turn(context,id+"couplerTurn",coupler,definition.release*degree);
+  label(context,coupler,"X Separate double-D adapter - fit last - axially captured between shafts",[.28,.68,.42]);
+  var latchDisk=cylinderMM(context,id+"latchDisk",14,106,109);
+  subtract(context,id+"latchNotch",latchDisk,sector(context,id+"latchNotchTool",10.5,15,9,105.9,3.2));
+  var windKnob=cylinderMM(context,id+"windKnob",9,110,113);
+  opBoolean(context,id+"driveStemJoin",{"tools":qUnion([drive,stem]),"operationType":BooleanOperationType.UNION});
+  var capNeck=cylinderMM(context,id+"capNeck",7,108.8,110.2);
+  opBoolean(context,id+"capJoin",{"tools":qUnion([latchDisk,capNeck,windKnob]),"operationType":BooleanOperationType.UNION});
+  subtract(context,id+"capSocket",latchDisk,dKey(context,id+"capSocketTool",6.25,5.05,105.9,113.1));
+  turn(context,id+"capTurn",latchDisk,definition.release*degree);
+  label(context,latchDisk,"T Separate keyed winding and latch cap - attach after lid",[.28,.68,.42]);
+ stage="loaded spiral";
+  springCore(context,id+"loadedSpring",definition.release,2.0,false);
+  // Upward-only latch: tooth withdraws above the disk. +Z points toward the nose.
+ stage="upward latch";
+  var plunger=atC(context,id+"plunger",2,104,125,18,0);
+  var yoke=radialBox(context,id+"plungerFoot",10.5,24,-3,3,115,4,0*degree);
+  var tooth=radialBox(context,id+"latchTooth",11,13.5,-1.7,1.7,106,9.2,0*degree);
+  var seat=atC(context,id+"returnSeat",3.5,122.2,123.2,18,0);
+  opBoolean(context,id+"upLatchJoin",{"tools":qUnion([plunger,yoke,tooth,seat]),"operationType":BooleanOperationType.UNION});
+  var sideYoke=radialBox(context,id+"sideYoke",20.2,26.8,-1,9.5,115,4,0*degree);
+  opBoolean(context,id+"sideYokeJoin",{"tools":qUnion([plunger,sideYoke]),"operationType":BooleanOperationType.UNION});
+  var cup=atC(context,id+"rodCup",3.3,115,120,23.5,9.5);
+  opBoolean(context,id+"cupJoin",{"tools":qUnion([plunger,cup]),"operationType":BooleanOperationType.UNION});
+  subtract(context,id+"rodSocket",plunger,atC(context,id+"rodSocketTool",2.05,114.9,117.5,23.5,9.5));
+  // Separate side rod inserts from below into the blind yoke cup.
+  var button=atC(context,id+"button",1.8,75.3,117.5,23.5,9.5);
+  var pad=atC(context,id+"buttonPad",3,73.3,75.5,23.5,9.5);
+  opBoolean(context,id+"rodPadJoin",{"tools":qUnion([button,pad]),"operationType":BooleanOperationType.UNION});
+  if(definition.button>0) {
+   opTransform(context,id+"buttonHeadPress",{"bodies":button,"transform":transform(vector(0,0,definition.button)*millimeter)});
+   opTransform(context,id+"buttonPress",{"bodies":plunger,"transform":transform(vector(0,0,definition.button)*millimeter)});
+  }
+  label(context,button,"A Short side pushrod - 3.6 mm - unbonded blind cup",[.88,.26,.32]);
+  label(context,plunger,"B Upward release yoke - lift 4.5 mm - square locking tooth",[.88,.26,.32]);
+  var guide=atC(context,id+"guide",4,108,115,18,0);
+  subtract(context,id+"guideBore",guide,atC(context,id+"guideDrill",2.4,107.9,115.1,18,0));
+  var bridge=radialBox(context,id+"guideBridge",18,25,-5,5,112,3,0*degree);
+  subtract(context,id+"bridgeBore",bridge,atC(context,id+"bridgeDrill",2.4,111.9,115.1,18,0));
+  var post=radialBox(context,id+"guidePost",21.5,26,-5,5,102.8,12.2,0*degree);
+  var leafRoot=radialBox(context,id+"leafRoot",-10,-2,-23,-15,102.8,20.4,0*degree);
+  opBoolean(context,id+"lidGuideJoin",{"tools":qUnion([lid,guide,bridge,post,leafRoot]),"operationType":BooleanOperationType.UNION});
+  var returnSpring=returnLeaf(context,id+"buttonReturn",-definition.button);
+  opTransform(context,id+"returnHeight",{"bodies":returnSpring,"transform":transform(vector(0,0,2.2)*millimeter)});
+  label(context,returnSpring,"W Return leaf LOADED REFERENCE - use preloaded printable sample",[.58,.35,.8]);
+ stage="lower servo cradle";
+  var servo=radialBox(context,id+"servo",-15.6,-3.4,3,27,-57.5,23,0*degree);
+  label(context,servo,"E SG90 envelope REFERENCE - below entire housing - measure actual servo",[.35,.38,.43]);
+  var mount=tubeMM(context,id+"lowerMountRing",29.4,26.8,-35,-30);
+  var cradle=radialBox(context,id+"cradleBase",-18.4,-.6,2.5,29.5,-60.5,3,0*degree);
+  var rail1=radialBox(context,id+"cradleRail1",-18.4,-16,2.5,27.4,-58,23.5,0*degree);
+  var rail2=radialBox(context,id+"cradleRail2",-3,-.6,4.5,27.4,-58,23.5,0*degree);
+  var back=radialBox(context,id+"cradleBack",-18.4,-.6,27.2,29.5,-58,23.5,0*degree);
+  var post1=radialBox(context,id+"lowerPost1",-7.5,-4.5,27,28.3,-58,28,0*degree);
+  var post2=radialBox(context,id+"lowerPost2",-28,-26,0,8,-58,28,0*degree);
+  var outrigger=radialBox(context,id+"lowerOutrigger",-28,-15,2,6,-60.5,3,0*degree);
+  var rodGuide=atC(context,id+"lowerRodGuide",4,-34.3,-30,0,0);
+  subtract(context,id+"lowerRodBore",rodGuide,atC(context,id+"lowerRodDrill",2.05,-34.4,-29.9,0,0));
+  var crossbar=radialBox(context,id+"lowerCrossbar",-28,0,-2,2,-34,4,0*degree);
+  subtract(context,id+"crossbarBore",crossbar,atC(context,id+"crossbarDrill",2.05,-34.1,-29.9,0,0));
+ stage="lower mount union";
+  opBoolean(context,id+"lowerCradleJoin",{"tools":qUnion([mount,cradle,rail1,rail2,back,post1,post2,outrigger,rodGuide,crossbar]),"operationType":BooleanOperationType.UNION});
+ stage="mount envelope";
+  opBoolean(context,id+"mountEnvelope",{"tools":qUnion([mount,cylinderMM(context,id+"mountEnvelopeTool",32,-60.6,-29.9)]),"operationType":BooleanOperationType.INTERSECTION});
+  mount=solid(id+"mountEnvelope");
+  subtract(context,id+"servoFitPocket",mount,radialBox(context,id+"servoFitTool",-16,-3,2.6,27.4,-57.7,23.6,0*degree));
+  // Rotate the servo tangentially to fit the BT80 bore; axis points inward along -X.
+  var orient=rotationAround(line(vector(0,0,0)*millimeter,vector(0,0,1)),90*degree);
+  var shift=transform(vector(23.5,9.5,112)*millimeter);
+  opTransform(context,id+"servoMove",{"bodies":servo,"transform":shift*orient});
+  // Retain just the reinforced cradle before attaching to the stationary lower frame.
+  opBoolean(context,id+"cradleTrim",{"tools":qUnion([mount,radialBox(context,id+"cradleTrimTool",-20,0,2,30,-60.6,26.2,0*degree)]),"operationType":BooleanOperationType.INTERSECTION});
+  mount=solid(id+"cradleTrim");
+  opTransform(context,id+"mountMove",{"bodies":mount,"transform":shift*orient});
+  var support=tubeMM(context,id+"servoFrame",29.4,26.5,76,79.7);
+  var strut=radialBox(context,id+"servoStrut",-7,-4.2,-8.5,.5,53,26.7,0*degree);
+  var cross=radialBox(context,id+"servoCross",-27,-4.2,-8.5,.5,76,3.7,0*degree);
+  opBoolean(context,id+"servoFrameJoin",{"tools":qUnion([mount,support,strut,cross]),"operationType":BooleanOperationType.UNION});
+  var guideWeb=radialBox(context,id+"compactGuideWeb",18,21,7,12,78,5.5,0*degree);
+  var rg=atC(context,id+"sideRodGuide",3,81,86,23.5,9.5);
+  subtract(context,id+"sideRodBore",rg,atC(context,id+"sideRodDrill",2.4,80.9,86.1,23.5,9.5));
+
+  subtract(context,id+"completeRodGuideBore",mount,atC(context,id+"completeRodTool",2.4,58,118,23.5,9.5));
+  subtract(context,id+"padTravelClear",mount,atC(context,id+"padTravelTool",3.25,58,80.3,23.5,9.5));
+  var roof=radialBox(context,id+"servoRoof",-6,20.9,-8.5,8.9,77.9,2.6,0*degree);
+  opBoolean(context,id+"servoRoofJoin",{"tools":qUnion([mount,roof]),"operationType":BooleanOperationType.UNION});
+  opBoolean(context,id+"sideRodGuideJoin",{"tools":qUnion([mount,rg,guideWeb]),"operationType":BooleanOperationType.UNION});
+  subtract(context,id+"roofPadClear",mount,atC(context,id+"roofPadTool",3.25,58,80.3,23.5,9.5));
+  for(var k=0;k<4;k+=1) {
+   var pad=radialBox(context,id+("mountPad"~k),28.5,30,-2.5,2.5,76,3.7,(45+90*k)*degree);
+   opBoolean(context,id+("mountPadJoin"~k),{"tools":qUnion([mount,pad]),"operationType":BooleanOperationType.UNION});
+  }
+  subtract(context,id+"compactHubClear",mount,cylinderMM(context,id+"compactHubTool",10.5,80.7,90));
+  subtract(context,id+"compactHornSweep",mount,radialBox(context,id+"compactHornTool",20,26.3,-14,14,70,8,0*degree));
+  var gate=radialBox(context,id+"servoGate",21,22.5,-4.5,4.5,53,5,0*degree);
+  label(context,gate,"G Servo lower keeper - fit after servo - bond to cradle floor",[.8,.69,.25]);
+  label(context,mount,"S Reinforced tangential SG90 cradle - roof and separate keeper",[.23,.55,.70]);
+ stage="lower pusher";
+  var horn=radialBox(context,id+"pusher",-20,1,-2.4,2.4,-45.5,6.6,0*degree);
+  fCylinder(context,id+"hornBoss",{"bottomCenter":vector(-9.5,-2.4,-42.2)*millimeter,"topCenter":vector(-9.5,2.4,-42.2)*millimeter,"radius":5.5*millimeter});
+  opBoolean(context,id+"hornJoin",{"tools":qUnion([horn,solid(id+"hornBoss")]),"operationType":BooleanOperationType.UNION});
+  // Double-arm horn lies in XZ, perpendicular to its Y output shaft.
+  subtract(context,id+"hornSlotCut",horn,radialBox(context,id+"doubleHornSlot",-20.1,1.1,-.2,2.5,-44.5,4.6,0*degree));
+  fCylinder(context,id+"hornHubPocket",{"bottomCenter":vector(-9.5,-.2,-42.2)*millimeter,"topCenter":vector(-9.5,2.5,-42.2)*millimeter,"radius":4.3*millimeter});
+  subtract(context,id+"hornHubCut",horn,solid(id+"hornHubPocket"));
+  fCylinder(context,id+"hornScrewAccess",{"bottomCenter":vector(-9.5,-2.5,-42.2)*millimeter,"topCenter":vector(-9.5,2.5,-42.2)*millimeter,"radius":2.2*millimeter});
+  subtract(context,id+"hornAccessCut",horn,solid(id+"hornScrewAccess"));
+  opTransform(context,id+"hornMove",{"bodies":horn,"transform":shift*orient});
+  label(context,horn,"J Double-arm SG90 horn saddle - measure horn before print",[.8,.69,.25]);
+  // Side rod clearance through stationary cartridge interfaces.
+  subtract(context,id+"rodDockClear",dock,atC(context,id+"rodDockTool",2.4,58,118,23.5,9.5));
+  subtract(context,id+"rodCollarClear",lock,atC(context,id+"rodCollarTool",2.4,58,118,23.5,9.5));
+  subtract(context,id+"rodCaseClear",casing,atC(context,id+"rodCaseTool",2.4,58,118,23.5,9.5));
+  subtract(context,id+"compactDockGuideClear",dock,atC(context,id+"compactDockGuideTool",3.3,80,86.3,23.5,9.5));
+  subtract(context,id+"compactGuideClear",casing,atC(context,id+"compactGuideTool",3.3,80,86.3,23.5,9.5));
+  subtract(context,id+"compactYokeClear",dock,radialBox(context,id+"compactYokeTool",20,27.1,-3.3,13.1,114.7,10.1,0*degree));
+
+
+  // Dock collar: preserve full bonding skin, end bands, leg roots and latch window.
+  for(var k=0;k<4;k+=1) {
+   var a=(45+90*k)*degree;
+   var relief=sector(context,id+("dockSkinPocket"~k),26.7,27.8,24,113,9);
+   turn(context,id+("dockSkinTurn"~k),relief,a);
+   subtract(context,id+("dockSkinCut"~k),dock,relief);
+  }
+  // Continuous ring still connects four mount pads; blind recess reduces duplicate ring material.
+  for(var k=0;k<4;k+=1) {
+   var a=(45+90*k)*degree;
+   var relief=sector(context,id+("cradleRingPocket"~k),27.3,28.6,26,75.9,2.3);
+   turn(context,id+("cradleRingTurn"~k),relief,a);
+   subtract(context,id+("cradleRingCut"~k),mount,relief);
+  }
+  // Blind underside floor pockets leave 1.8 mm skin and radial spring-anchor ribs.
+  for(var k=0;k<3;k+=1) {
+   var a=(60+120*k)*degree;
+   var relief=sector(context,id+("caseFloorPocket"~k),11,19,40,83.9,1.3);
+   turn(context,id+("caseFloorTurn"~k),relief,a);
+   subtract(context,id+("caseFloorCut"~k),casing,relief);
+  }
+
+ } else {
+  var stem=cylinderMM(context,id+"directStem",8,89.5,107);
+  var adapter=cylinderMM(context,id+"hornAdapter",13,103.5,107);
+  try { opBoolean(context,id+"directJoin",{"tools":qUnion([drive,stem,adapter]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"directJoin"); }
+  var pocket=cylinderMM(context,id+"hornPocket",4.5,105.8,107.2);
+  var slot=radialBox(context,id+"hornSlot",-2,12,-2,2,105.8,1.4,0*degree);
+  try { opBoolean(context,id+"hornToolJoin",{"tools":qUnion([pocket,slot]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"hornToolJoin"); }subtract(context,id+"hornPocketCut",drive,pocket);
+  var horn=cylinderMM(context,id+"servoHorn",4,106,107.8);
+  var arm=radialBox(context,id+"servoHornArm",0,11,-1.7,1.7,106,1.8,0*degree);
+  try { opBoolean(context,id+"servoHornJoin",{"tools":qUnion([horn,arm]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"servoHornJoin"); }
+  turn(context,id+"directHornTurn",horn,definition.release*degree);label(context,horn,"J Original SG90 horn REFERENCE - fit adapter to actual horn",[.8,.69,.25]);
+ stage="servo cradle";
+  var servo=radialBox(context,id+"servo",-6.1,6.1,-6.5,16.5,110,24,0*degree);
+  label(context,servo,"E SG90 envelope REFERENCE - output axis down",[.35,.38,.43]);
+  var saddle=radialBox(context,id+"servoSaddle",-18,18,-11,22,108,2,0*degree);
+  subtract(context,id+"saddleShaftHole",saddle,cylinderMM(context,id+"saddleDrill",3,107.9,110.1));
+  var rail1=radialBox(context,id+"servoRail1",-9,-6.6,-7,17,108,22.8,0*degree);
+  var rail2=radialBox(context,id+"servoRail2",6.6,9,-7,17,108,22.8,0*degree);
+  var outer1=radialBox(context,id+"outerPost1",-18,-15,-4,4,102.8,7,0*degree);
+  var outer2=radialBox(context,id+"outerPost2",15,18,-4,4,102.8,7,0*degree);
+  try { opBoolean(context,id+"servoCradleJoin",{"tools":qUnion([lid,saddle,rail1,rail2,outer1,outer2]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"servoCradleJoin"); }
+ }
+ turn(context,id+"moduleDriveTurn",drive,definition.release*degree);
+ label(context,drive,"U Cartridge output hub - same D socket in both modes",[.28,.68,.42]);
+ label(context,lid,"F Upper latch guide and spring cartridge lid - lower servo is separate",[.23,.55,.70]);
+ var moduleBodies=qSubtraction(qBodyType(qEverything(EntityType.BODY),BodyType.SOLID),baseBodies);
+ opTransform(context,id+"moduleBelowHousing",{"bodies":moduleBodies,"transform":transform(vector(0,0,-145)*millimeter)});
+
+ } catch(error) {throw regenError(stage ~ " : " ~ error);}
+ });
