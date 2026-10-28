@@ -131,7 +131,7 @@ if __name__ == '__main__':
 NV = np.array([1, -1, 0]) / math.sqrt(2)      # seam normal (C1 = positive side, C2 = negative side)
 
 
-def fig_rotor(parts, name):
+def fig_rotor(parts, name, v2=False):
     def spec(t, nm, m):
         if t == 'R': return ((0, 0, 0), None)
         if t.startswith('L') and t[1:].isdigit(): return ((0, 0, -26), None)
@@ -139,11 +139,15 @@ def fig_rotor(parts, name):
         return None
     items = build(parts, spec)
     img, meta = render.render(items, az=-40, el=28, size=(1500, 1200))
-    img = label_image(img, meta, [
-        ('R rotor arm (3 mm)', (24.3 * 1, 0, 60), (-120, -120)),
-        ('M3x8 button-head screw', (24.3, 0, 63 + 14), (60, -80)),
-        ('L cap boss (screw pilot)', (24.3, 0, 55 - 26), (60, 90)),
-    ], size=26)
+    if v2:
+        labs = [('R rotor arm (3 mm)', (20.4, 0, 39.6), (-120, -120)),
+                ('M3x8 button-head screw', (20.4, 0, 40.8 + 14), (60, -80)),
+                ('L cap boss (screw pilot)', (20.4, 0, 33.4 - 26), (60, 90))]
+    else:
+        labs = [('R rotor arm (3 mm)', (24.3 * 1, 0, 60), (-120, -120)),
+                ('M3x8 button-head screw', (24.3, 0, 63 + 14), (60, -80)),
+                ('L cap boss (screw pilot)', (24.3, 0, 55 - 26), (60, 90))]
+    img = label_image(img, meta, labs, size=26)
     img.save(OUT + name)
 
 

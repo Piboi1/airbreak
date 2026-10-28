@@ -58,7 +58,7 @@ def v1_templates(prefix):
 
 def v2_templates(prefix):
     fig, ax = plt.subplots(figsize=(7.1, 4.4))
-    wins = [((a - 33.5) % 360, (a + 33.5) % 360, 1.8, 62.0, '', '#f4d29a') for a in (0, 90, 180, 270)]
+    wins = [((a - 33.5) % 360, (a + 33.5) % 360, 1.8, 65.6, '', '#f4d29a') for a in (0, 90, 180, 270)]
     holes = []
     for s in range(4):
         for lv in range(2):
@@ -73,7 +73,7 @@ def v2_templates(prefix):
             ax.add_patch(Rectangle((0, 19), 37.5 - (CIRC - x0), 42, fill=False, ec='teal', lw=1.4, ls='--'))
         else:
             ax.add_patch(Rectangle((x0, 19), 37.5, 42, fill=False, ec='teal', lw=1.4, ls='--'))
-    ax.text(CIRC * .02, 74, 'orange = window to cut (38.6 x 60.2); dashed teal = 37.5 x 42 cut-out trimmed from the waste and glued to the fin\n'
+    ax.text(CIRC * .02, 74, 'orange = window to cut (38.6 x 63.8); dashed teal = 37.5 x 42 cut-out trimmed from the waste and glued to the fin\n'
             'at the same azimuth (fin 1 = 0\u00b0, fin 2 = 90\u00b0 ...); red = 8 x \u00d83.4 holes for M3x6, centred on each strip', fontsize=6.5, color='teal')
     _save(fig, prefix + 'v2_upper_tube.png')
 

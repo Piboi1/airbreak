@@ -1,0 +1,10 @@
+import pickle, figures as F, diagrams as D, render, run, numpy as np
+p2 = F.load('fin_v2'); p1 = F.load('fin_v1'); rel = pickle.load(open(str(run.S / 'v2_rel.pkl'), 'rb'))
+items = F.build(p2, F.overview_v2(p2)); img, meta = render.render(items, az=-55, el=20, size=(1500, 2300)); img.save(F.OUT + 'v2_overview_exploded.png')
+F.fig_rotor(p2, 'v2_rotor_caps.png', v2=True)
+F.fig_halves(p2, 'v2_halves.png')
+F.fig_tube_cutout(p2, 'v2_tube_cutout.png')
+F.fig_compare(p1, p2, 'compare_length.png')
+F.fig_latch_plan(F.OUT + 'v2_latch_plan.png', p2, rel)
+D.v2_templates(F.OUT); D.v1_templates(F.OUT); D.v2_radial(F.OUT + 'v2_radial.png')
+print('figs ok')
