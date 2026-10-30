@@ -100,8 +100,16 @@ def v2_radial(path):
     fig.tight_layout(); fig.savefig(path, dpi=220); plt.close(fig)
 
 
+def v3_templates(prefix):
+    fig, ax = plt.subplots(figsize=(7.1, 2.8))
+    tube_panel(ax, 70, 'V3 lower BT80 tube (butts the housing bottom at z=-15): 3 x \u00d83.4 holes for M3x10',
+               holes=[(a, 11.5, f'{a}\u00b0, d=11.5') for a in (90, 200, 340)])
+    _save(fig, prefix + 'v3_lower_tube.png')
+
+
 if __name__ == '__main__':
     v1_templates(F.OUT)
     v2_templates(F.OUT)
     v2_radial(F.OUT + 'v2_radial.png')
+    v3_templates(F.OUT)
     print('ok')

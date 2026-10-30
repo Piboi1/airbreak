@@ -344,8 +344,113 @@ def v2():
     build_pdf(DOCS / 'V2_assembly_guide.pdf', 'V2 compact head assembly guide - ARC BT80 airbrake', s)
 
 
+def WARN_P(t):
+    return Paragraph(t, WARN)
+
+
+def torque_table():
+    A, ZS, ZL, RF, RHO = 1.785e-3, 0.029, 0.0458, 0.0248, 1.1
+    rows = [['Speed', 'Typical wind suction (Cp -0.2)', 'Pessimistic (Cp -0.6)']]
+    for V in (50, 100, 150, 200):
+        q = 0.5 * RHO * V * V
+        cells = []
+        for cp in (0.2, 0.6):
+            N = q * cp * A * ZS / ZL
+            cells.append('%.1f N on the finger, %.3f–%.3f N·m' % (N, 4 * 0.2 * N * RF, 4 * 0.4 * N * RF))
+        rows.append(['%d m/s' % V] + cells)
+    return rows
+
+
+def v3():
+    s = []
+    s += [P('V3 – SG90 straight on the rotor: assembly guide', H1),
+          P('Built from the 22 mm V2. The spring cartridge, trigger, pushrod, yoke, cradle and all the layers between the servo and the rotor are gone: '
+            'one SG90 hangs under the rotor and turns it through its own horn. The fins, cams, rotor-mounted latch, housing and tube slits are the V2 ones.', B),
+          P(f'Onshape: <a href="{DOC_URL}" color="blue">ARC BT80 Airbrake - V1 Screwed + V2 Compact (Claude build)</a>. Elements: <b>V3-A</b> closed, <b>V3-B</b> fully open, <b>ASM-V3</b> assembly. '
+            'Feature Studio: module mode <i>3</i> with <i>V2 compact head</i> on.', SM),
+          fig('v3_assembled.png', 62, 'V3 closed. Same upper tube and slits as V2; the lower tube now only has to hold a servo.', 105),
+          P('1 &nbsp; What changed', H2),
+          table([['Item', 'V1', 'V2 (22 mm drop)', 'V3 (servo on rotor)'],
+                 ['Printed housing incl. sleeve', '118 mm', '91.8 mm', '91.8 mm (same housing)'],
+                 ['Everything below the housing', 'cartridge, dock, cradle (to z −93.5)', 'same', '<b>SG90 only</b>, bottom at z −46.7'],
+                 ['Whole assembly, top to bottom', '178.5 mm', '152.3 mm', '<b>105.5 mm</b> including the servo'],
+                 ['Printed parts (solid, PLA 1.24 g/cm³)', '180 g', '169 g', '<b>108 g</b> (−36 % vs V2)'],
+                 ['Printed part count', '19 types', '19 types', '<b>5 types</b>: 2 housing halves, 4 fins, 4 catch caps, rotor'],
+                 ['Drive', 'wound spiral spring + SG90 trigger', 'same', 'SG90 turns the rotor 0 → 65°'],
+                 ['Latch', 'tab and hook on the rotor', 'lug + finger on the rotor', 'same as V2']], [50, 38, 38, 54]),
+          Spacer(1, 4), fig('compare_length_v3.png', 175, 'V1, V2 and V3 side by side (tubes cut in half). V3 keeps the V2 head; everything under it is replaced by the servo.', 95),
+          P('Removed printed parts: dock D, casing M, lid F, output hub U, bayonet collar N, locking pin I, winding cap T, double-D adapter X, thrust collar Q, '
+            'pushrod A, release yoke B, servo cradle S, keeper G and horn saddle J (about 64 g), plus the spiral spring and return leaf.', B)]
+    s += [P('2 &nbsp; How it works now', H2),
+          P('The servo horn sits in a socket in the underside of the rotor hub, so rotating the servo rotates the rotor. At 0° the finger on each catch cap holds the fin lug (the V2 latch). '
+            'The latch lets go between 14° and 15° of rotor travel; the cams first touch the fins at about 26° and finish the kick at 65°. '
+            'With the rotor at 65° the cam holds each fin open about 14° and the airflow carries it the rest of the way to the 90° hard stop, as in V1 and V2. '
+            'The servo only has to move the rotor and slide the finger off the lug: it does not carry the airbrake drag, because at 90° the fins rest on the stop.', B),
+          fig('v3_overview_exploded.png', 100, 'Exploded V3. Top to bottom: upper tube with its screws, horn screw, rotor with catch caps and tube cut-outs, housing with fins, horn, servo with its two flange screws, lower tube with sleeve screws.', 175)]
+    s += [P('3 &nbsp; Servo mount', H2),
+          P('The SG90 hangs by its flange from two posts that grow out of the low spokes (azimuth 135° and 315°, off the seam): M2×8 self-tapping screws go up through the two tab holes into 1.6 mm pilots in the posts. '
+            'The shaft sits on the rotor axis, the horn lies in a round pocket and arm slot in the rotor hub, and the horn screw is dropped down through the rotor bore. '
+            'Three pads on the inside of the lower sleeve take the three M3×10 screws that hold the lower tube.', B),
+          fig('v3_mount_sections.png', 165, 'Plan sections: left through the horn socket (z −21.3), right through the servo tabs and sleeve pads (z −29.5).', 90),
+          WARN_P('The servo, horn and tab-hole positions are standard SG90 numbers (body 22.7 × 12.2 × 22.7, tab holes 28.1 mm apart, horn arm 3.4 mm wide, 1.8 mm thick). '
+                 '<b>Measure your own servo and horn before printing</b>; the post pilots and the horn pocket are the two places that must match.')]
+    s += [P('4 &nbsp; Torque check (SG90)', H2),
+          P('The load that matters is friction at the latch while the wind pulls the closed fins outward: the finger has to slide off the lug under that load. '
+            'Fin area 1785 mm², latch 45.8 mm and skin centre 29 mm above the hinge, friction 0.2–0.4, finger at R24.8. '
+            'The SG90 stall torque is 0.176 N·m at 4.8 V (0.216 at 6 V); I would only rely on about half of it (0.09 N·m). '
+            'Rotor spin-up and the cam kick are negligible (about 0.001 N·m): the wind assists the opening.', B),
+          table(torque_table(), [28, 76, 76]),
+          P('So the stock SG90 has margin to roughly <b>77–109 m/s</b> if the wind suction on the closed fins is as bad as the pessimistic case, and to roughly <b>134–188 m/s</b> in the typical case. '
+            'Above that, use a metal-gear servo (about 0.22–0.25 N·m), polish the finger and lug, or add a ramp. The suction coefficient is an assumption: it needs a wind-tunnel or CFD number, or a ground test of the closed fins in a fan. '
+            'The script is <font face="Courier">tools/torque_check.py</font>.', B)]
+    s += [P('5 &nbsp; Print list and hardware', H2),
+          table([['File', 'Qty', 'Part', 'Notes'],
+                 ['C1_housing_half_1_x1 / C2_housing_half_2_x1', '1 + 1', 'Housing halves', 'Servo posts, sleeve pads and strips are part of the halves. Same print orientation as V2.'],
+                 ['P_fin_x4', '4', 'Fin', 'Same as V2.'],
+                 ['L_catch_cap_x4', '4', 'Catch cap', 'Same as V2.'],
+                 ['R_rotor_x1', '1', 'Rotor with horn socket', 'Hub, horn pocket and arm slot on the underside; M2 access hole to the bore. Print upright.']], [62, 12, 40, 66]),
+          Spacer(1, 3),
+          table([['Ref in CAD', 'Fastener', 'Qty', 'Joint', 'Driver'],
+                 ['HW seam screw 1-4', 'M3 × 8 socket-head cap', 4, 'C2 counterbore → C1, z=8 and z=44', '2.5 mm hex'],
+                 ['HW L1-L4 cap screw', 'M3 × 8 button head', 4, 'Rotor arm → catch cap boss', '2.0 mm hex'],
+                 ['HW H1-H4 hinge screw', 'M4 × 25 button head', 4, 'Fin hinge, threads into the +Y ear', '2.5 mm hex'],
+                 ['HW top-tube support screw 1-8', 'M3 × 5 button head', 8, 'Upper BT80 tube → strips between the fins', '2.0 mm hex'],
+                 ['HW sleeve screw 1-3', 'M3 × 10 button head', 3, 'Lower BT80 tube → sleeve → pad (z=-26.5)', '2.0 mm hex'],
+                 ['HW servo flange screw 1-2', 'M2 × 8 button head, self-tapping', 2, 'Servo tabs → housing posts', '1.5 mm hex or PH0'],
+                 ['HW horn screw', 'M2 × 6 (the one supplied with the servo)', 1, 'Horn → servo spline, from above through the rotor bore', 'PH0 / 1.5 mm hex']], [38, 40, 9, 63, 22], font=7.8),
+          P('<b>Totals:</b> M3×5 × 8, M3×8 × 8, M3×10 × 3, M4×25 × 4, M2×8 × 2 plus the horn screw = 26 screws. Not printed or screwed: 1 SG90 servo with horn, 2 BT80 airframe tubes, epoxy for the tube cut-outs.', B)]
+    s += [P('6 &nbsp; Tubes', H2),
+          P('The upper tube is cut exactly as in the V2 guide (four windows 38.6 × 63.8 mm, four 37.5 × 42 mm cut-outs glued to the fins, eight M3 holes). '
+            'The lower tube needs only three 3.4 mm holes.', B),
+          fig('v3_lower_tube.png', 165, 'Lower tube template.', 55)]
+    s += [P('7 &nbsp; Assembly sequence', H2)]
+    s += bullets([
+        'Steps 1–4 as in V2: hinge screws, catch caps (M3×8) on the rotor arms, rotor into one half, fins, second half, four seam screws (2.5 mm hex).',
+        '<b>Set the servo to its 0° position first</b> (servo tester or the flight computer), then press the horn on the spline so that the arm points where the pocket slot is when the rotor is locked at 0°.',
+        'Drop the horn into the socket in the rotor hub from below, arm in its slot; slide the servo spline into the horn, flange under the two posts, long axis along the 135°/315° line.',
+        'Drive the two M2×8 flange screws up through the tab holes. Then put the M2×6 horn screw down through the rotor bore and access hole (1.5 mm hex or small Phillips).',
+        'Route the servo lead down the lower tube. Slide the lower tube over the sleeve and fit the three M3×10 screws.',
+        'Glue the tube cut-outs to the fins, slide the upper tube on and fit the eight M3×5 screws, as in V2.',
+        'Function check with the servo only: command 0° → 70° and back; the fins should unlatch around 15°, be kicked from about 26° and stop at 65° of horn travel.'])
+    s += [P('8 &nbsp; Checks run on this model', H2),
+          table([['Check', 'Result'],
+                 ['V3-A closed / V3-B open (90°, 65°)', '45 bodies, all watertight; no printed-part overlap; the only overlap among references is the servo spline inside the horn (intended)'],
+                 ['Rotor, horn and catch caps turned 0 → 65° (5° steps)', 'clear of both housing halves and the servo at every step'],
+                 ['Latch hold / release', 'fin blocked from 1.5–2° opening at rotor 0°; free from rotor 15° (14° still overlaps by 0.4 mm³)'],
+                 ['Cam timing', 'cams first touch the closed fin at about 26° of rotor travel'],
+                 ['Fin + glued cut-out swept 0.5 → 90° against the upper tube', 'clear at every angle'],
+                 ['Seam screw access', 'straight 2.5 mm hex key reaches all four heads with the fins open'],
+                 ['Assembly mates', '21 features (fin groups, four hinges, rotor revolute): all solve OK']], [64, 116]),
+          WARN_P('<b>Open points for you:</b> (1) Not tested on a print: the latch and the horn pocket. (2) The servo and horn dimensions are assumed. '
+                 '(3) The wind-suction number behind the torque check is an assumption; give me your top speed. (4) Mate motion is not scripted: drag the rotor and a fin in ASM-V3. '
+                 '(5) After the cam kick the fins stay out only while air flows; with no airflow they can fall back to about 14°. A positive hold open at 90° needs a detent or a longer cam. '
+                 '(6) Ground-impact strength is not analysed: that is the FEA you mentioned (the posts, sleeve pads and fin hinges are the first places to look).')]
+    build_pdf(DOCS / 'V3_assembly_guide.pdf', 'V3 servo-on-rotor assembly guide - ARC BT80 airbrake', s)
+
+
 if __name__ == '__main__':
-    which = sys.argv[1:] or ['v1', 'v2']
+    which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
     if 'v2' in which: v2()
+    if 'v3' in which: v3()
     print('docs written', list(DOCS.glob('*.pdf')))

@@ -129,6 +129,12 @@ function screwHW(context is Context, id is Id, p is Vector, d is Vector, kind is
         hr = 2.75;
         hh = 3.0;
     }
+    if (kind == "M2BH")
+    {
+        hr = 2.0;
+        hh = 1.3;
+        sr = 1.0;
+    }
     if (kind == "M4BH")
     {
         hr = 3.8;
@@ -162,6 +168,8 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   definition.cords is boolean;
   annotation { "Name" : "V2 compact head (fins inside upper BT80 tube)", "Default" : false }
   definition.compact is boolean;
+  annotation { "Name" : "V3 servo posts and tube pads", "Default" : false }
+  definition.direct is boolean;
   annotation { "Name" : "Show fastener hardware", "Default" : true }
   definition.hardware is boolean;
   annotation { "Name" : "Show BT80 tube references and cut-out pieces", "Default" : true }
@@ -405,6 +413,30 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
     screwHW(context,id+("supportScrew"~s~lv),vector(33.02*cos(saz),33.02*sin(saz),sz),vector(-cos(saz),-sin(saz),0),"M3BH",5,"HW top-tube support screw "~(s*2+lv+1)~" - M3x5 button head");
   }
  }
+ if(definition.direct) {
+  // V3: SG90 hangs from its flange under two posts that grow out of the low spokes at azimuth 135 / 315 (off the seam).
+  // Servo long axis s runs along azimuth 135; shaft on the rotor axis; tab holes at s=+18.8 and s=-9.3 (measure your servo).
+  var es=vector(cos(135*degree),sin(135*degree),0);
+  for(var k=0;k<2;k+=1) {
+   var hs=k==0?18.8:-9.3;
+   var post=radialBox(context,id+("servoPost"~k),k==0?16.3:-11.8,k==0?21.3:-6.8,-3,3,-28.2,14.2,135*degree);
+   opBoolean(context,id+("servoPostJoin"~k),{"tools":qUnion([carrier,post]),"operationType":BooleanOperationType.UNION});
+   drill(context,id+("servoPostPilot"~k),carrier,vector(hs*es[0],hs*es[1],-28.2),vector(0,0,1),0,5.5,0.8);
+   if(definition.hardware)
+    screwHW(context,id+("servoScrew"~k),vector(hs*es[0],hs*es[1],-30.7),vector(0,0,1),"M2BH",8,"HW servo flange screw "~(k+1)~" - M2x8 button head");
+  }
+  var rpAz3=[90,200,340];
+  for(var k=0;k<3;k+=1) {
+   // Pads on the inside of the lower glue sleeve take 3 radial M3x10 screws through the BT80 tube and the sleeve.
+   var raz3=rpAz3[k]*degree;var rs3=id+("sleeveScrewPad"~k);
+   var rpad3=radialBox(context,rs3,23.2,30.4,-4.5,4.5,-30.5,8,raz3);
+   opBoolean(context,rs3+"join",{"tools":qUnion([carrier,rpad3]),"operationType":BooleanOperationType.UNION});
+   radialDrill(context,rs3+"pilot",carrier,raz3,-26.5,23.6,29.9,M3_PILOT);
+   radialDrill(context,rs3+"clear",carrier,raz3,-26.5,29.9,33.5,M3_CLR);
+   if(definition.hardware)
+    screwHW(context,rs3+"hw",vector(33.02*cos(raz3),33.02*sin(raz3),-26.5),vector(-cos(raz3),-sin(raz3),0),"M3BH",10,"HW sleeve screw "~(k+1)~" - M3x10 button head");
+  }
+ }
  // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.
  for(var side=0;side<2;side+=1) {
   var a=(45+side*180)*degree;
@@ -441,7 +473,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   var ut=compact?tubeMM(context,id+"upperTube",33.02,32.5,-11,100):tubeMM(context,id+"upperTube",33.02,32.5,67,110);
   if(compact) {
    for(var i=0;i<4;i+=1) {
-    var tw=sector(context,id+("tubeWindow"~i),32.0,34,33.5,-9.2,60.2);
+    var tw=sector(context,id+("tubeWindow"~i),32.0,34,33.5,-9.2,63.8);
     turn(context,id+("tubeWindowTurn"~i),tw,i*90*degree);
     subtract(context,id+("tubeWindowCut"~i),ut,tw);
     for(var lv=0;lv<2;lv+=1)
@@ -509,7 +541,7 @@ function returnLeaf(context is Context,id is Id,stroke is number) returns Query 
 annotation { "Feature Type Name" : "BT80 modular spring or direct SG90 drive" }
 export const modularBrake = defineFeature(function(context is Context,id is Id,definition is map)
  precondition {
-  annotation {"Name":"Module: 0 spring, 1 direct servo, 2 unloaded spring samples","Default":0} isInteger(definition.mode,{(unitless):[0,0,2]} as IntegerBoundSpec);
+  annotation {"Name":"Module: 0 spring, 1 direct servo, 2 unloaded spring samples, 3 V3 servo straight on the rotor","Default":0} isInteger(definition.mode,{(unitless):[0,0,3]} as IntegerBoundSpec);
   annotation {"Name":"Panel opening degrees","Default":0} isReal(definition.opening,{(unitless):[0,0,90]} as RealBoundSpec);
   annotation {"Name":"Drive rotation degrees","Default":0} isReal(definition.release,{(unitless):[0,0,65]} as RealBoundSpec);
   annotation {"Name":"Upward trigger stroke mm","Default":0} isReal(definition.button,{(unitless):[0,0,4.5]} as RealBoundSpec);
@@ -531,10 +563,51 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
  }
  stage="base feature";
  camKickBrake(context,id+"brake",{"opening":definition.opening,"release":definition.release,"cords":false,
-  "compact":definition.compact,"hardware":definition.hardware,"tubes":definition.tubes});
+  "compact":definition.compact,"direct":definition.mode==3,"hardware":definition.hardware,"tubes":definition.tubes});
  stage="base query";
  var baseBodies=qUnion(evaluateQuery(context,qBodyType(qEverything(EntityType.BODY),BodyType.SOLID)));
  var rotor=solid(id+"brake"+"rotorShaft");
+ if(definition.mode==3) {
+  stage="v3 rotor hub";
+  var es3=vector(cos(135*degree),sin(135*degree),0);
+  // Round stub through the low bearing, then a 6.2 mm hub below it; the horn sits in a socket in the hub underside.
+  var stub=cylinderMM(context,id+"v3Stub",5,-15.6,-10.4);
+  var hub=cylinderMM(context,id+"v3Hub",6.2,-22.4,-15.4);
+  try { opBoolean(context,id+"v3HubJoin",{"tools":qUnion([rotor,stub,hub]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v3HubJoin"); }
+  var pocket=cylinderMM(context,id+"v3HornPocket",4.5,-22.6,-20.2);
+  var slot=radialBox(context,id+"v3HornSlot",0,13,-2.2,2.2,-22.6,2.4,0*degree);
+  try { opBoolean(context,id+"v3PocketJoin",{"tools":qUnion([pocket,slot]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v3PocketJoin"); }
+  turn(context,id+"v3PocketTurn",pocket,(100+definition.release)*degree);
+  subtract(context,id+"v3HornPocketCut",rotor,pocket);
+  // Access for the horn screw (M2) and a small driver, joining the rotor's axial bore.
+  subtract(context,id+"v3ScrewAccess",rotor,cylinderMM(context,id+"v3AccessTool",2.1,-20.3,-7.9));
+  label(context,rotor,"R Top knob + keyed crown arms + four kick cams + servo horn socket - 0 LOCK 65 OPEN",[.28,.68,.42]);
+  // SG90 horn (reference) in the socket: hub + one arm, 1.8 mm thick.
+  var hornHub=cylinderMM(context,id+"v3HornHub",4,-22.2,-20.4);
+  var hornArm=radialBox(context,id+"v3HornArm",0,11,-1.7,1.7,-22.2,1.8,0*degree);
+  try { opBoolean(context,id+"v3HornJoin",{"tools":qUnion([hornHub,hornArm]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v3HornJoin"); }
+  turn(context,id+"v3HornTurn",hornHub,(100+definition.release)*degree);
+  label(context,hornHub,"EH SG90 horn REFERENCE - fit the socket to your actual horn",[.8,.69,.25]);
+  if(definition.hardware)
+   screwHW(context,id+"v3HornScrew",vector(0,0,-20.4),vector(0,0,-1),"M2BH",6,"HW horn screw - M2x6 (the one supplied with the servo)");
+  // SG90 envelope (reference): shaft up on the rotor axis, long axis at azimuth 135, flange 4.2 mm below the shaft-end face.
+  stage="v3 servo";
+  var sBody=radialBox(context,id+"v3ServoBody",-6.5,16.0,-6.1,6.1,-46.7,22.7,135*degree);
+  var sTab=radialBox(context,id+"v3ServoTab",-11.5,21.0,-5.9,5.9,-30.7,2.5,135*degree);
+  var sSpline=cylinderMM(context,id+"v3Spline",2.4,-24.2,-20.3);
+  try { opBoolean(context,id+"v3ServoJoin",{"tools":qUnion([sBody,sTab,sSpline]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v3ServoJoin"); }
+  for(var k=0;k<2;k+=1) {
+   var hs3=k==0?18.8:-9.3;
+   drill(context,id+("v3TabHole"~k),sBody,vector(hs3*es3[0],hs3*es3[1],-31),vector(0,0,1),0,3.6,1.1);
+  }
+  label(context,sBody,"E SG90 servo REFERENCE - shaft up, flange under the two housing posts - measure your servo",[.35,.38,.43]);
+  if(definition.tubes) {
+   var lt3=tubeMM(context,id+"lowerTube",33.02,32.5,-85,-15);
+   for(var k=0;k<3;k+=1) radialDrill(context,id+("lowerTubeHole"~k),lt3,[90,200,340][k]*degree,-26.5,32.0,33.5,M3_CLR);
+   label(context,lt3,"REF BT80 lower tube - 3 sleeve-screw holes at z=-26.5 - cut from real tube",TUBE_TAN);
+  }
+  return;
+ }
  stage="shaft extension";
  var key=dKey(context,id+"commonKey",5,3.8,-24,-10.4);turn(context,id+"commonKeyTurn",key,definition.release*degree);
  try { opBoolean(context,id+"commonKeyJoin",{"tools":qUnion([rotor,key]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"commonKeyJoin"); }

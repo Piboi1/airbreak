@@ -339,3 +339,80 @@ def fig_latch_plan(path, state_closed, state_released, z=43.5, zoom=(-4, 34, -22
         ax.set_title(title, fontsize=8); ax.tick_params(labelsize=6)
     fig.suptitle('Section at z = %.1f mm, looking down. Orange: fin lug wall; green: cap finger and rotor arm' % z, fontsize=8)
     fig.tight_layout(); fig.savefig(path, dpi=220); plt.close(fig)
+
+
+# ---------------------------------------------------------------- V3 (SG90 straight on the rotor)
+def overview_v3(parts):
+    def spec(t, name, m):
+        if t == 'REF_upper': return ((0, 0, 125), None)
+        if t.startswith('HW_top-tube'): return (rot_z((16, 0, 0), mesh_az(m)) + np.array([0, 0, 125]), None)
+        if t.startswith('TP'): return (rot_z((58, 0, 0), az_of(name, t)), None)
+        if t == 'R': return ((0, 0, 72), None)
+        if t.startswith('L') and t[1:].isdigit(): return ((0, 0, 72 - 30), None)
+        if t.startswith('HW_L'): return ((0, 0, 72 + 6), None)
+        if t == 'HW_horn': return ((0, 0, 118), None)
+        if t == 'EH': return ((0, 0, 30), None)
+        if t.startswith('P') and t[1:].isdigit(): return (rot_z((30, 0, 0), az_of(name, t)), None)
+        if t.startswith('HW_H'): return (rot_z((30, 0, 0), az_of(name, t)) + rot_z((0, -26, 0), az_of(name, t)), None)
+        if t.startswith('HW_seam'): return (np.array([-20, 20, 0]) * 1.0, None)
+        if t == 'E': return ((0, 0, -62), None)
+        if t.startswith('HW_servo'): return ((0, 0, -88), None)
+        if t == 'REF_lower': return ((0, 0, -110), None)
+        if t.startswith('HW_sleeve'): return (rot_z((16, 0, 0), mesh_az(m)) + np.array([0, 0, -110]), None)
+        return ((0, 0, 0), None)
+    return spec
+
+
+def fig_v3_mount(path, parts, zs=(-21.3, -29.5)):
+    """Plan sections (looking down) through the horn socket and through the servo tabs / posts / sleeve pads."""
+    import matplotlib; matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import LineCollection
+    fig, axs = plt.subplots(1, 2, figsize=(7.4, 3.9))
+    titles = ('z = %.1f: horn in the rotor hub socket' % zs[0], 'z = %.1f: servo tabs, posts, sleeve pads' % zs[1])
+    for ax, z, title in zip(axs, zs, titles):
+        for nm, m in parts.items():
+            t = tok(nm)
+            if t.startswith('REF') or t.startswith('TP') or t[:1] == 'P' and t[1:].isdigit() or t[:1] == 'L' and t[1:].isdigit():
+                continue
+            try:
+                sec = m.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
+            except Exception:
+                sec = None
+            if sec is None: continue
+            segs = [sec.vertices[e.points][:, :2] for e in sec.entities]
+            col = {'C1': '#2f6fa8', 'C2': '#5a9bd0', 'R': '#2e8b57', 'E': '#666666', 'EH': '#c9a227'}.get(t, '#aa3333' if t.startswith('HW') else '#555555')
+            ax.add_collection(LineCollection(segs, colors=col, linewidths=1.2))
+            if t in ('E', 'EH', 'R'):
+                c = np.concatenate(segs).mean(0); ax.text(c[0], c[1], {'E': 'servo', 'EH': 'horn', 'R': 'rotor hub'}[t], fontsize=7, color=col, ha='center')
+        ax.set_xlim(-36, 36); ax.set_ylim(-36, 36); ax.set_aspect('equal'); ax.grid(alpha=.25)
+        ax.set_title(title, fontsize=8); ax.tick_params(labelsize=6)
+    fig.suptitle('V3 servo mount, plan sections looking down (mm). Servo long axis at 135 deg; posts at 135 / 315 deg grow from the low spokes', fontsize=7.5)
+    fig.tight_layout(); fig.savefig(path, dpi=220); plt.close(fig)
+
+
+def fig_compare3(parts_list, titles, spans, name):
+    """Side-by-side elevations (tubes cut in half) with printed-height brackets. spans: per column list of (z0, z1, text, colour, x-offset)."""
+    imgs = []
+    for parts in parts_list:
+        items = build(parts, lambda t, n, m: ((0, 0, 0), None))
+        for it in items:
+            if it['tok'].startswith('REF'):
+                it['mesh'] = trimesh.intersections.slice_mesh_plane(it['mesh'].copy(), plane_normal=[-1, 0, 0], plane_origin=[0, 0, 0], cap=False)
+        imgs.append(render.render(items, az=90, el=0, size=(820, 1500), scale=4.9, center=np.array([0, 0, -2])))
+    w = imgs[0][0].size[0]; gap = 20
+    out = Image.new('RGB', (w * len(imgs) + gap * (len(imgs) - 1), imgs[0][0].size[1]), (255, 255, 255))
+    dr = ImageDraw.Draw(out)
+    f = render.font(40)
+    for i, ((img, meta), title, sp) in enumerate(zip(imgs, titles, spans)):
+        x0 = i * (w + gap)
+        out.paste(img, (x0, 0))
+        dr.text((x0 + 15, 10), title, font=render.font(40), fill=(0, 0, 0))
+        for z0, z1, txt, col, xo in sp:
+            _, y0 = render.project(meta, (0, 0, z0)); _, y1 = render.project(meta, (0, 0, z1))
+            x = x0 + 40 + xo
+            dr.line([(x, y0), (x, y1)], fill=col, width=3)
+            for y in (y0, y1): dr.line([(x - 12, y), (x + 12, y)], fill=col, width=3)
+            ym = (y0 + y1) / 2; wd = dr.textlength(txt, font=f)
+            dr.rectangle([x + 8, ym - 28, x + 16 + wd, ym + 28], fill=(255, 255, 255)); dr.text((x + 12, ym - 24), txt, font=f, fill=col)
+    out.save(OUT + name)

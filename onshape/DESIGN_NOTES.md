@@ -36,6 +36,23 @@ Source: `fs/v0_original.fs` (your FeatureScript, unchanged). `fs/airbrake_v1_v2.
 * Lengths: exposed airbrake 82 -> 4 mm; printed housing 118 -> 91.8 mm; whole printed assembly 178.5 -> 152.3 mm.
 * Checked: no printed-part overlaps closed or open; hex-key access to all four seam screws with fins open.
 
+## V3 = SG90 straight on the rotor (module mode 3, `V2 compact head` on)
+* Starts from the 22 mm V2 head unchanged (fins, cams, rotor-mounted latch, housing, tube slits). Everything between the rotor and the servo
+  is removed: spring cartridge, trigger, pushrod, yoke, dock, casing, lid, hub, collar, pin, cradle, keeper, horn saddle (about 64 g printed).
+* Rotor: round stub through the low bearing, 6.2 mm hub (z -22.4..-15.4) with a horn pocket R4.5 + arm slot and a 4.2 mm access hole to the bore for the horn screw.
+  The horn arm starts at 100 deg so its 65 deg sweep clears the posts.
+* Servo (reference body, shaft up, shaft end at z -24, bottom z -46.7): long axis at 135 deg, hung by its flange from two posts (R16.3..21.3 at 135 deg and R-11.8..-6.8, i.e. at 315 deg) that
+  grow from the low spokes; M2x8 self-tapping screws up through the tab holes (s = +18.8 and -9.3) into 1.6 mm pilots.
+* Three pads on the inside of the lower glue sleeve (R23.2..30.4, z -30.5..-22.5, at 90/200/340 deg) take 3 x M3x10 through the BT80 tube and the sleeve.
+* Printed set 108 g solid PLA (V2 169 g); overall 105.5 mm with the servo (V2 152.3 mm). Checked: no printed overlaps closed or open, rotor swept 0..65 deg clear of housing and servo,
+  latch holds from 1.5-2 deg of fin opening and releases at 15 deg of rotor travel, cams touch at about 26 deg, seam hex-key access clear.
+* With the rotor at 65 deg the cam holds each fin open about 14 deg; the airflow does the rest to the 90 deg stop. Servo torque: `tools/torque_check.py` (latch friction under wind suction dominates).
+* Assumed, not measured: SG90 and horn dimensions, wind-suction coefficient, friction.
+
+## Correction made while building V3
+The V2 reference upper tube in the CAD still had a 60.2 mm window (top z 51.0) while the fin top is at z 54: the fin tip would have hit the tube at the first degree of opening. The window is now 63.8 mm
+(top z 54.6, as the guide always said); fin plus glued cut-out are clear of the tube at every opening angle 0.5..90 deg (`tools/sweep_open.py`). Printed parts were not affected.
+
 ## Choices that were mine
 * One public Onshape document (Free plan cannot make private ones).
 * Where the user's bonded joint had under 3 mm of material, it stays bonded rather than adding a weak screw.
