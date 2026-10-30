@@ -614,6 +614,63 @@ def history():
     build_pdf(DOCS / 'Design_history.pdf', 'Design history - ARC BT80 airbrake', s)
 
 
+def sketch_v4():
+    s = []
+    s += [P('V4 concept sketch: servo on top, thicker parts, electronics bay', H1),
+          WARN_P('<b>This is a sketch for you to inspect, not a CAD model.</b> Nothing in Onshape has changed. Dimensions are to scale where they come from the current V3 model; the new parts are placeholders. Please read the questions on the last page before I start the CAD.'),
+          P('1 &nbsp; How I read your request', H2)]
+    s += bullets([
+        '<b>Thin parts:</b> the knob finger and the two knob stops that limit the rotor (about 2 mm wide), and the green rotor: the crown arms (3 mm thick, only 0.8 mm of material beside the screw hole) and the cam web (3 mm). All get thicker.',
+        '<b>Flip:</b> the servo goes on <b>top</b> of the airbrake (output shaft pointing down). The rotation limiter (finger + stops) therefore moves to the <b>bottom</b> of the rotor, flipped.',
+        '<b>Bottom end:</b> the module screws onto the top of the transition on the BT80 side, with vertical screws.',
+        '<b>New bay</b> at the bottom for the altimeter, a small battery for the servo, and a regulator giving the servo the right voltage and current.',
+        '<b>Same size:</b> 91.8 mm tall, 66 mm OD (the dashed box). Fins, cams, latch and tube slits stay as they are.'])
+    s += [fig('v4_sketch_elevation.png', 138, 'Side sections to scale. Left: V3 now. Right: V4 proposal.', 98),
+          table([['#', 'V3 now (left)', '#', 'V4 proposal (right)'],
+                 ['1', 'knob finger and stops: about 2 mm wide', '1', 'SG90 flipped on top, its top flush with the housing top (z 58.8), shaft pointing down'],
+                 ['2', 'crown arms: 3 mm thick, 0.8 mm walls at the screw', '2', 'ledges from the support strips carry the servo flange (M2 screws)'],
+                 ['3', 'SG90 at the bottom, flush with the housing bottom', '3', 'crown arms 5 mm thick with a 10 mm boss round the screw, now just below the servo'],
+                 ['', '', '4', 'cam web 6 mm thick (the fin follower is 9 mm tall)'],
+                 ['', '', '5', 'lower bearing (3 mm) with a collar above it: the rotor now hangs from the servo horn, the collar stops it dropping'],
+                 ['', '', '6', 'limiter moved to the bottom, flipped and thick: finger 6 mm, stops 8 mm, full-height webs'],
+                 ['', '', '7', 'bay ceiling and two electronics layers (altimeter above, battery + regulator below); base ring opened to R26'],
+                 ['', '', '8', 'bottom flange, 4 M3 up through the transition on the BT80 side']], [8, 62, 8, 98], font=7.4)]
+    s += [PageBreak(), P('2 &nbsp; The thicker parts', H2),
+          fig('v4_sketch_thicken.png', 160, 'Plan views. The 65° travel is kept: the finger touches one stop at rest and the other at the end of travel.', 100),
+          P('3 &nbsp; The electronics bay', H2),
+          fig('v4_sketch_bay.png', 160, 'Plan views from below. All sizes are placeholders for typical parts.', 64),
+          PageBreak(), P('4 &nbsp; The screwed transition', H2),
+          fig('v4_sketch_transition.png', 160, 'The module bottom face with four vertical M3 bosses, and the stack.', 66)]
+    s += [P('5 &nbsp; Two options for the bay height', H2),
+          table([['', 'Option A: keep 91.8 mm (my default)', 'Option B: allow a little more'],
+                 ['Bay height', 'z −33 to −9 = 24 mm, base ring opened to R26', 'about 24 mm + whatever your parts need, in 1 mm steps'],
+                 ['Fits', 'typical parts need about 25 mm (battery 10 + altimeter 12 + trays 3): <b>borderline</b>', 'comfortable'],
+                 ['Overall', '91.8 mm × 66 mm, unchanged', 'about 92–96 mm × 66 mm'],
+                 ['Depends on', 'your real altimeter and battery sizes', 'same']], [28, 76, 72], font=7.8),
+          P('6 &nbsp; Power for the servo (suggestion)', H2)]
+    s += bullets([
+        'SG90 (4.8–6 V): about 0.1–0.25 A moving, about 0.7 A at stall. A 5 V regulator rated 3 A (a small step-down “UBEC” module) gives about four times the stall current.',
+        'Battery: a 2S LiPo (7.4 V, roughly 300–450 mAh) feeding that regulator is the usual choice; a 1S cell would need a boost converter. A capacitor (about 470–1000 µF) at the servo supply and a power switch or arming jumper reachable through the transition are cheap additions.',
+        'At 5 V the SG90 stall torque is 0.176 N·m (0.216 N·m at 6 V); the torque check in the V3 guide assumed 5 V.',
+        'Most altimeters have no servo output. If yours does not, a small microcontroller board has to sit between the altimeter and the servo: it takes bay space too (about 20 × 10 mm).'])
+    s += [P('7 &nbsp; Risks I can already see', H2)]
+    s += bullets([
+        'With the servo flipped, the rotor <b>hangs from the horn</b> and the top bearing is gone; the lower bearing, the collar and the limiter have to keep it in place and centred. I will check this in CAD.',
+        'The catch caps move down about 6 mm at the arm end and become taller clips; their screw boss has to move inboard to clear the fin follower. The latch and cam timing must be re-measured afterwards.',
+        'The servo cable exits at the top of the case and has to run down a channel inside the support strip to the bay.',
+        'The bay is only about 1.4 mm of wall away from the outer skin all round; very little room for anything I have not listed.'])
+    s += [P('8 &nbsp; Questions before I build it', H2)]
+    s += bullets([
+        '<b>Which parts are “the part at the top that restricts rotation”?</b> I assumed the knob finger and the two stops. If you meant something else, say so.',
+        '<b>What is “the transition on the BT80 side”?</b> A printed coupler ring that you already have (dimensions?), or something I should design? I assumed a flat ring with four M3 holes, bonded in the BT80 tube, with the module screwed down onto it.',
+        '<b>Which altimeter</b> (make, size) and <b>how should it command the servo</b>? Does it need its own small battery?',
+        '<b>Which battery</b> (type, mAh, size)? If it is bigger than 40 × 18 × 10 mm, Option B is probably needed.',
+        '<b>Is the servo end (top) the nose side?</b> I assumed yes.',
+        '<b>Option A or B</b> for the bay height?'])
+    s += [P('If you do not answer, I will use the assumptions above, Option A, and typical part sizes, and tell you exactly where they do not fit.', SM)]
+    build_pdf(DOCS / 'V4_concept_sketch.pdf', 'V4 concept sketch - ARC BT80 airbrake', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -621,4 +678,5 @@ if __name__ == '__main__':
     if 'v3' in which: v3()
     if 'mech' in which: mech()
     if 'history' in which: history()
+    if 'sketch' in which: sketch_v4()
     print('docs written', list(DOCS.glob('*.pdf')))
