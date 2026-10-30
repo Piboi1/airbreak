@@ -506,10 +506,106 @@ def mech():
     build_pdf(DOCS / 'V3_mechanics_diagrams.pdf', 'V3 mechanics diagrams - ARC BT80 airbrake', s)
 
 
+def history():
+    from reportlab.platypus import Table as RT, TableStyle as RTS, Image as RI
+    def side(img, flow, img_w=58):
+        p = FIG / img; im = PILImage.open(p); w = img_w * mm; h = w * im.size[1] / im.size[0]
+        if h > 120 * mm: h = 120 * mm; w = h * im.size[0] / im.size[1]
+        t = RT([[RI(str(p), width=w, height=h), flow]], colWidths=[(img_w + 2) * mm, (176 - img_w - 2) * mm])
+        t.setStyle(RTS([('VALIGN', (0, 0), (-1, -1), 'TOP'), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('RIGHTPADDING', (0, 0), (-1, -1), 2)]))
+        return t
+    def bl(items): return [Paragraph(i, BUL, bulletText='•') for i in items]
+    s = []
+    s += [P('Design history: every iteration and why we switched', H1),
+          P('From your original FeatureScript to the SG90-on-the-rotor V3. Numbers are measured on the CAD models (printed mass = solid PLA at 1.24 g/cm³; the original and the first V2 were measured from their saved models and STL exports).', B),
+          fig('hist_timeline.png', 150, 'The path: five steps, each triggered by a request or a finding.', 205)]
+    s += [PageBreak(), P('1 &nbsp; Side by side', H2),
+          fig('hist_scale.png', 150, 'To scale. The fins never moved (z 4..54). What changed is what sits above and below them.', 140),
+          fig('hist_metrics.png', 176, 'Length, mass and number of printed parts for each iteration.', 60),
+          table([['', 'Printed housing', 'Overall length', 'Printed mass', 'Printed parts', 'Drive and latch'],
+                 ['Original', '118 mm', '178.5 mm', '177 g', '33 bodies (glued pins, caps)', 'wound spring + SG90 trigger; tab-and-hook latch on the rotor'],
+                 ['V1 screwed', '118 mm', '178.5 mm', '180 g', '19 types', 'same'],
+                 ['V2 first (compact head)', '111.4 mm', '171.9 mm', '177 g', '19 types', 'same'],
+                 ['V2 22 mm drop', '91.8 mm', '152.3 mm', '169 g', '19 types', 'spring + SG90 trigger; inward lug + finger latch'],
+                 ['V3 servo on rotor', '91.8 mm', '105.5 mm incl. servo', '108 g', '5 types', 'SG90 on the rotor; same lug + finger latch']], [32, 24, 26, 20, 30, 44], font=7.6)]
+    # --- iteration 0
+    s += [PageBreak(), P('2 &nbsp; The original: your FeatureScript', H2),
+          side('hist_baseline.png', bl([
+              'Source: your “Positive cam kick-out / modular brake” FeatureScript, with your unloaded-spring print references; I rebuilt it in a new Onshape document and matched its size (z −93.5…85) and part count before changing anything.',
+              'How it works: a wound spiral spring in a cartridge drives a four-lobe cam rotor; an SG90 pulls a trigger through a pushrod and yoke; a hook on the rotor holds a tab on each fin; the cams kick the fins and the airflow finishes opening them.',
+              'Fastening: glue. Hinge pins H and caps K, the catch caps, the housing seam, the glue sleeves, the lid.',
+              '<b>178.5 mm overall, 177 g, 33 printed bodies.</b>',
+              '<b>Why we moved on:</b> you asked for screw holes in place of the bonds, and an assembly document.']))]
+    # --- iteration 1
+    s += [Spacer(1, 8), P('3 &nbsp; V1: the same machine, screwed together', H2),
+          side('v1_assembled.png', bl([
+              'Seam: 4 × M3×8 socket-head screws across the housing seam on inward ribs at z = 8 and z = 44. Hinges: M4×25 screw per fin instead of pin and cap. Catch caps: open-top clip with an M3×8 into the rotor arm. Sleeves, dock ring, cradle and lid: M3×6 and M3×10 radial or vertical screws.',
+              'Stayed bonded: the thrust collar, servo keeper and return-leaf root (under 3 mm of material, a screw would be weaker than the glue).',
+              'Checked: no overlaps, straight hex-key access to the seam screws with the fins open.',
+              '<b>178.5 mm overall, 180 g, 26 screws, 56 bodies incl. hardware.</b>',
+              'Found and fixed on the way: a casing boss that made a non-manifold boolean; lid ears that hit the pushrod (moved to 145/215/335°); seam screws at z = 6 blocked by hinge-ear tops (moved to z = 8).',
+              '<b>Why we moved on:</b> you wanted a shorter airbrake: fins higher, a smaller head (fin thickness adds to the diameter), thick supports, screw holes.']), 52)]
+    # --- iteration 2
+    s += [PageBreak(), P('4 &nbsp; V2 first: compact head inside the upper BT80 tube', H2),
+          side('hist_v2first.png', bl([
+              'Your first brief asked for 4 supports between the fins and 4 under them. You then proposed something simpler and better: cut slits in the upper BT80 tube, glue each cut-out to its fin so it rides with the fin, keep supports only in the solid strips between the slits, and keep the sleeve fit at the bottom.',
+              'Fin shell R29.9–32.3 (64.6 mm OD), 0.2 mm glue gap, then the 0.52 mm BT80 wall: back to 66.04 mm flush. The upper sleeve is gone; 8 supports (4 strips, 4 stop blocks) take 8 × M3 into the tube.',
+              'Cam peak 29 → 28.6 mm for pillar clearance. Tube windows 38.6 mm wide; cut-outs start at z = 8 so they clear the stop block at 90°; tube holes centred on the strips (offset ones left only 1.3 mm of web).',
+              '<b>Exposed airbrake 82 → 4 mm. Housing 111.4 mm, overall 171.9 mm, 177 g.</b>',
+              '<b>Why we moved on:</b> your white-outline drawing on a screenshot: the fins should sit up at the rim of the head, so everything under the fin moves up and the whole piece is shorter than V1.']), 58),
+          Spacer(1, 6),
+          fig('hist_compare_v1_v2first.png', 150, 'V1 (left) and the first V2 (right), as built at the time.', 80)]
+    # --- iteration 3
+    s += [PageBreak(), P('5 &nbsp; V2 at 22 mm: the latch stack moves up into the fin height', H2),
+          fig('hist_dz_preview.png', 176, 'The preview I made so you could choose: the real V2 with the top trimmed by 0, 14 and 22 mm. You chose 22 mm. (The mm figures in the picture were the estimate; the final build is 152.3 mm overall.)', 95),
+          side('v2_assembled.png', bl([
+              'Problem: the V1 hook swings sideways through the fin’s own window, so it cannot fit inside the fin height. New latch: each fin carries a lug that reaches inward (plate + wall), and the catch cap on the rotor arm carries a finger just outside that wall. Measured on the CAD: held from 2° of opening, released by 16° of rotor travel, before the cams touch at about 26°.',
+              'Everything below the fin (rotor stack, bearings, knob, caps) moved up 22 mm. Fin top z 54, head top z 58.8 (4.8 mm).',
+              '<b>91.8 mm housing, 152.3 mm overall, 169 g.</b>',
+              'Corrections after the first 22 mm build: the window was 60.4 mm tall and the top ring overlapped the fin top by 231 mm³ (window now 63.8 mm, ring raised: 89.4 → 91.8 mm); a 0.1 mm skin in the catch-cap socket; and, found later, the reference tube still had a 60.2 mm window, which the fin tip would have hit (now 63.8 mm; swept 0.5–90°, clear).',
+              '<b>Why we moved on:</b> an experienced person you talked to: make it a direct motor drive and drop the layers; shorter and lighter.']), 50)]
+    # --- iteration 4
+    s += [PageBreak(), P('6 &nbsp; V3: the SG90 drives the rotor directly', H2),
+          side('v3_assembled.png', bl([
+              'Removed: spring cartridge, trigger, pushrod, yoke, dock, casing, lid, hub, collar, pin, cradle, keeper, horn saddle (about 64 g printed), plus the spring and return leaf.',
+              'Added: a horn socket in the rotor underside, two posts that hold the SG90 by its flange, three pads for the lower tube. Latch, cams, fins and tube slits are the V2 ones, so the same checks apply.',
+              'Torque (SG90): the load that matters is friction at the latch while the wind pulls the closed fins outward; roughly fine up to 77–109 m/s in a pessimistic case, 134–188 m/s in the typical one. Deploy once and stay out: the 90° hard stop is in the fin geometry; the cam only holds the fins at about 14°, the airflow does the rest.',
+              '<b>105.5 mm overall including the servo, 108 g, 5 printed part types.</b>',
+              '<b>Next:</b> measure your own servo and horn, run the ground-impact FEA you asked about, print and test the latch.']), 52),
+          Spacer(1, 6),
+          fig('compare_length_v3.png', 170, 'V1, V2 and V3 side by side.', 90)]
+    # --- problems and decisions
+    s += [PageBreak(), P('7 &nbsp; Problems found along the way and what fixed them', H2),
+          table([['Step', 'Problem', 'Fix'],
+                 ['Setup', 'Free Onshape plan forces public documents; your own document was read-only', 'New public document (you chose to keep it public)'],
+                 ['Setup', 'Direct STL export was blocked by the proxy', 'STLs built from the model’s tessellation; STEP through Onshape’s translation'],
+                 ['V1', 'Casing boss tangent to the cylinder gave a non-manifold boolean', 'Boss embedded into the casing (r0 = 22.0)'],
+                 ['V1', 'Lid ears hit the pushrod; one boss 0.1 mm too tall', 'Ears at 145/215/335°, boss height 4.0 mm'],
+                 ['V1', 'Seam screws at z = 6 blocked by hinge-ear tops', 'Moved to z = 8 (hex-key ray test now clear)'],
+                 ['V2 first', 'Tube cut-outs clipped the stop block at 90°; offset tube holes left a 1.3 mm web', 'Cut-outs start at z = 8; holes centred on the strips'],
+                 ['V2 22 mm', 'V1 hook cannot fit inside the fin height', 'Inward lug on the fin + finger on the catch cap'],
+                 ['V2 22 mm', 'Fin window too short: ring overlapped the fin top by 231 mm³', 'Window 63.8 mm, ring raised (housing 91.8 mm)'],
+                 ['V2 22 mm', 'Reference tube window still 60.2 mm; fin tip would hit it while opening', 'Window 63.8 mm; opening sweep 0.5–90° clear'],
+                 ['V2 22 mm', 'My angle scan polled Onshape too hard and was blocked for about 20 h', 'Waited; later checks done offline on the meshes (no API calls)'],
+                 ['All', 'Assembly mate values cannot be driven from a script', 'Not verified by script; drag the rotor and a fin in ASM-V3']], [20, 90, 66], font=7.6),
+          P('8 &nbsp; Who decided what', H2),
+          table([['Decision', 'By'],
+                 ['Screws instead of glue, M3 self-tapping, M4 for the hinge, public Onshape document', 'You'],
+                 ['Shorter airbrake with the fins higher and a smaller head', 'You'],
+                 ['Slit the upper tube and glue the cut-outs to the fins; supports only in the strips; sleeve fit at the bottom', 'You (replaced my first 8-support plan)'],
+                 ['Fin top at the rim of the head; 22 mm drop rather than 14 mm', 'You'],
+                 ['New lug-and-finger latch, 63.8 mm window, 4.2 mm top ring', 'Me (needed to make your layout work)'],
+                 ['Direct SG90 drive, deploy once, 90° mechanical stop, FEA later', 'You (from the expert’s advice)'],
+                 ['Servo posts and pads, horn pocket, cam peak 28.6 mm, small joints left bonded', 'Me; please check the servo and horn dimensions']], [130, 46], font=7.8),
+          WARN_P('Mass is solid PLA; the slicer’s infill will lower the real weights. The latch, horn pocket and servo mount have not been tested on a print.')]
+    build_pdf(DOCS / 'Design_history.pdf', 'Design history - ARC BT80 airbrake', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
     if 'v2' in which: v2()
     if 'v3' in which: v3()
     if 'mech' in which: mech()
+    if 'history' in which: history()
     print('docs written', list(DOCS.glob('*.pdf')))
