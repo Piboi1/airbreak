@@ -12,7 +12,7 @@ Everything here was generated from your FeatureScript (`fs/v0_original.fs`, unch
 | Design notes | `DESIGN_NOTES.md` |
 | Design-only prompt for the 22 mm V2 | `V2_22mm_BUILD_PROMPT.md` |
 
-V3 = the 22 mm V2 with the spring cartridge, trigger and every layer under the rotor replaced by one SG90 on the rotor (module mode 3): printed set 108 g (V2: 169 g), 105.5 mm overall including the servo (V2: 152.3 mm). `tools/torque_check.py` estimates the servo torque.
+V3 = the 22 mm V2 with the spring cartridge, trigger and every layer under the rotor replaced by one SG90 on the rotor (module mode 3): printed set 106 g (V2: 169 g), 91.8 mm overall with the servo flush inside the housing (V2: 152.3 mm). `tools/torque_check.py` estimates the servo torque.
 
 V2 has the latch stack dropped 22 mm into the fin height: printed housing 91.8 mm (V1: 118 mm), whole printed assembly 152.3 mm (V1: 178.5 mm).
 

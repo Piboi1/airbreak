@@ -368,13 +368,13 @@ def v3():
             'one SG90 hangs under the rotor and turns it through its own horn. The fins, cams, rotor-mounted latch, housing and tube slits are the V2 ones.', B),
           P(f'Onshape: <a href="{DOC_URL}" color="blue">ARC BT80 Airbrake - V1 Screwed + V2 Compact (Claude build)</a>. Elements: <b>V3-A</b> closed, <b>V3-B</b> fully open, <b>ASM-V3</b> assembly. '
             'Feature Studio: module mode <i>3</i> with <i>V2 compact head</i> on.', SM),
-          fig('v3_assembled.png', 62, 'V3 closed. Same upper tube and slits as V2; the lower tube now only has to hold a servo.', 105),
+          fig('v3_assembled.png', 62, 'V3 closed. Same upper tube and slits as V2; the servo is inside the housing, flush with its bottom edge.', 105),
           P('1 &nbsp; What changed', H2),
           table([['Item', 'V1', 'V2 (22 mm drop)', 'V3 (servo on rotor)'],
                  ['Printed housing incl. sleeve', '118 mm', '91.8 mm', '91.8 mm (same housing)'],
-                 ['Everything below the housing', 'cartridge, dock, cradle (to z −93.5)', 'same', '<b>SG90 only</b>, bottom at z −46.7'],
-                 ['Whole assembly, top to bottom', '178.5 mm', '152.3 mm', '<b>105.5 mm</b> including the servo'],
-                 ['Printed parts (solid, PLA 1.24 g/cm³)', '180 g', '169 g', '<b>108 g</b> (−36 % vs V2)'],
+                 ['Everything below the housing', 'cartridge, dock, cradle (to z −93.5)', 'same', '<b>nothing</b>: the SG90 sits inside the housing, bottom flush at z −33'],
+                 ['Whole assembly, top to bottom', '178.5 mm', '152.3 mm', '<b>91.8 mm</b> (servo inside the housing)'],
+                 ['Printed parts (solid, PLA 1.24 g/cm³)', '180 g', '169 g', '<b>106 g</b> (−37 % vs V2)'],
                  ['Printed part count', '19 types', '19 types', '<b>5 types</b>: 2 housing halves, 4 fins, 4 catch caps, rotor'],
                  ['Drive', 'wound spiral spring + SG90 trigger', 'same', 'SG90 turns the rotor 0 → 65°'],
                  ['Latch', 'tab and hook on the rotor', 'lug + finger on the rotor', 'same as V2']], [50, 38, 38, 54]),
@@ -388,10 +388,11 @@ def v3():
             'The servo only has to move the rotor and slide the finger off the lug: it does not carry the airbrake drag, because at 90° the fins rest on the stop.', B),
           fig('v3_overview_exploded.png', 100, 'Exploded V3. Top to bottom: upper tube with its screws, horn screw, rotor with catch caps and tube cut-outs, housing with fins, horn, servo with its two flange screws, lower tube with sleeve screws.', 175)]
     s += [P('3 &nbsp; Servo mount', H2),
-          P('The SG90 hangs by its flange from two posts that grow out of the low spokes (azimuth 135° and 315°, off the seam): M2×8 self-tapping screws go up through the two tab holes into 1.6 mm pilots in the posts. '
+          P('The SG90 sits <b>inside the housing with its bottom flush with the housing bottom edge (z −33)</b>, so nothing sticks out below. It hangs by its flange from two posts (azimuth 135° and 315°, off the seam) that grow out of the lower spokes: M2×8 self-tapping screws go up through the two tab holes into 1.6 mm pilots in the posts. '
+            'To make room, the rotor’s lower bearing, its thrust collar and the four spokes that carry it moved <b>up</b> above the horn (bearing now z −0.8…2.2, spokes out to the support strips), and the rotor bottom stops at z −8.7. '
             'The shaft sits on the rotor axis, the horn lies in a round pocket and arm slot in the rotor hub, and the horn screw is dropped down through the rotor bore. '
-            'Three pads on the inside of the lower sleeve take the three M3×10 screws that hold the lower tube.', B),
-          fig('v3_mount_sections.png', 165, 'Plan sections: left through the horn socket (z −21.3), right through the servo tabs and sleeve pads (z −29.5).', 90),
+            'The base ring has a 0.7 mm relief where the servo tab meets it. Three pads on the inside of the lower sleeve take the three M3×10 screws that hold the lower tube.', B),
+          fig('v3_mount_sections.png', 165, 'Plan sections: left through the horn socket (z −7.6), middle through the two servo posts (z −12), right through the servo body and the sleeve pads (z −26).', 66),
           WARN_P('The servo, horn and tab-hole positions are standard SG90 numbers (body 22.7 × 12.2 × 22.7, tab holes 28.1 mm apart, horn arm 3.4 mm wide, 1.8 mm thick). '
                  '<b>Measure your own servo and horn before printing</b>; the post pilots and the horn pocket are the two places that must match.')]
     s += [P('4 &nbsp; Torque check (SG90)', H2),
@@ -408,7 +409,7 @@ def v3():
                  ['C1_housing_half_1_x1 / C2_housing_half_2_x1', '1 + 1', 'Housing halves', 'Servo posts, sleeve pads and strips are part of the halves. Same print orientation as V2.'],
                  ['P_fin_x4', '4', 'Fin', 'Same as V2.'],
                  ['L_catch_cap_x4', '4', 'Catch cap', 'Same as V2.'],
-                 ['R_rotor_x1', '1', 'Rotor with horn socket', 'Hub, horn pocket and arm slot on the underside; M2 access hole to the bore. Print upright.']], [62, 12, 40, 66]),
+                 ['R_rotor_x1', '1', 'Rotor with horn socket', 'Hub with horn pocket and arm slot on the underside; the pocket opens into the bore (horn-screw access). Print upright.']], [62, 12, 40, 66]),
           Spacer(1, 3),
           table([['Ref in CAD', 'Fastener', 'Qty', 'Joint', 'Driver'],
                  ['HW seam screw 1-4', 'M3 × 8 socket-head cap', 4, 'C2 counterbore → C1, z=8 and z=44', '2.5 mm hex'],
@@ -517,8 +518,8 @@ def history():
     def bl(items): return [Paragraph(i, BUL, bulletText='•') for i in items]
     s = []
     s += [P('Design history: every iteration and why we switched', H1),
-          P('From your original FeatureScript to the SG90-on-the-rotor V3. Numbers are measured on the CAD models (printed mass = solid PLA at 1.24 g/cm³; the original and the first V2 were measured from their saved models and STL exports).', B),
-          fig('hist_timeline.png', 150, 'The path: five steps, each triggered by a request or a finding.', 205)]
+          P('From your original FeatureScript to the flush SG90-on-the-rotor V3. Numbers are measured on the CAD models (printed mass = solid PLA at 1.24 g/cm³; the original and the first V2 were measured from their saved models and STL exports).', B),
+          fig('hist_timeline.png', 150, 'The path: six steps, each triggered by a request or a finding.', 215)]
     s += [PageBreak(), P('1 &nbsp; Side by side', H2),
           fig('hist_scale.png', 150, 'To scale. The fins never moved (z 4..54). What changed is what sits above and below them.', 140),
           fig('hist_metrics.png', 176, 'Length, mass and number of printed parts for each iteration.', 60),
@@ -527,7 +528,8 @@ def history():
                  ['V1 screwed', '118 mm', '178.5 mm', '180 g', '19 types', 'same'],
                  ['V2 first (compact head)', '111.4 mm', '171.9 mm', '177 g', '19 types', 'same'],
                  ['V2 22 mm drop', '91.8 mm', '152.3 mm', '169 g', '19 types', 'spring + SG90 trigger; inward lug + finger latch'],
-                 ['V3 servo on rotor', '91.8 mm', '105.5 mm incl. servo', '108 g', '5 types', 'SG90 on the rotor; same lug + finger latch']], [32, 24, 26, 20, 30, 44], font=7.6)]
+                 ['V3 first (servo below)', '91.8 mm', '105.5 mm incl. servo', '108 g', '5 types', 'SG90 on the rotor; same lug + finger latch'],
+                 ['V3 flush (servo inside)', '91.8 mm', '91.8 mm', '106 g', '5 types', 'same; bearing and spokes raised']], [32, 24, 26, 20, 30, 44], font=7.6)]
     # --- iteration 0
     s += [PageBreak(), P('2 &nbsp; The original: your FeatureScript', H2),
           side('hist_baseline.png', bl([
@@ -564,18 +566,26 @@ def history():
               '<b>91.8 mm housing, 152.3 mm overall, 169 g.</b>',
               'Corrections after the first 22 mm build: the window was 60.4 mm tall and the top ring overlapped the fin top by 231 mm³ (window now 63.8 mm, ring raised: 89.4 → 91.8 mm); a 0.1 mm skin in the catch-cap socket; and, found later, the reference tube still had a 60.2 mm window, which the fin tip would have hit (now 63.8 mm; swept 0.5–90°, clear).',
               '<b>Why we moved on:</b> an experienced person you talked to: make it a direct motor drive and drop the layers; shorter and lighter.']), 50)]
-    # --- iteration 4
-    s += [PageBreak(), P('6 &nbsp; V3: the SG90 drives the rotor directly', H2),
+    # --- iteration 4 and 5
+    s += [PageBreak(), P('6 &nbsp; V3 first: the SG90 drives the rotor directly', H2),
+          P('Removed: spring cartridge, trigger, pushrod, yoke, dock, casing, lid, hub, collar, pin, cradle, keeper, horn saddle (about 64 g printed), plus the spring and return leaf. '
+            'Added: a horn socket in the rotor underside, two posts that hold the SG90 by its flange, three pads for the lower tube. Latch, cams, fins and tube slits are the V2 ones, so the same checks apply.', B)]
+    s += bl(['Torque (SG90): the load that matters is friction at the latch while the wind pulls the closed fins outward; roughly fine up to 77–109 m/s in a pessimistic case, 134–188 m/s in the typical one.',
+             'Deploy once and stay out: the 90° hard stop is in the fin geometry; the cam only holds the fins at about 14°, the airflow does the rest.',
+             '<b>105.5 mm overall, 108 g, 5 printed part types.</b> The servo hung about 13.7 mm below the bottom of the housing.',
+             '<b>Why we moved on:</b> you asked for the servo to be moved up so it sits flush with the bottom and does not stick out, while still working.'])
+    s += [P('7 &nbsp; V3 flush: the servo inside the housing', H2),
           side('v3_assembled.png', bl([
-              'Removed: spring cartridge, trigger, pushrod, yoke, dock, casing, lid, hub, collar, pin, cradle, keeper, horn saddle (about 64 g printed), plus the spring and return leaf.',
-              'Added: a horn socket in the rotor underside, two posts that hold the SG90 by its flange, three pads for the lower tube. Latch, cams, fins and tube slits are the V2 ones, so the same checks apply.',
-              'Torque (SG90): the load that matters is friction at the latch while the wind pulls the closed fins outward; roughly fine up to 77–109 m/s in a pessimistic case, 134–188 m/s in the typical one. Deploy once and stay out: the 90° hard stop is in the fin geometry; the cam only holds the fins at about 14°, the airflow does the rest.',
-              '<b>105.5 mm overall including the servo, 108 g, 5 printed part types.</b>',
+              'Moving the servo up alone was not possible: the rotor’s lower bearing and its four spokes sat exactly where the servo has to go (z −15…−6).',
+              'So the lower bearing (now 3 mm, z −0.8…2.2), the thrust collar and the spokes moved <b>up</b> above the horn, the rotor now ends at z −8.7, the horn pocket sits at z −8.5…−6.7, and the servo posts hang from the raised spokes. The servo’s bottom is exactly at the housing bottom (z −33).',
+              'A 0.7 mm relief in the base ring clears the servo tab. Latch, cam timing and the fin motion are unchanged (checked again on the new model).',
+              'Checked: no printed-part overlaps closed or open; rotor, horn and caps swept 0–65° clear of housing and servo; hex-key access to the seam screws clear; ASM-V3 mates (21) all solve.',
+              '<b>91.8 mm overall, 106 g, 5 printed part types</b> (V2: 152.3 mm and 169 g).',
               '<b>Next:</b> measure your own servo and horn, run the ground-impact FEA you asked about, print and test the latch.']), 52),
           Spacer(1, 6),
-          fig('compare_length_v3.png', 170, 'V1, V2 and V3 side by side.', 90)]
+          fig('compare_length_v3.png', 170, 'V1, V2 and V3 side by side (V3 is the flush layout).', 90)]
     # --- problems and decisions
-    s += [PageBreak(), P('7 &nbsp; Problems found along the way and what fixed them', H2),
+    s += [PageBreak(), P('8 &nbsp; Problems found along the way and what fixed them', H2),
           table([['Step', 'Problem', 'Fix'],
                  ['Setup', 'Free Onshape plan forces public documents; your own document was read-only', 'New public document (you chose to keep it public)'],
                  ['Setup', 'Direct STL export was blocked by the proxy', 'STLs built from the model’s tessellation; STEP through Onshape’s translation'],
@@ -587,8 +597,9 @@ def history():
                  ['V2 22 mm', 'Fin window too short: ring overlapped the fin top by 231 mm³', 'Window 63.8 mm, ring raised (housing 91.8 mm)'],
                  ['V2 22 mm', 'Reference tube window still 60.2 mm; fin tip would hit it while opening', 'Window 63.8 mm; opening sweep 0.5–90° clear'],
                  ['V2 22 mm', 'My angle scan polled Onshape too hard and was blocked for about 20 h', 'Waited; later checks done offline on the meshes (no API calls)'],
+                 ['V3 flush', 'Servo cannot just move up: rotor bearing and spokes were in the way; tab 0.5 mm into the base ring', 'Bearing, collar and spokes raised above the horn; 0.7 mm ring relief'],
                  ['All', 'Assembly mate values cannot be driven from a script', 'Not verified by script; drag the rotor and a fin in ASM-V3']], [20, 90, 66], font=7.6),
-          P('8 &nbsp; Who decided what', H2),
+          P('9 &nbsp; Who decided what', H2),
           table([['Decision', 'By'],
                  ['Screws instead of glue, M3 self-tapping, M4 for the hinge, public Onshape document', 'You'],
                  ['Shorter airbrake with the fins higher and a smaller head', 'You'],
@@ -596,7 +607,9 @@ def history():
                  ['Fin top at the rim of the head; 22 mm drop rather than 14 mm', 'You'],
                  ['New lug-and-finger latch, 63.8 mm window, 4.2 mm top ring', 'Me (needed to make your layout work)'],
                  ['Direct SG90 drive, deploy once, 90° mechanical stop, FEA later', 'You (from the expert’s advice)'],
-                 ['Servo posts and pads, horn pocket, cam peak 28.6 mm, small joints left bonded', 'Me; please check the servo and horn dimensions']], [130, 46], font=7.8),
+                 ['Servo flush with the housing bottom, not sticking out', 'You'],
+                 ['Servo posts and pads, horn pocket, cam peak 28.6 mm, small joints left bonded', 'Me; please check the servo and horn dimensions'],
+                 ['Moving the lower bearing and spokes up to make the flush servo fit', 'Me']], [130, 46], font=7.8),
           WARN_P('Mass is solid PLA; the slicer’s infill will lower the real weights. The latch, horn pocket and servo mount have not been tested on a print.')]
     build_pdf(DOCS / 'Design_history.pdf', 'Design history - ARC BT80 airbrake', s)
 

@@ -6,7 +6,7 @@ F.fig_v3_mount(F.OUT + 'v3_mount_sections.png', p3)
 B = (40, 40, 200); Rr = (200, 40, 40); G = (30, 130, 60)
 F.fig_compare3([p1, p2, p3], ['V1 (inline)', 'V2 (22 mm drop)', 'V3 (servo on rotor)'],
   [[(-33, 85, 'printed 118', B, 0)], [(-33, 58.8, 'printed 91.8', B, 0), (-15, -11, 'exposed 4', Rr, 330)],
-   [(-33, 58.8, 'printed 91.8', B, 0), (-46.7, 58.8, 'with servo 105.5', G, 330)]], 'compare_length_v3.png')
+   [(-33, 58.8, 'printed 91.8, servo inside', B, 0), (-15, -11, 'exposed 4', Rr, 330)]], 'compare_length_v3.png')
 vm = osapi.view_matrix(-40, 24)
 osapi.shaded_view(did, wid, d['ps_v3'], F.OUT + 'v3_assembled.png', vm, w=900, h=1300)
 osapi.shaded_view(did, wid, d['ps_v3b'], F.OUT + 'v3_open.png', vm, w=1000, h=1300)

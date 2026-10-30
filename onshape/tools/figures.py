@@ -363,13 +363,13 @@ def overview_v3(parts):
     return spec
 
 
-def fig_v3_mount(path, parts, zs=(-21.3, -29.5)):
-    """Plan sections (looking down) through the horn socket and through the servo tabs / posts / sleeve pads."""
+def fig_v3_mount(path, parts, zs=(-7.6, -12.0, -26.0)):
+    """Plan sections (looking down) through the horn socket, the servo posts and the sleeve pads."""
     import matplotlib; matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib.collections import LineCollection
-    fig, axs = plt.subplots(1, 2, figsize=(7.4, 3.9))
-    titles = ('z = %.1f: horn in the rotor hub socket' % zs[0], 'z = %.1f: servo tabs, posts, sleeve pads' % zs[1])
+    fig, axs = plt.subplots(1, 3, figsize=(7.6, 3.0))
+    titles = ('z = %.1f: horn in the hub socket' % zs[0], 'z = %.1f: servo posts, spokes above' % zs[1], 'z = %.1f: servo body, sleeve pads' % zs[2])
     for ax, z, title in zip(axs, zs, titles):
         for nm, m in parts.items():
             t = tok(nm)
@@ -382,12 +382,12 @@ def fig_v3_mount(path, parts, zs=(-21.3, -29.5)):
             if sec is None: continue
             segs = [sec.vertices[e.points][:, :2] for e in sec.entities]
             col = {'C1': '#2f6fa8', 'C2': '#5a9bd0', 'R': '#2e8b57', 'E': '#666666', 'EH': '#c9a227'}.get(t, '#aa3333' if t.startswith('HW') else '#555555')
-            ax.add_collection(LineCollection(segs, colors=col, linewidths=1.2))
-            if t in ('E', 'EH', 'R'):
-                c = np.concatenate(segs).mean(0); ax.text(c[0], c[1], {'E': 'servo', 'EH': 'horn', 'R': 'rotor hub'}[t], fontsize=7, color=col, ha='center')
+            ax.add_collection(LineCollection(segs, colors=col, linewidths=1.1))
+            if t in ('E', 'EH'):
+                c = np.concatenate(segs).mean(0); ax.text(c[0], c[1], {'E': 'servo', 'EH': 'horn'}[t], fontsize=6.5, color=col, ha='center')
         ax.set_xlim(-36, 36); ax.set_ylim(-36, 36); ax.set_aspect('equal'); ax.grid(alpha=.25)
-        ax.set_title(title, fontsize=8); ax.tick_params(labelsize=6)
-    fig.suptitle('V3 servo mount, plan sections looking down (mm). Servo long axis at 135 deg; posts at 135 / 315 deg grow from the low spokes', fontsize=7.5)
+        ax.set_title(title, fontsize=7); ax.tick_params(labelsize=5)
+    fig.suptitle('V3 servo mount, plan sections looking down (mm). Servo long axis at 135 deg; posts at 135 / 315 deg hang from the raised spokes', fontsize=7)
     fig.tight_layout(); fig.savefig(path, dpi=220); plt.close(fig)
 
 
