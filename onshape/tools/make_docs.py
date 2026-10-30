@@ -448,9 +448,68 @@ def v3():
     build_pdf(DOCS / 'V3_assembly_guide.pdf', 'V3 servo-on-rotor assembly guide - ARC BT80 airbrake', s)
 
 
+def mech():
+    import math
+    s = []
+    r_f = 24.8
+    s += [P('V3 mechanics: how it works and how every part moves', H1),
+          P('Diagram companion to the V3 assembly guide (SG90 straight on the rotor). All pictures are made from the CAD model: the staged views pose the real meshes, '
+            'and the timing numbers are measured on them, not drawn by hand.', B),
+          fig('mech_map.png', 140, 'What moves. Green: the rotor group (rotor, horn, four catch caps, their screws) turns about the vertical axis. Orange: the four fins and their glued tube cut-outs hinge outward. Blue and grey: everything else is fixed, including the servo body.', 130),
+          P('1 &nbsp; The idea in five sentences', H2)]
+    s += bullets([
+        '<b>Latched.</b> At 0° the finger on each catch cap sits just outside the lug on its fin, so the fin cannot open more than about 1°, however hard the wind pulls.',
+        '<b>Unlatched.</b> The servo turns the rotor counter-clockwise (seen from the nose). By about 14° the fingers have slid sideways off the lugs: the fins are free.',
+        '<b>Cam kick.</b> From about 26° the four cam lobes on the rotor push the four fin followers outward; the fins reach about 14° open at the end of the servo travel (65°).',
+        '<b>Airflow.</b> From about 14° open the relative wind gets under the fin tip and pushes each fin the rest of the way until it lands on its 90° hard stop.',
+        '<b>Stays deployed</b> while air flows: the stop carries the drag, not the servo. The cam keeps the fins from closing below about 14° as long as the servo stays at 65°.'])
+    s += [P('2 &nbsp; The five stages', H2),
+          P('Cut-away through the plane y = 0 looking at the cut face: fins 1 (right) and 3 (left) swing in the picture; the rotor and catch caps are cut open.', SM)]
+    pics = [('mech_s0.png', 'Servo 0°, rotor 0°, fins closed. Latch holds.'), ('mech_s1.png', 'Rotor 14°. Fingers off the lugs.'),
+            ('mech_s2.png', 'Rotor 40°. Cams push, fins 7°.'), ('mech_s3.png', 'Rotor 65°. Cams hold fins at 14°.'), ('mech_s4.png', 'Airflow has opened the fins to 90°, on the stop.')]
+    from reportlab.platypus import Table as RT, TableStyle as RTS
+    def img_cell(name, cap):
+        from reportlab.platypus import Image as RI
+        p = FIG / name; im = PILImage.open(p); w = 84 * mm; h = w * im.size[1] / im.size[0]
+        return [RI(str(p), width=w, height=h), Paragraph(cap, CAP)]
+    rows = [[img_cell(*pics[0]), img_cell(*pics[1])], [img_cell(*pics[2]), img_cell(*pics[3])], [img_cell(*pics[4]), '']]
+    t = RT(rows, colWidths=[88 * mm, 88 * mm]); t.setStyle(RTS([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    s += [t]
+    s += [PageBreak(), P('3 &nbsp; Geometry of the fin and its two contacts', H2),
+          fig('mech_side.png', 140, 'Side section. The fin turns about a hinge axis at R25, z0 (an M4 screw through the fin barrel). The latch lug is 46 mm above that axis, the cam follower 24.5 mm above it, so the cam needs only about 6 mm of lift to open the fin 14°. '
+              'The tip swings outward and ends at R58.4 at 90°.', 135),
+          P('The wind direction matters: the hinge is at the <i>bottom</i> of the fin and the tip opens up into the oncoming air, so airflow pushes the fin open once it has started. '
+            'That is presumably why the design uses a latch plus a short cam kick instead of a motor that has to hold the fins open.', B)]
+    s += [PageBreak(), P('4 &nbsp; Latch and cam, up close', H2),
+          fig('mech_latch.png', 176, 'The finger travels on an arc of radius 24.8 mm: 6 mm at 14°, 28 mm at 65°. The lug cannot follow it because the lug moves on the fin\'s own hinge arc.', 62),
+          fig('mech_cam.png', 176, 'Four lobes, four followers. The rotor profile rises from R21 (base) to R28.6 over 36° of rotor travel, with a dwell, so each lobe pushes its fin about 14°.', 66),
+          fig('mech_curve.png', 170, 'Measured on the CAD. Left of 14° the latch lets a fin open only about 1° (its free play). The cam first moves a fin at about 26° and reaches about 14° at 55°, then dwells.', 90)]
+    s += [P('5 &nbsp; Every part and how it moves', H2),
+          table([['Part (CAD name)', 'Qty', 'Motion', 'Range', 'Driven by'],
+                 ['R rotor (shaft, hub, 4 cams, 4 crown arms, knob)', 1, 'Rotates about the vertical axis in the top and low bearings', '0 → 65°, counter-clockwise from the nose', 'Servo horn, through the horn socket in the hub'],
+                 ['EH SG90 horn, HW horn screw M2', '1 + 1', 'Rotates with the rotor (horn is clamped on the servo spline)', '0 → 65°', 'Servo spline'],
+                 ['E SG90 servo body', 1, 'Fixed, hung from two housing posts by its flange. Only the output shaft turns', 'Shaft 0 → 65° commanded', 'Flight computer'],
+                 ['L1–L4 catch caps, HW L1–L4 M3×8', '4 + 4', 'Rotate with the rotor; the finger moves on a 24.8 mm radius arc', 'Finger travel 6 mm to unlatch (14°), 28 mm at 65°', 'Rotor'],
+                 ['P1–P4 fins', 4, 'Hinge about an axis at R25, z0, tangent to the housing, on an M4 screw', '0 → 90°: about 1° free play when latched, 14° from the cam, the rest from the airflow', 'Cam, then airflow; the latch holds them closed'],
+                 ['TP1–TP4 BT80 cut-outs', 4, 'Glued to the fins; swing out through the tube windows with them', '0 → 90°', 'Their fin'],
+                 ['HW H1–H4 hinge screws M4×25', 4, 'Fixed in the housing; the fin barrel turns around the shank', 'none', ''],
+                 ['C1, C2 housing halves (bearings, hinge ears, stop blocks, strips, servo posts, sleeve pads)', '1 + 1', 'Fixed. The 90° stop is the landing flat on the fin against the stop block', 'none', ''],
+                 ['REF upper and lower BT80 tubes', '1 + 1', 'Fixed. The upper tube has four windows for the fins', 'none', ''],
+                 ['Seam M3×8, support M3×5, sleeve M3×10, servo flange M2×8', '4 + 8 + 3 + 2', 'Fixed', 'none', '']],
+                [52, 12, 56, 38, 26], font=7.4),
+          P('In the Onshape assembly (ASM-V3) these motions are the rotor revolute (0 → 65°) and the four hinge revolutes (0 → 90°, hard stop). The mate values could not be driven by script, so drag the rotor and a fin to see them move.', SM)]
+    s += [P('6 &nbsp; Who pushes on whom', H2),
+          fig('mech_loadpath.png', 160, 'Load path. The servo only supplies torque to the rotor. The fin loads (suction when closed, drag at 90°) end in the housing through the finger-lug contact, the hinge screws and the hard stop.', 120),
+          P('<b>What the servo feels.</b> Closed: friction at the finger-lug contact while the wind pulls the fins outward (the dominant load, see the torque check in the V3 guide). During the kick: almost nothing, because the wind helps. '
+            'At 90°: nothing, the stop takes the drag. Its own inertia and the rotor\'s are negligible.', B),
+          WARN_P('Everything in this document is derived from the CAD geometry and a simple wind model. Latch behaviour, friction and the real wind load have not been tested on a print or in flight.')]
+    build_pdf(DOCS / 'V3_mechanics_diagrams.pdf', 'V3 mechanics diagrams - ARC BT80 airbrake', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
     if 'v2' in which: v2()
     if 'v3' in which: v3()
+    if 'mech' in which: mech()
     print('docs written', list(DOCS.glob('*.pdf')))
