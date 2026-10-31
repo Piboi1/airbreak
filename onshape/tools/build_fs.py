@@ -511,7 +511,182 @@ P('var lowThrust=cylinderMM(context,id+"lowThrust",7,-5.5,-3.5);','var lowThrust
 P('var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,-15,-6);','var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,definition.direct?-0.8:-15,definition.direct?2.2:-6);')
 P('var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,20,-2.5,2.5,-15,4,a);','var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,definition.direct?30.6:20,-2.5,2.5,definition.direct?-0.8:-15,definition.direct?3.0:4,a);')
 
+# ------------------------------------------------------------------ V4: servo on top (flipped), bay at the bottom (module mode 4)
+P('  annotation { "Name" : "V3 servo posts and tube pads", "Default" : false }\n  definition.direct is boolean;\n',
+  '  annotation { "Name" : "V3 servo posts and tube pads", "Default" : false }\n  definition.direct is boolean;\n  annotation { "Name" : "V4 servo on top, bay at the bottom", "Default" : false }\n  definition.flip is boolean;\n')
+P(' var compact=definition.compact;\n', ' var compact=definition.compact;\n var flip=definition.flip;\n')
+P(' var topZ=compact?58.8:67;', ' var topZ=compact?58.8:67;')
+P('var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,-33,-14.9);', 'var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,flip?-35.5:-33,-14.9);')
+P('var base=tubeMM(context,id+"base",33.02,18,-15,-11);', 'var base=tubeMM(context,id+"base",33.02,flip?26:18,-15,-11);')
+P('var ring=cylinderMM(context,id+"rotorShaft",5,definition.direct?-8.7:-10.5,78-dzT);',
+  'var ring=cylinderMM(context,id+"rotorShaft",5,flip?-6.4:(definition.direct?-8.7:-10.5),flip?44.6:78-dzT);')
+P('var cam=polygonMM(context,id+"camProfile",points,22,3);', 'var cam=polygonMM(context,id+"camProfile",points,flip?22.5:22,flip?5.5:3);')
+P('var crownHub=cylinderMM(context,id+"crownHub",9,58.6-dzT,61.6-dzT);', 'var crownHub=cylinderMM(context,id+"crownHub",9,flip?33.6:58.6-dzT,flip?44.6:61.6-dzT);')
+P('var lowThrust=cylinderMM(context,id+"lowThrust",7,definition.direct?2.7:-5.5,definition.direct?4.7:-3.5);',
+  'var lowThrust=cylinderMM(context,id+"lowThrust",7,flip?3.9:(definition.direct?2.7:-5.5),flip?5.9:(definition.direct?4.7:-3.5));')
+P(''' var highThrust=cylinderMM(context,id+"highThrust",7,65.5-dzT,67.5-dzT);
+ var knob=cylinderMM(context,id+"knob",10,74-dzT,78-dzT);
+ var finger=sector(context,id+"finger",8,16,4,74-dzT,4);
+ opBoolean(context,id+"rotorJoin",{"tools":qUnion([ring,cam,crownHub,lowThrust,highThrust,knob,finger]),"operationType":BooleanOperationType.UNION});''',
+  ''' var rotorParts=[ring,cam,crownHub,lowThrust];
+ if(flip) {
+  // V4: the rotation limiter moves to the bottom of the rotor, flipped and thick (6 mm finger, below the lower bearing).
+  rotorParts=append(rotorParts,radialBox(context,id+"limFinger",4,16,-3,3,-5.6,5.2,60*degree));
+ } else {
+  rotorParts=append(rotorParts,cylinderMM(context,id+"highThrust",7,65.5-dzT,67.5-dzT));
+  rotorParts=append(rotorParts,cylinderMM(context,id+"knob",10,74-dzT,78-dzT));
+  rotorParts=append(rotorParts,sector(context,id+"finger",8,16,4,74-dzT,4));
+ }
+ opBoolean(context,id+"rotorJoin",{"tools":qUnion(rotorParts),"operationType":BooleanOperationType.UNION});''')
+P(''' var topBearing=tubeMM(context,id+"topBearing",18,5.4,68-dzT,73-dzT);
+ var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,definition.direct?-0.8:-15,definition.direct?2.2:-6);
+ for(var i=0;i<4;i+=1) {
+  var a=(45+i*90)*degree;
+  var spoke=radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68-dzT,4,a);
+  var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,definition.direct?30.6:20,-2.5,2.5,definition.direct?-0.8:-15,definition.direct?3.0:4,a);
+  opBoolean(context,id+("topSpokeJoin"~i),{"tools":qUnion([topBearing,spoke]),"operationType":BooleanOperationType.UNION});
+  opBoolean(context,id+("lowSpokeJoin"~i),{"tools":qUnion([lowBearing,lowSpoke]),"operationType":BooleanOperationType.UNION});
+ }
+ opBoolean(context,id+"bearingsJoin",{"tools":qUnion([carrier,topBearing,lowBearing]),"operationType":BooleanOperationType.UNION});
+ for(var j=0;j<2;j+=1) {
+  var stop=sector(context,id+("knobStop"~j),12,18,4,72.5-dzT,5.9);
+  turn(context,id+("knobStopTurn"~j),stop,(j==0?-8:73)*degree);
+  opBoolean(context,id+("knobStopJoin"~j),{"tools":qUnion([carrier,stop]),"operationType":BooleanOperationType.UNION});
+ }''',
+  ''' var topBearing=undefined;
+ if(!flip) topBearing=tubeMM(context,id+"topBearing",18,5.4,68-dzT,73-dzT);
+ var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,flip?0.4:(definition.direct?-0.8:-15),flip?3.4:(definition.direct?2.2:-6));
+ for(var i=0;i<4;i+=1) {
+  var a=(45+i*90)*degree;
+  var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,(flip||definition.direct)?30.6:20,-2.5,2.5,flip?0.4:(definition.direct?-0.8:-15),flip?3.0:(definition.direct?3.0:4),a);
+  if(!flip) {
+   var spoke=radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68-dzT,4,a);
+   opBoolean(context,id+("topSpokeJoin"~i),{"tools":qUnion([topBearing,spoke]),"operationType":BooleanOperationType.UNION});
+  }
+  opBoolean(context,id+("lowSpokeJoin"~i),{"tools":qUnion([lowBearing,lowSpoke]),"operationType":BooleanOperationType.UNION});
+ }
+ opBoolean(context,id+"bearingsJoin",{"tools":qUnion(flip ? [carrier,lowBearing] : [carrier,topBearing,lowBearing]),"operationType":BooleanOperationType.UNION});
+ if(!flip) for(var j=0;j<2;j+=1) {
+  var stop=sector(context,id+("knobStop"~j),12,18,4,72.5-dzT,5.9);
+  turn(context,id+("knobStopTurn"~j),stop,(j==0?-8:73)*degree);
+  opBoolean(context,id+("knobStopJoin"~j),{"tools":qUnion([carrier,stop]),"operationType":BooleanOperationType.UNION});
+ }''')
+P('var camPocket=sector(context,id+("camRelief"~i),8,18,30,21.9,3.2);','var camPocket=sector(context,id+("camRelief"~i),8,18,30,flip?22.4:21.9,flip?5.7:3.2);')
+P('subtract(context,id+"rotorLightBore",ring,cylinderMM(context,id+"rotorLightTool",3,-8,78.1-dzT));','subtract(context,id+"rotorLightBore",ring,cylinderMM(context,id+"rotorLightTool",3,flip?-7:-8,flip?41.6:78.1-dzT));')
+P(' var armEnd=compact?24.1:30+dr;var armZ=compact?58.6-dzT:58.6;var capR=compact?20.4:24.3;',
+  ' var armEnd=compact?24.1:30+dr;var armZ=flip?33.6:(compact?58.6-dzT:58.6);var capR=flip?19.5:(compact?20.4:24.3);')
+P('var catchArm=radialBox(context,sub+"catchArm",6,armEnd,-2.5,2.5,armZ,3,0*degree);','var catchArm=radialBox(context,sub+"catchArm",6,armEnd,flip?-4:-2.5,flip?4:2.5,armZ,flip?5:3,0*degree);')
+P('vector(0,0,1),armZ-0.6,armZ+3.6,M3_CLR);','vector(0,0,1),armZ-0.6,armZ+(flip?5.6:3.6),M3_CLR);')
+P('catchCap=radialBox(context,sub+"catchCap",18.0,26.0,-4.2,4.2,35.4,5.4,0*degree);','catchCap=radialBox(context,sub+"catchCap",flip?16.5:18.0,26.0,flip?-7.2:-4.2,flip?7.2:4.2,flip?29.4:35.4,flip?9.5:5.4,0*degree);')
+P('var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,40.8,5.2,0*degree);','var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,flip?38.9:40.8,flip?5.9:5.2,0*degree);')
+P('var catchBoss=radialBox(context,sub+"catchBoss",18.0,24.2,-4.2,4.2,31.4,4.0,0*degree);','var catchBoss=radialBox(context,sub+"catchBoss",flip?16.5:18.0,flip?22.5:24.2,flip?-5.2:-4.2,flip?5.2:4.2,flip?28.6:31.4,flip?5.0:4.0,0*degree);')
+P('catchSocket=radialBox(context,sub+"catchSocket",17.9,24.2,-2.75,2.75,36.4,5.0,0*degree);','catchSocket=radialBox(context,sub+"catchSocket",flip?16.4:17.9,24.2,flip?-4.3:-2.75,flip?4.3:2.75,flip?33.4:36.4,flip?6.0:5.0,0*degree);')
+P('vector(0,0,1),compact?32.0:54.0,compact?36.5:58.5,M3_PILOT);','vector(0,0,1),flip?28.8:(compact?32.0:54.0),flip?33.5:(compact?36.5:58.5),M3_PILOT);')
+P('var cs=screwHW(context,sub+"capScrew",vector(capR,0,armZ+3.0),vector(0,0,-1),"M3BH",8,"HW L"~(i+1)~" cap screw - M3x8 button head");',
+  'var cs=screwHW(context,sub+"capScrew",vector(capR,0,armZ+(flip?5.0:3.0)),vector(0,0,-1),"M3BH",flip?10:8,"HW L"~(i+1)~" cap screw - "~(flip?"M3x10":"M3x8")~" button head");')
+P(' // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.',
+  r''' if(flip) {
+  // V4: SG90 flipped on top (shaft down). Ledges at azimuth 135 / 315 grow out of the support strips under its flange tabs.
+  var esF=vector(cos(135*degree),sin(135*degree),0);
+  for(var k=0;k<2;k+=1) {
+   var hsF=k==0?18.8:-9.3;
+   var ledge=radialBox(context,id+("servoLedge"~k),k==0?16.3:-30.6,k==0?30.6:-6.8,-3.5,3.5,45.1,4.3,135*degree);
+   opBoolean(context,id+("servoLedgeJoin"~k),{"tools":qUnion([carrier,ledge]),"operationType":BooleanOperationType.UNION});
+   drill(context,id+("ledgePilot"~k),carrier,vector(hsF*esF[0],hsF*esF[1],49.4),vector(0,0,-1),0,3.5,0.8);
+   if(definition.hardware)
+    screwHW(context,id+("servoScrew"~k),vector(hsF*esF[0],hsF*esF[1],51.9),vector(0,0,-1),"M2BH",6,"HW servo flange screw "~(k+1)~" - M2x6 button head");
+  }
+  // Rotation limiter stops (thick, 8 mm) at the bottom, hanging from the lower spokes. Faces are 0.4 mm clear of the 6 mm finger at both ends of the 65 deg travel.
+  var limA=radialBox(context,id+"limStop1",10,19,-11,-3.4,-6.4,9.8,60*degree);
+  var limB=radialBox(context,id+"limStop2",10,19,3.4,11,-6.4,9.8,125*degree);
+  opBoolean(context,id+"limStop1Join",{"tools":qUnion([carrier,limA]),"operationType":BooleanOperationType.UNION});
+  opBoolean(context,id+"limStop2Join",{"tools":qUnion([carrier,limB]),"operationType":BooleanOperationType.UNION});
+  // Bay ceiling (wires come down the hollow rotor and through the centre hole), and four bosses that take the screws into the transition.
+  var bayCeil=cylinderMM(context,id+"bayCeiling",30.5,-10,-8);
+  opBoolean(context,id+"bayCeilingJoin",{"tools":qUnion([carrier,bayCeil]),"operationType":BooleanOperationType.UNION});
+  subtract(context,id+"bayWireHole",carrier,cylinderMM(context,id+"bayWireTool",4,-10.1,-7.9));
+  for(var k=0;k<4;k+=1) {
+   var baz=(45+90*k)*degree;var bsub=id+("transBoss"~k);
+   var tboss=radialBox(context,bsub,23.5,30.2,-4.5,4.5,-35.5,6.0,baz);
+   opBoolean(context,bsub+"join",{"tools":qUnion([carrier,tboss]),"operationType":BooleanOperationType.UNION});
+   var bp=vector(27*cos(baz),27*sin(baz),-29.5);
+   drill(context,bsub+"cb",carrier,bp,vector(0,0,-1),0,2.0,3.1);
+   drill(context,bsub+"clr",carrier,bp,vector(0,0,-1),0,6.2,1.7);
+   if(definition.hardware)
+    screwHW(context,bsub+"hw",vector(27*cos(baz),27*sin(baz),-31.5),vector(0,0,-1),"M3BH",12,"HW transition screw "~(k+1)~" - M3x12 button head");
+  }
+ }
+ // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.''')
+P('annotation {"Name":"Module: 0 spring, 1 direct servo, 2 unloaded spring samples, 3 V3 servo straight on the rotor","Default":0} isInteger(definition.mode,{(unitless):[0,0,3]} as IntegerBoundSpec);',
+  'annotation {"Name":"Module: 0 spring, 1 direct servo, 2 unloaded spring samples, 3 V3 servo straight on the rotor, 4 V4 servo on top","Default":0} isInteger(definition.mode,{(unitless):[0,0,4]} as IntegerBoundSpec);')
+P('var a=(45+side*180)*degree;var r=level==0?24:29;var z=level==0?-13:(compact?53:65);','var a=(45+side*180)*degree;var r=level==0?(flip?28.5:24):29;var z=level==0?-13:(compact?53:65);')
+P('"compact":definition.compact,"direct":definition.mode==3,"hardware"','"compact":definition.compact,"direct":definition.mode==3,"flip":definition.mode==4,"hardware"')
+P(' stage="shaft extension";',
+  r''' if(definition.mode==4) {
+  stage="v4 rotor top";
+  var es4=vector(cos(135*degree),sin(135*degree),0);
+  // Horn pocket + arm slot open at the top of the rotor hub; the servo (with its horn) comes down from above.
+  var pocketF=cylinderMM(context,id+"v4HornPocket",4.5,41.3,45.0);
+  var slotF=radialBox(context,id+"v4HornSlot",0,13,-2.2,2.2,41.3,3.7,0*degree);
+  try { opBoolean(context,id+"v4PocketJoin",{"tools":qUnion([pocketF,slotF]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v4PocketJoin"); }
+  turn(context,id+"v4PocketTurn",pocketF,(45+definition.release)*degree);
+  subtract(context,id+"v4HornPocketCut",rotor,pocketF);
+  label(context,rotor,"R Cam rotor - servo horn socket at the top, thick limiter finger at the bottom - 0 LOCK 65 OPEN",[.28,.68,.42]);
+  var hornHubF=cylinderMM(context,id+"v4HornHub",4,41.5,43.3);
+  var hornArmF=radialBox(context,id+"v4HornArm",0,11,-1.7,1.7,41.5,1.8,0*degree);
+  try { opBoolean(context,id+"v4HornJoin",{"tools":qUnion([hornHubF,hornArmF]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v4HornJoin"); }
+  turn(context,id+"v4HornTurn",hornHubF,(45+definition.release)*degree);
+  label(context,hornHubF,"EH SG90 horn REFERENCE - fit the socket to your actual horn",[.8,.69,.25]);
+  if(definition.hardware)
+   screwHW(context,id+"v4HornScrew",vector(0,0,41.5),vector(0,0,1),"M2BH",6,"HW horn screw - M2x6 (the one supplied with the servo), from below through the rotor bore");
+  stage="v4 servo";
+  var sBody4=radialBox(context,id+"v4ServoBody",-6.5,16.0,-6.1,6.1,45.2,22.7,135*degree);
+  var sTab4=radialBox(context,id+"v4ServoTab",-11.5,21.0,-5.9,5.9,49.4,2.5,135*degree);
+  var sSpl4=cylinderMM(context,id+"v4Spline",2.4,41.5,45.2);
+  try { opBoolean(context,id+"v4ServoJoin",{"tools":qUnion([sBody4,sTab4,sSpl4]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v4ServoJoin"); }
+  for(var k=0;k<2;k+=1) {
+   var hs4=k==0?18.8:-9.3;
+   drill(context,id+("v4TabHole"~k),sBody4,vector(hs4*es4[0],hs4*es4[1],49.0),vector(0,0,1),0,3.6,1.1);
+  }
+  label(context,sBody4,"E SG90 servo REFERENCE - flipped on top, shaft down, flange screwed to the two housing ledges - measure your servo",[.35,.38,.43]);
+  stage="v4 bay";
+  // Electronics: Mercury V1 altimeter (30 x 16.9 x 10.8) and a 5 V regulator (25 x 15 x 8, placeholder) in the upper layer, a 2S LiPo (40 x 18 x 10, placeholder) in the lower layer.
+  var merc=radialBox(context,id+"v4Mercury",-15,15,-17.45,-0.55,-21.2,10.8,0*degree);
+  label(context,merc,"E2 Mercury V1 altimeter REFERENCE (30 x 16.9 x 10.8, Altimeter Cloud)",[.55,.35,.75]);
+  var regu=radialBox(context,id+"v4Regulator",-12.5,12.5,2.5,17.5,-21.2,8.0,0*degree);
+  label(context,regu,"E3 5 V 3 A regulator REFERENCE (placeholder 25 x 15 x 8)",[.94,.54,.63]);
+  var batt=radialBox(context,id+"v4Battery",-20,20,-9,9,-34.5,10.0,0*degree);
+  label(context,batt,"E4 Servo battery 2S LiPo REFERENCE (placeholder 40 x 18 x 10)",[.95,.83,.36]);
+  // Electronics sled: slides in from below, held between the bay ceiling and the transition.
+  // Skeletal sled: a block round the upper layer, a block round the battery, and four thin centring ribs; pockets cut after.
+  var sled=radialBox(context,id+"v4SledA",-17.0,17.0,-19.2,19.2,-23.0,12.8,0*degree);
+  var sledB=radialBox(context,id+"v4SledB",-22.4,22.4,-11.4,11.4,-35.3,14.3,0*degree);
+  opBoolean(context,id+"v4SledJoinB",{"tools":qUnion([sled,sledB]),"operationType":BooleanOperationType.UNION});
+  for(var k=0;k<4;k+=1) {
+   var sribk=radialBox(context,id+("v4SledRib"~k),16,29.3,-1.0,1.0,-35.3,19.5,(90*k)*degree);
+   opBoolean(context,id+("v4SledRibJoin"~k),{"tools":qUnion([sled,sribk]),"operationType":BooleanOperationType.UNION});
+  }
+  subtract(context,id+"v4SledPocketA1",sled,radialBox(context,id+"v4PocketA1",-15.2,15.2,-17.65,-0.35,-21.2,11.3,0*degree));
+  subtract(context,id+"v4SledPocketA2",sled,radialBox(context,id+"v4PocketA2",-12.7,12.7,2.3,17.7,-21.2,11.3,0*degree));
+  subtract(context,id+"v4SledPocketB",sled,radialBox(context,id+"v4PocketB",-20.4,20.4,-9.4,9.4,-35.4,10.9,0*degree));
+  subtract(context,id+"v4SledWire",sled,cylinderMM(context,id+"v4SledWireTool",4,-24.6,-21.1));
+  label(context,sled,"N Electronics sled - slides in from below, clamped between the bay ceiling and the transition",[.30,.60,.55]);
+  // Transition on the BT80 side: bond inside the lower BT80 tube; the module is screwed down onto it.
+  var trans=tubeMM(context,id+"v4TransTube",32.3,23.5,-43.5,-35.5);
+  for(var k=0;k<4;k+=1) drill(context,id+("v4TransPilot"~k),trans,vector(27*cos((45+90*k)*degree),27*sin((45+90*k)*degree),-35.5),vector(0,0,-1),0,7.0,M3_PILOT);
+  subtract(context,id+"v4TransWire",trans,atC(context,id+"v4TransWireTool",4,-43.6,-35.4,0,-26));
+  label(context,trans,"T Transition ring (BT80 side) - bond inside the lower BT80 tube, 4 M3 pilots take the module screws",[.86,.78,.55]);
+  if(definition.tubes) {
+   var lt4=tubeMM(context,id+"lowerTube",33.02,32.5,-95,-15);
+   label(context,lt4,"REF BT80 lower tube - bonded to the sleeve and the transition",TUBE_TAN);
+  }
+  return;
+ }
+ stage="shaft extension";''')
+
 # ------------------------------------------------------------------ apply
+import os
+if os.environ.get('PATCH_LIMIT'): patches = patches[:int(os.environ['PATCH_LIMIT'])]
 out = src
 for old, new, cnt in patches:
     n = out.count(old)

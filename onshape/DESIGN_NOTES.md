@@ -49,6 +49,18 @@ Source: `fs/v0_original.fs` (your FeatureScript, unchanged). `fs/airbrake_v1_v2.
 * With the rotor at 65 deg the cam holds each fin open about 14 deg; the airflow does the rest to the 90 deg stop. Servo torque: `tools/torque_check.py` (latch friction under wind suction dominates).
 * Assumed, not measured: SG90 and horn dimensions, wind-suction coefficient, friction.
 
+## V4 = servo on top, bay at the bottom (module mode 4, `V2 compact head` on)
+* Servo flipped on top (shaft down, long axis at 135 deg), tabs at z 49.4..51.9 screwed (M2x6) to two ledges at z 45.1..49.4 that grow out of the support strips; servo body z 45.2..67.9, 9.1 mm above the housing top (z 58.8).
+  The ledges sit above the catch-cap fingers (top z 44.8): anything lower is swept by the fingers between 30 and 60 deg of rotor travel.
+* Rotor: shaft R5 from z -6.4 to 44.6, crown hub R9 (z 33.6..44.6) with a horn pocket open at the top (horn at z 41.5..43.3, arm slot at 45 deg), arms 8 x 5 mm (z 33.6..38.6, hole R19.5), cam web 5.5 mm (z 22.5..28),
+  collar R7 at z 3.9..5.9 above the 3 mm lower bearing (z 0.4..3.4). Top bearing, knob, high thrust collar and the old stops are removed.
+* Limiter at the bottom: finger 6 mm wide (R4..16, z -5.6..-0.4, rest az 60 deg), two stops 7.6 mm wide (R10..19, z -6.4..3.4) hung from the lower spokes, faces 0.4 mm clear of the finger at both ends of the 65 deg travel (engages at -3 and 67 deg).
+* Catch caps: body 14 mm wide (R16.5..26, z 29.4..38.9), socket for the 8 mm arm, boss R16.5..22.5 (z 28.6..33.6), finger R23.6..26 z 38.9..44.8; screw M3x10 from the arm top.
+* Bay: ceiling disc z -10..-8 with a centre hole (wires come down the hollow rotor), base ring opened to R26, lower sleeve to z -35.5, four bosses (R23.5..30.2, z -35.5..-29.5) with counterbored clearance holes for M3x12 into the transition ring (R23.5..32.3, z -43.5..-35.5, bonded in the lower BT80 tube).
+* Electronics (reference bodies): Mercury V1 30 x 16.9 x 10.8 (upper layer, with a 25 x 15 x 8 regulator), 2S LiPo 40 x 18 x 10 (lower layer); skeletal sled slides in from below and is clamped between the ceiling and the transition.
+* Printed set 143 g solid PLA (core 113 g + sled 16 g + transition ring 15 g). Checked: no printed-part overlaps closed or open, rotor swept -1.5..66.5 deg clear, latch and cam timing as V3, V1/V2/V3 rebuilt identical.
+* Assumed, not measured: servo and horn dimensions, battery and regulator sizes, the Mercury's servo output pad and signal level. Not modelled: static pressure ports for the altimeter, the servo cable route (through the hollow rotor).
+
 ## Correction made while building V3
 The V2 reference upper tube in the CAD still had a 60.2 mm window (top z 51.0) while the fin top is at z 54: the fin tip would have hit the tube at the first degree of opening. The window is now 63.8 mm
 (top z 54.6, as the guide always said); fin plus glued cut-out are clear of the tube at every opening angle 0.5..90 deg (`tools/sweep_open.py`). Printed parts were not affected.

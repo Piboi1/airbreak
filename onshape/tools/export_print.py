@@ -34,20 +34,21 @@ def candidates():
     return out
 
 
-def export(ps_key, outdir, tag):
+def export(ps_key, outdir, tag, names=None):
+    NAMES_ = names or NAMES
     d = run.ids()
     parts = geom.fetch_parts(d['did'], d['wid'], d[ps_key], chord=0.015, ang=0.1)
     os.makedirs(outdir, exist_ok=True)
     rows = []
     for pid, (name, m) in parts.items():
         tok = name.split(' ')[0]
-        if tok in NAMES and name.split(' ')[0] == tok and 'REFERENCE' not in name and not name.startswith(('HW', 'REF', 'TP')):
+        if tok in NAMES_ and name.split(' ')[0] == tok and 'REFERENCE' not in name and not name.startswith(('HW', 'REF', 'TP')):
             sc, mm, over, h = orient(m)
             n = REPEAT.get(tok, 1)
-            fn = f"{outdir}/{tok.rstrip('1234') if tok in ('P1','L1') else tok}_{NAMES[tok]}_x{n}.stl"
+            fn = f"{outdir}/{tok.rstrip('1234') if tok in ('P1','L1') else tok}_{NAMES_[tok]}_x{n}.stl"
             fn = fn.replace('/P_', '/P_').replace('/L_', '/L_')
             mm.export(fn)
-            rows.append((tok, NAMES[tok], n, round(m.volume), round(mm.bounds[1][2], 1), round(over, 1), fn.split('/')[-1]))
+            rows.append((tok, NAMES_[tok], n, round(m.volume), round(mm.bounds[1][2], 1), round(over, 1), fn.split('/')[-1]))
     return rows
 
 

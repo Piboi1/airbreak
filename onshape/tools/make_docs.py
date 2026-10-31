@@ -518,8 +518,8 @@ def history():
     def bl(items): return [Paragraph(i, BUL, bulletText='•') for i in items]
     s = []
     s += [P('Design history: every iteration and why we switched', H1),
-          P('From your original FeatureScript to the flush SG90-on-the-rotor V3. Numbers are measured on the CAD models (printed mass = solid PLA at 1.24 g/cm³; the original and the first V2 were measured from their saved models and STL exports).', B),
-          fig('hist_timeline.png', 150, 'The path: six steps, each triggered by a request or a finding.', 215)]
+          P('From your original FeatureScript to the servo-on-top V4 with its electronics bay. Numbers are measured on the CAD models (printed mass = solid PLA at 1.24 g/cm³; the original and the first V2 were measured from their saved models and STL exports).', B),
+          fig('hist_timeline.png', 150, 'The path: seven steps, each triggered by a request or a finding.', 225)]
     s += [PageBreak(), P('1 &nbsp; Side by side', H2),
           fig('hist_scale.png', 150, 'To scale. The fins never moved (z 4..54). What changed is what sits above and below them.', 140),
           fig('hist_metrics.png', 176, 'Length, mass and number of printed parts for each iteration.', 60),
@@ -529,7 +529,8 @@ def history():
                  ['V2 first (compact head)', '111.4 mm', '171.9 mm', '177 g', '19 types', 'same'],
                  ['V2 22 mm drop', '91.8 mm', '152.3 mm', '169 g', '19 types', 'spring + SG90 trigger; inward lug + finger latch'],
                  ['V3 first (servo below)', '91.8 mm', '105.5 mm incl. servo', '108 g', '5 types', 'SG90 on the rotor; same lug + finger latch'],
-                 ['V3 flush (servo inside)', '91.8 mm', '91.8 mm', '106 g', '5 types', 'same; bearing and spokes raised']], [32, 24, 26, 20, 30, 44], font=7.6)]
+                 ['V3 flush (servo inside)', '91.8 mm', '91.8 mm', '106 g', '5 types', 'same; bearing and spokes raised'],
+                 ['V4 (servo on top, bay)', '94.3 mm', '103.4 mm (servo top above the housing)', '143 g incl. sled + transition', '7 types', 'servo on top, thick limiter at the bottom']], [32, 24, 26, 20, 30, 44], font=7.6)]
     # --- iteration 0
     s += [PageBreak(), P('2 &nbsp; The original: your FeatureScript', H2),
           side('hist_baseline.png', bl([
@@ -584,8 +585,18 @@ def history():
               '<b>Next:</b> measure your own servo and horn, run the ground-impact FEA you asked about, print and test the latch.']), 52),
           Spacer(1, 6),
           fig('compare_length_v3.png', 170, 'V1, V2 and V3 side by side (V3 is the flush layout).', 90)]
+    s += [PageBreak(), P('8 &nbsp; V4: servo on top, thicker parts, electronics bay', H2),
+          side('v4_assembled.png', bl([
+              'You noticed the limiter stops and the green rotor parts were thin, and asked for the servo on top with the limiter moved to the bottom, a screwed bottom joint on the BT80 transition, and a bay for the altimeter, a servo battery and a regulator, keeping the size small.',
+              'I drew a sketch first (no CAD) and you picked Option B (a little more length), the Mercury V1 altimeter, and my battery assumption.',
+              'Thicker: limiter finger 2 → 6 mm, stops 2 → 7.6 mm, crown arms 3 × 5 → 5 × 8 mm (walls at the screw 0.8 → 2.3 mm), cam web 3 → 5.5 mm.',
+              'Bay: sled with the Mercury and a regulator on one layer and the battery on the other; four vertical M3 into a transition ring.',
+              'The interference sweep showed the servo ledges were hit by the catch-cap fingers, so the ledges moved above them and the servo now stands 9.1 mm above the housing.',
+              '<b>Housing 94.3 mm, 103.4 mm from housing bottom to servo top, printed set 143 g</b> (113 g core + sled + transition ring).']), 52),
+          Spacer(1, 6),
+          fig('v4_side.png', 120, 'V4 section from the CAD model.', 110)]
     # --- problems and decisions
-    s += [PageBreak(), P('8 &nbsp; Problems found along the way and what fixed them', H2),
+    s += [PageBreak(), P('9 &nbsp; Problems found along the way and what fixed them', H2),
           table([['Step', 'Problem', 'Fix'],
                  ['Setup', 'Free Onshape plan forces public documents; your own document was read-only', 'New public document (you chose to keep it public)'],
                  ['Setup', 'Direct STL export was blocked by the proxy', 'STLs built from the model’s tessellation; STEP through Onshape’s translation'],
@@ -598,8 +609,10 @@ def history():
                  ['V2 22 mm', 'Reference tube window still 60.2 mm; fin tip would hit it while opening', 'Window 63.8 mm; opening sweep 0.5–90° clear'],
                  ['V2 22 mm', 'My angle scan polled Onshape too hard and was blocked for about 20 h', 'Waited; later checks done offline on the meshes (no API calls)'],
                  ['V3 flush', 'Servo cannot just move up: rotor bearing and spokes were in the way; tab 0.5 mm into the base ring', 'Bearing, collar and spokes raised above the horn; 0.7 mm ring relief'],
-                 ['All', 'Assembly mate values cannot be driven from a script', 'Not verified by script; drag the rotor and a fin in ASM-V3']], [20, 90, 66], font=7.6),
-          P('9 &nbsp; Who decided what', H2),
+                 ['V4', 'Catch-cap fingers hit the servo flange ledges between 30° and 60° of rotor travel (63 mm³)', 'Ledges raised above the fingers; servo stands 9.1 mm above the housing'],
+                 ['V4', 'Limiter finger only touched the shaft (stayed a separate body); seam pegs floated after the base ring was opened; sled overlapped the hinge ears', 'Finger overlapped into the shaft, pegs moved to R28.5, sled ribs trimmed to the lower bay'],
+                 ['All', 'Assembly mate values cannot be driven from a script', 'Not verified by script; drag the rotor and a fin in ASM-V3 / ASM-V4']], [20, 90, 66], font=7.6),
+          P('10 &nbsp; Who decided what', H2),
           table([['Decision', 'By'],
                  ['Screws instead of glue, M3 self-tapping, M4 for the hinge, public Onshape document', 'You'],
                  ['Shorter airbrake with the fins higher and a smaller head', 'You'],
@@ -608,8 +621,10 @@ def history():
                  ['New lug-and-finger latch, 63.8 mm window, 4.2 mm top ring', 'Me (needed to make your layout work)'],
                  ['Direct SG90 drive, deploy once, 90° mechanical stop, FEA later', 'You (from the expert’s advice)'],
                  ['Servo flush with the housing bottom, not sticking out', 'You'],
+                 ['Servo on top, limiter to the bottom, thicker parts, screwed transition, electronics bay, Option B, Mercury V1', 'You'],
                  ['Servo posts and pads, horn pocket, cam peak 28.6 mm, small joints left bonded', 'Me; please check the servo and horn dimensions'],
-                 ['Moving the lower bearing and spokes up to make the flush servo fit', 'Me']], [130, 46], font=7.8),
+                 ['Moving the lower bearing and spokes up to make the flush servo fit', 'Me'],
+                 ['Raising the servo ledges above the finger sweep; sled, transition ring, battery and regulator placeholders', 'Me']], [130, 46], font=7.8),
           WARN_P('Mass is solid PLA; the slicer’s infill will lower the real weights. The latch, horn pocket and servo mount have not been tested on a print.')]
     build_pdf(DOCS / 'Design_history.pdf', 'Design history - ARC BT80 airbrake', s)
 
@@ -671,6 +686,85 @@ def sketch_v4():
     build_pdf(DOCS / 'V4_concept_sketch.pdf', 'V4 concept sketch - ARC BT80 airbrake', s)
 
 
+def v4():
+    s = []
+    s += [P('V4 – servo on top, thicker parts, electronics bay: assembly guide', H1),
+          P('Built from the sketch you reviewed, with Option B (a little more length), the Mercury V1 altimeter, and my assumptions for the battery and regulator. '
+            'The fins, cams, hinge, tube slits and rotor-mounted latch are the V3 ones; what changed is below.', B),
+          P(f'Onshape: <a href="{DOC_URL}" color="blue">ARC BT80 Airbrake - V1 Screwed + V2 Compact (Claude build)</a>. Elements: <b>V4-A</b> closed, <b>V4-B</b> fully open, <b>ASM-V4</b> assembly. '
+            'Feature Studio: module mode <i>4</i> with <i>V2 compact head</i> on.', SM),
+          WARN_P('<b>Where it differs from the sketch:</b> (1) the servo top is <b>9.1 mm above the housing</b>, not flush: the catch-cap fingers sweep under the servo’s flange ledges, so the ledges had to move above them, which lifts the servo; it sits in the upper BT80 tube. '
+                 '(2) The crown arm is 8 mm wide and 5 mm thick with no separate boss (walls beside the screw 2.3 mm, not 3.3). (3) Limiter stops are 7.6 mm wide, the cam web 5.5 mm. '
+                 '(4) The housing is 94.3 mm (Option B: +2.5 mm over V3), and 103.4 mm from the housing bottom to the top of the servo.'),
+          fig('v4_assembled.png', 55, 'V4 closed. The upper tube, with the servo showing through its window zone, covers the head as before.', 112),
+          P('1 &nbsp; The numbers', H2),
+          table([['', 'V3 flush', 'V4'],
+                 ['Printed housing', '91.8 mm', '94.3 mm (z −35.5 … 58.8)'],
+                 ['Housing bottom to servo top', '91.8 mm (servo inside)', '103.4 mm (servo top 9.1 mm above the housing)'],
+                 ['Printed set, solid PLA', '106 g', '<b>143 g</b>: 113 g core + 16 g sled + 15 g transition ring'],
+                 ['Printed part types', '5', '7 (adds the electronics sled and the transition ring)'],
+                 ['Servo', 'inside, shaft up, bottom flush', 'on top, flipped, shaft down'],
+                 ['Rotation limiter', 'top: finger and stops about 2 mm wide', 'bottom: finger 6 mm, stops 7.6 mm'],
+                 ['Crown arms', '5 × 3 mm, 0.8 mm walls at the screw', '8 × 5 mm, 2.3 mm walls (cap body 14 mm wide)'],
+                 ['Cam web', '3 mm', '5.5 mm'],
+                 ['Electronics', 'none', 'Mercury V1 + 2S LiPo + 5 V regulator in the bay'],
+                 ['Tube joint at the bottom', '3 radial M3 into sleeve pads', '4 vertical M3×12 into the transition ring']], [52, 52, 72], font=7.8),
+          fig('v4_side.png', 138, 'Side section from the CAD model, to scale.', 128)]
+    s += [PageBreak(), P('2 &nbsp; What you asked for, and what I did', H2)]
+    s += bullets([
+        '<b>Thicker limiter and rotor parts.</b> Limiter finger 2 → 6 mm wide and 5.2 mm tall; stops 2 → 7.6 mm, 9.8 mm tall, hung from the lower spokes; arms 3 → 5 mm thick and 5 → 8 mm wide; cam web 3 → 5.5 mm. The catch caps got a 14 mm wide body to carry the wider arm.',
+        '<b>Flipped.</b> The servo is on top with the shaft down into a pocket on the rotor hub; the limiter moved to the bottom of the rotor. The old top bearing is gone: the rotor is held by the servo horn and the lower bearing, with a collar above the bearing and the limiter finger below it.',
+        '<b>Bottom end.</b> Four bosses on the housing take M3×12 screws that go down into the transition ring (heads in counterbores, reached from inside the bay with the sled out).',
+        '<b>Bay.</b> A ceiling at z −10 closes the mechanism; below it a skeletal sled holds the Mercury and regulator in the upper layer and the battery in the lower layer, clamped between the ceiling and the transition.'])
+    s += [fig('v4_thicker.png', 150, 'Before and after, sections taken from the V3 and V4 models.', 120),
+          PageBreak(), P('3 &nbsp; The electronics bay', H2),
+          fig('v4_bay.png', 172, 'Plan sections of the V4 model. Mercury V1 is the real size (30 × 16.9 × 10.8 mm); battery and regulator are placeholders.', 72),
+          table([['Part', 'Size', 'Source'],
+                 ['Mercury V1 altimeter', '30 × 16.9 × 10.8 mm, 7.2 g in case, onboard 50 mAh battery, USB-C, Wi-Fi, 2 direct servo outputs', 'Altimeter Cloud specification you sent'],
+                 ['Servo battery', '2S LiPo, 7.4 V, about 40 × 18 × 10 mm (placeholder)', 'my assumption'],
+                 ['Regulator', '5 V, 3 A step-down module, about 25 × 15 × 8 mm (placeholder)', 'my assumption']], [38, 96, 42], font=7.6),
+          fig('v4_wiring.png', 150, 'Power and signal. The Mercury has its own battery and drives the servo through a direct servo output; the servo is powered separately.', 80)]
+    s += [PageBreak(), P('4 &nbsp; Why the servo stands 9.1 mm above the housing', H2),
+          P('The four catch-cap fingers sweep 65° around the axis and pass under every azimuth, so a servo ledge that sits below the fingers is hit between 30° and 60° of rotor travel (found in the interference sweep, 63 mm³ at 45°). '
+            'Raising the ledges above the fingers fixes that for good, and lifts the servo 6 mm; then I brought the housing top back down to 58.8 mm because it no longer needs to enclose the servo. '
+            'Alternatives, if you do not want the servo above the ring: lower the whole latch (needs a redesign of the fin lug), or hold the servo by a yoke at its top end (adds a lid and moves the support above the nose-side ring).', B),
+          P('5 &nbsp; Hardware', H2),
+          table([['Ref in CAD', 'Fastener', 'Qty', 'Joint', 'Driver'],
+                 ['HW seam screw 1-4', 'M3 × 8 socket-head cap', 4, 'Seam, z = 8 and z = 44', '2.5 mm hex'],
+                 ['HW L1-L4 cap screw', 'M3 × 10 button head', 4, 'Rotor arm → catch cap boss', '2.0 mm hex'],
+                 ['HW H1-H4 hinge screw', 'M4 × 25 button head', 4, 'Fin hinge', '2.5 mm hex'],
+                 ['HW top-tube support screw 1-8', 'M3 × 5 button head', 8, 'Upper BT80 tube → strips', '2.0 mm hex'],
+                 ['HW servo flange screw 1-2', 'M2 × 6 button head, self-tapping', 2, 'Servo tabs → ledges (from above)', '1.5 mm hex or PH0'],
+                 ['HW horn screw', 'M2 × 6 (supplied with the servo)', 1, 'Horn → spline, from below through the rotor bore', 'PH0 / 1.5 mm hex'],
+                 ['HW transition screw 1-4', 'M3 × 12 button head', 4, 'Module bosses → transition ring (from the bay side)', '2.0 mm hex']], [40, 42, 9, 60, 25], font=7.6),
+          P('<b>Totals:</b> 27 screws: M3×5 × 8, M3×8 × 4, M3×10 × 4, M3×12 × 4, M4×25 × 4, M2×6 × 3.', B),
+          P('Print list (STLs in <font face="Courier">onshape/exports/v4/print</font>): housing halves C1 and C2, fin ×4, catch cap ×4, rotor, <b>electronics sled</b>, <b>transition ring</b>. The sled and the transition ring are new; the transition ring is yours to bond into the lower BT80 tube.', B),
+          fig('v4_overview_exploded.png', 92, 'Exploded V4. Top to bottom: upper tube, servo with horn, housing with rotor and fins, electronics sled with its parts, transition ring, lower tube.', 170)]
+    s += [PageBreak(), P('6 &nbsp; Assembly sequence', H2)]
+    s += bullets([
+        'Hinge screws, catch caps (M3×10 into the arm bosses), rotor into one housing half, fins, second half, four seam screws, as in V3.',
+        'Set the servo to its 0° position, press the horn on so that its arm lies in the slot at 45° to the crown arms, and lower the servo with its horn into the pocket on the rotor hub from above.',
+        'Screw the servo tabs to the two ledges with the M2×6 screws from above. Put the horn screw in from below through the rotor bore and the ceiling hole (R3 bore, small driver).',
+        'Fill the sled: Mercury and regulator in the top pockets, battery in the bottom pocket; run the servo wires down the hollow rotor and through the ceiling hole to the bay; slide the sled up into the bay.',
+        'Bond the transition ring into the lower BT80 tube, set the module on it, and fit the four M3×12 screws down through the bosses from inside the bay (before the sled goes in, or with the sled out).',
+        'Glue the tube cut-outs to the fins and slide the upper tube on with its eight M3×5 screws, as in V2 and V3. The top of the servo sits inside this tube.'])
+    s += [P('7 &nbsp; Checks run on this model', H2),
+          table([['Check', 'Result'],
+                 ['V4-A closed and V4-B open (90°, 65°)', '51 bodies, all watertight; no printed-part overlap; the only overlaps are the servo spline inside the horn and the reference tube touching the housing (as in V2/V3)'],
+                 ['Rotor sweep −1.5° … 66.5°', 'clear of both housing halves, the servo, the sled and the transition ring at every step'],
+                 ['Limiter', 'engages at −3° and 67°: the 0–65° travel has about 1.5° of margin at each end'],
+                 ['Latch and cam', 'latch holds from about 1.5° of fin opening and frees by 15° of rotor travel; cams first touch at about 26° (same as V3)'],
+                 ['Fin + cut-out swept 0.5 … 90°', 'clear of the upper tube and the housing'],
+                 ['Seam screws, servo screws, horn screw, transition screws', 'a hex key reaches all of them (servo screws from above, horn screw through the bore, transition screws from inside the bay)'],
+                 ['V1, V2, V3 rebuilt', 'volumes identical to before: nothing in them changed'],
+                 ['ASM-V4 mates', '21 features: fin groups, four hinges, rotor revolute: all solve']], [62, 114], font=7.6),
+          WARN_P('<b>Not verified, and what I need from you:</b> (1) your servo and horn dimensions (the ledge pilots and the horn pocket must match). (2) The Mercury’s servo output: which pad, and whether its 3.3 V signal level drives the SG90 (check the manual). '
+                 '(3) Battery and regulator sizes are placeholders. (4) <b>Pressure:</b> the Mercury reads static pressure, so the bay needs vent holes to the outside (not modelled): about three 3 mm holes through the lower tube at the Mercury level. '
+                 '(5) The servo cable must come down through the hollow rotor (3 wires beside the 4 mm horn-screw head in a 6 mm bore): tight, to be tried on a print. (6) USB-C access to the Mercury is with the sled out. '
+                 '(7) Latch and horn pocket not tested on a print; ground-impact FEA not run (the ledges, limiter stops and the 1.4 mm sled walls are the first places to look).')]
+    build_pdf(DOCS / 'V4_assembly_guide.pdf', 'V4 servo-on-top assembly guide - ARC BT80 airbrake', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -679,4 +773,5 @@ if __name__ == '__main__':
     if 'mech' in which: mech()
     if 'history' in which: history()
     if 'sketch' in which: sketch_v4()
+    if 'v4' in which: v4()
     print('docs written', list(DOCS.glob('*.pdf')))

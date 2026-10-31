@@ -151,6 +151,40 @@ def build_v3(aid):
     return bad
 
 
+def build_v4(aid):
+    """V4: servo on top, bay at the bottom. Rotor group (rotor, horn, catch caps, their screws), one group per fin with its cut-out,
+    everything else stationary; four hinge revolutes and the rotor revolute (the SG90 is the driver)."""
+    d = run.ids(); did, wid = d['did'], d['wid']
+    inst, asm = instances(did, wid, aid)
+    T = template_features()
+
+    def ids_where(pred):
+        return [i['id'] for i in asm['rootAssembly']['instances'] if pred(i['name'])]
+
+    is_rotor = lambda n: n.split(' ')[0] in ('R', 'EH', 'L1', 'L2', 'L3', 'L4') or n.startswith('HW L') or n.startswith('HW horn')
+    is_fin = lambda n: n.split(' ')[0] in ('P1', 'P2', 'P3', 'P4', 'TP1', 'TP2', 'TP3', 'TP4')
+    rotor = ids_where(is_rotor)
+    stationary = ids_where(lambda n: not is_rotor(n) and not is_fin(n))
+    print('stationary', len(stationary), 'rotor', len(rotor))
+    mate_group(did, wid, aid, 'Stationary housing halves, SG90 servo, electronics, sled, transition, hardware and tube references', stationary)
+    mate_group(did, wid, aid, 'Rotor with horn, catch caps and horn screw (driven by the SG90)', rotor)
+    for i in range(1, 5):
+        mate_group(did, wid, aid, f'Fin P{i} with its glued BT80 cut-out TP{i}', [inst[f'P{i}'], inst[f'TP{i}']])
+    c1 = inst['C1']
+    for i in range(1, 5):
+        a = clone_connector(T[f'Fixed hinge axis {i}'], c1, f'Fixed hinge axis {i}')
+        b = clone_connector(T[f'Panel hinge axis {i}'], inst[f'P{i}'], f'Panel hinge axis {i}')
+        ca, cb = post_feature(did, wid, aid, a), post_feature(did, wid, aid, b)
+        mname = [n for n in T if n.startswith(f'Panel {i} - hinge')][0]
+        post_feature(did, wid, aid, clone_mate(T[mname], f'Panel {i} - hinge - 0 to 90 deg (hard stop)', [cb, ca]))
+    a = post_feature(did, wid, aid, clone_connector(T['Fixed cam shaft axis'], c1, 'Fixed cam shaft axis'))
+    b = post_feature(did, wid, aid, clone_connector(T['Rotating cam shaft axis'], inst['R'], 'Rotating cam shaft axis'))
+    post_feature(did, wid, aid, clone_mate(T['Top knob - 0 LOCKED to 65 deg KICK'], 'Servo horn / rotor - 0 LOCKED to 65 deg KICK', [b, a]))
+    bad, f = states(did, wid, aid)
+    print('feature count', len(f['features']), 'non-OK:', bad)
+    return bad
+
+
 if __name__ == '__main__':
     import sys
     key, compact = sys.argv[1], sys.argv[2] == 'v2'
