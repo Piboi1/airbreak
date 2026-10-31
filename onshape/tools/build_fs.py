@@ -650,17 +650,18 @@ P(' stage="shaft extension";',
   }
   label(context,sBody4,"E SG90 servo REFERENCE - flipped on top, shaft down, flange screwed to the two housing ledges - measure your servo",[.35,.38,.43]);
   stage="v4 bay";
-  // Electronics: Mercury V1 altimeter (30 x 16.9 x 10.8) and a 5 V regulator (25 x 15 x 8, placeholder) in the upper layer, a 2S LiPo (40 x 18 x 10, placeholder) in the lower layer.
+  // Electronics: Mercury V1 altimeter (30 x 16.9 x 10.8) and a 5 V regulator (25 x 15 x 8, placeholder) in the upper layer, a Spektrum 300 mAh 2S LiPo (42 x 19 x 12) in the lower layer.
   var merc=radialBox(context,id+"v4Mercury",-15,15,-17.45,-0.55,-21.2,10.8,0*degree);
   label(context,merc,"E2 Mercury V1 altimeter REFERENCE (30 x 16.9 x 10.8, Altimeter Cloud)",[.55,.35,.75]);
   var regu=radialBox(context,id+"v4Regulator",-12.5,12.5,2.5,17.5,-21.2,8.0,0*degree);
   label(context,regu,"E3 5 V 3 A regulator REFERENCE (placeholder 25 x 15 x 8)",[.94,.54,.63]);
-  var batt=radialBox(context,id+"v4Battery",-20,20,-9,9,-34.5,10.0,0*degree);
-  label(context,batt,"E4 Servo battery 2S LiPo REFERENCE (placeholder 40 x 18 x 10)",[.95,.83,.36]);
+  var batt=radialBox(context,id+"v4Battery",-21,21,-9.5,9.5,-35.2,12.0,0*degree);
+  label(context,batt,"E4 Servo battery Spektrum 300 mAh 2S LiPo REFERENCE (42 x 19 x 12, as listed - measure yours)",[.95,.83,.36]);
   // Electronics sled: slides in from below, held between the bay ceiling and the transition.
   // Skeletal sled: a block round the upper layer, a block round the battery, and four thin centring ribs; pockets cut after.
   var sled=radialBox(context,id+"v4SledA",-17.0,17.0,-19.2,19.2,-23.0,12.8,0*degree);
-  var sledB=radialBox(context,id+"v4SledB",-22.4,22.4,-11.4,11.4,-35.3,14.3,0*degree);
+  var sledB=radialBox(context,id+"v4SledB",-23.4,23.4,-11.9,11.9,-35.3,14.3,0*degree);
+  subtract(context,id+"v4SledBClip",sledB,tubeMM(context,id+"v4SledBClipTool",40,25.5,-36,-20));
   opBoolean(context,id+"v4SledJoinB",{"tools":qUnion([sled,sledB]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<4;k+=1) {
    var sribk=radialBox(context,id+("v4SledRib"~k),16,29.3,-1.0,1.0,-35.3,19.5,(90*k)*degree);
@@ -668,7 +669,7 @@ P(' stage="shaft extension";',
   }
   subtract(context,id+"v4SledPocketA1",sled,radialBox(context,id+"v4PocketA1",-15.2,15.2,-17.65,-0.35,-21.2,11.3,0*degree));
   subtract(context,id+"v4SledPocketA2",sled,radialBox(context,id+"v4PocketA2",-12.7,12.7,2.3,17.7,-21.2,11.3,0*degree));
-  subtract(context,id+"v4SledPocketB",sled,radialBox(context,id+"v4PocketB",-20.4,20.4,-9.4,9.4,-35.4,10.9,0*degree));
+  subtract(context,id+"v4SledPocketB",sled,radialBox(context,id+"v4PocketB",-21.4,21.4,-9.9,9.9,-35.4,12.4,0*degree));
   subtract(context,id+"v4SledWire",sled,cylinderMM(context,id+"v4SledWireTool",4,-24.6,-21.1));
   label(context,sled,"N Electronics sled - slides in from below, clamped between the bay ceiling and the transition",[.30,.60,.55]);
   // Transition on the BT80 side: bond inside the lower BT80 tube; the module is screwed down onto it.

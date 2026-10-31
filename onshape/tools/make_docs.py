@@ -530,7 +530,7 @@ def history():
                  ['V2 22 mm drop', '91.8 mm', '152.3 mm', '169 g', '19 types', 'spring + SG90 trigger; inward lug + finger latch'],
                  ['V3 first (servo below)', '91.8 mm', '105.5 mm incl. servo', '108 g', '5 types', 'SG90 on the rotor; same lug + finger latch'],
                  ['V3 flush (servo inside)', '91.8 mm', '91.8 mm', '106 g', '5 types', 'same; bearing and spokes raised'],
-                 ['V4 (servo on top, bay)', '94.3 mm', '103.4 mm (servo top above the housing)', '143 g incl. sled + transition', '7 types', 'servo on top, thick limiter at the bottom']], [32, 24, 26, 20, 30, 44], font=7.6)]
+                 ['V4 (servo on top, bay)', '94.3 mm', '103.4 mm (servo top above the housing)', '142 g incl. sled + transition', '7 types', 'servo on top, thick limiter at the bottom']], [32, 24, 26, 20, 30, 44], font=7.6)]
     # --- iteration 0
     s += [PageBreak(), P('2 &nbsp; The original: your FeatureScript', H2),
           side('hist_baseline.png', bl([
@@ -592,7 +592,7 @@ def history():
               'Thicker: limiter finger 2 → 6 mm, stops 2 → 7.6 mm, crown arms 3 × 5 → 5 × 8 mm (walls at the screw 0.8 → 2.3 mm), cam web 3 → 5.5 mm.',
               'Bay: sled with the Mercury and a regulator on one layer and the battery on the other; four vertical M3 into a transition ring.',
               'The interference sweep showed the servo ledges were hit by the catch-cap fingers, so the ledges moved above them and the servo now stands 9.1 mm above the housing.',
-              '<b>Housing 94.3 mm, 103.4 mm from housing bottom to servo top, printed set 143 g</b> (113 g core + sled + transition ring).']), 52),
+              '<b>Housing 94.3 mm, 103.4 mm from housing bottom to servo top, printed set 142 g</b> (113 g core + sled + transition ring).']), 52),
           Spacer(1, 6),
           fig('v4_side.png', 120, 'V4 section from the CAD model.', 110)]
     # --- problems and decisions
@@ -624,7 +624,8 @@ def history():
                  ['Servo on top, limiter to the bottom, thicker parts, screwed transition, electronics bay, Option B, Mercury V1', 'You'],
                  ['Servo posts and pads, horn pocket, cam peak 28.6 mm, small joints left bonded', 'Me; please check the servo and horn dimensions'],
                  ['Moving the lower bearing and spokes up to make the flush servo fit', 'Me'],
-                 ['Raising the servo ledges above the finger sweep; sled, transition ring, battery and regulator placeholders', 'Me']], [130, 46], font=7.8),
+                 ['Raising the servo ledges above the finger sweep; sled, transition ring, regulator placeholder', 'Me'],
+                 ['Battery pocket resized for the Spektrum 300 mAh 2S (42 × 19 × 12 mm)', 'You asked; me']], [130, 46], font=7.8),
           WARN_P('Mass is solid PLA; the slicer’s infill will lower the real weights. The latch, horn pocket and servo mount have not been tested on a print.')]
     build_pdf(DOCS / 'Design_history.pdf', 'Design history - ARC BT80 airbrake', s)
 
@@ -701,7 +702,7 @@ def v4():
           table([['', 'V3 flush', 'V4'],
                  ['Printed housing', '91.8 mm', '94.3 mm (z −35.5 … 58.8)'],
                  ['Housing bottom to servo top', '91.8 mm (servo inside)', '103.4 mm (servo top 9.1 mm above the housing)'],
-                 ['Printed set, solid PLA', '106 g', '<b>143 g</b>: 113 g core + 16 g sled + 15 g transition ring'],
+                 ['Printed set, solid PLA', '106 g', '<b>142 g</b>: 113 g core + 15 g sled + 15 g transition ring'],
                  ['Printed part types', '5', '7 (adds the electronics sled and the transition ring)'],
                  ['Servo', 'inside, shaft up, bottom flush', 'on top, flipped, shaft down'],
                  ['Rotation limiter', 'top: finger and stops about 2 mm wide', 'bottom: finger 6 mm, stops 7.6 mm'],
@@ -718,10 +719,10 @@ def v4():
         '<b>Bay.</b> A ceiling at z −10 closes the mechanism; below it a skeletal sled holds the Mercury and regulator in the upper layer and the battery in the lower layer, clamped between the ceiling and the transition.'])
     s += [fig('v4_thicker.png', 150, 'Before and after, sections taken from the V3 and V4 models.', 120),
           PageBreak(), P('3 &nbsp; The electronics bay', H2),
-          fig('v4_bay.png', 172, 'Plan sections of the V4 model. Mercury V1 is the real size (30 × 16.9 × 10.8 mm); battery and regulator are placeholders.', 72),
+          fig('v4_bay.png', 172, 'Plan sections of the V4 model. Mercury V1 is the real size (30 × 16.9 × 10.8 mm); the battery is the Spektrum 300 mAh 2S as listed (42 × 19 × 12 mm); the regulator is a placeholder.', 72),
           table([['Part', 'Size', 'Source'],
                  ['Mercury V1 altimeter', '30 × 16.9 × 10.8 mm, 7.2 g in case, onboard 50 mAh battery, USB-C, Wi-Fi, 2 direct servo outputs', 'Altimeter Cloud specification you sent'],
-                 ['Servo battery', '2S LiPo, 7.4 V, about 40 × 18 × 10 mm (placeholder)', 'my assumption'],
+                 ['Servo battery', 'Spektrum 300 mAh 2S LiPo, 7.4 V, 42 × 19 × 12 mm, about 17 g; pocket 42.8 × 19.8 × 12.4 mm', 'retailer listings (measure your pack)'],
                  ['Regulator', '5 V, 3 A step-down module, about 25 × 15 × 8 mm (placeholder)', 'my assumption']], [38, 96, 42], font=7.6),
           fig('v4_wiring.png', 150, 'Power and signal. The Mercury has its own battery and drives the servo through a direct servo output; the servo is powered separately.', 80)]
     s += [PageBreak(), P('4 &nbsp; Why the servo stands 9.1 mm above the housing', H2),
@@ -759,7 +760,7 @@ def v4():
                  ['V1, V2, V3 rebuilt', 'volumes identical to before: nothing in them changed'],
                  ['ASM-V4 mates', '21 features: fin groups, four hinges, rotor revolute: all solve']], [62, 114], font=7.6),
           WARN_P('<b>Not verified, and what I need from you:</b> (1) your servo and horn dimensions (the ledge pilots and the horn pocket must match). (2) The Mercury’s servo output: which pad, and whether its 3.3 V signal level drives the SG90 (check the manual). '
-                 '(3) Battery and regulator sizes are placeholders. (4) <b>Pressure:</b> the Mercury reads static pressure, so the bay needs vent holes to the outside (not modelled): about three 3 mm holes through the lower tube at the Mercury level. '
+                 '(3) The regulator size is a placeholder, and the battery pocket is sized for the Spektrum 300 mAh 2S as listed (42 × 19 × 12 mm): measure your pack before printing the sled, and hold it in with a strap or tape (the pocket is open at the bottom). (4) <b>Pressure:</b> the Mercury reads static pressure, so the bay needs vent holes to the outside (not modelled): about three 3 mm holes through the lower tube at the Mercury level. '
                  '(5) The servo cable must come down through the hollow rotor (3 wires beside the 4 mm horn-screw head in a 6 mm bore): tight, to be tried on a print. (6) USB-C access to the Mercury is with the sled out. '
                  '(7) Latch and horn pocket not tested on a print; ground-impact FEA not run (the ledges, limiter stops and the 1.4 mm sled walls are the first places to look).')]
     build_pdf(DOCS / 'V4_assembly_guide.pdf', 'V4 servo-on-top assembly guide - ARC BT80 airbrake', s)
@@ -772,8 +773,8 @@ def wiring():
             'Part sizes below come from the sellers’ listings I could reach; I could <b>not</b> read the Mercury manual (the Altimeter Cloud site is not reachable from this session), so its servo-header pin order and signal voltage are the items to confirm.', B),
           P('1 &nbsp; Recommended parts', H2),
           table([['Part', 'Recommendation', 'Size / weight (from listings)', 'Why'],
-                 ['Battery', '<b>Tattu 300 mAh 2S, 75C</b> (HV, 7.6 V nominal, JST-PHR plug)', '45–47 × 16–17 × 12–13 mm, 16–17 g (sellers differ by about 2 mm)', 'Small, light, high-rate 2S pack; 7.4–8.7 V in, which the regulator below accepts; 300 mAh is far more than a flight needs'],
-                 ['', 'Alternative: Turnigy nano-tech 2S 300 mAh 35C', '44 × 12 × 17 mm, 17 g', 'Thinner, but listed as discontinued'],
+                 ['Battery', '<b>Spektrum 300 mAh 2S, 30C</b> (7.4 V nominal, 8.4 V full, PH plug)', '42 × 19 × 12 mm, about 17 g (one retailer’s listing; measure yours)', 'Small 2S pack that fits the V4 pocket; 6.0–8.4 V in, which the regulator below accepts; 300 mAh is far more than a flight needs (about 7–12 flights per charge on my estimate)'],
+                 ['', 'Alternatives: Tattu 300 mAh 2S HV; EMAX Tinyhawk S 2S', '47 × 17 × 13 mm; 42 × 16.2 × 12.7 mm (listings)', 'The Tattu is 4.6 mm too long for the new pocket; the EMAX would fit the length and width but is 0.3 mm too tall'],
                  ['Regulator', '<b>Pololu D24V10F5</b>: 5 V, 1 A step-down', '0.5 × 0.7 × 0.14 in (about 13 × 18 × 4 mm), 1 g', 'Input 5.1–36 V; the SG90 takes 4.8–6 V and draws roughly 0.3–0.55 A at stall (sources vary), so 1 A is about 2× headroom'],
                  ['', 'Option for more torque: D24V10F6 (6 V, 1 A)', 'same footprint', 'SG90 torque rises with voltage (one source: 1.2 → 1.6 kg·cm from 4.8 → 6 V; another lists 1.8 kg·cm at 4.8 V), but this board needs at least 6.1 V in: keep the pack above about 6.5 V'],
                  ['Capacitor C1', '470–1000 µF, 10 V, low-ESR electrolytic', 'about 6.3 mm diameter × 11 mm', 'Absorbs the servo’s current spikes so the regulator and the Mercury do not brown out'],
@@ -790,19 +791,19 @@ def wiring():
         '<b>The one rule:</b> the servo’s red wire takes power from the regulator only. If the Mercury servo header has a power pin, leave it unconnected (pull the red wire out of the Mercury-side connector shell, or use a servo lead with the red wire cut on that side). Two supplies tied together can damage the Mercury or the regulator.',
         '<b>Order of assembly:</b> bench-test with the servo and a 5 V supply first, then the regulator on the battery, with the switch off until the last step.'])
     s += [PageBreak(), P('3 &nbsp; What I could not verify, and what it means for the CAD', H2),
-          WARN_P('<b>The battery I recommend is bigger than the placeholder in the V4 bay.</b> The sled’s battery pocket is 40.8 × 18.8 × 10.9 mm; the Tattu is about 45–47 × 16–17 × 12–13 mm. It does not fit as modelled: the pocket would need to be about 48 × 18 × 13.6 mm, and the bay about 2.7 mm taller (housing about 97 mm instead of 94.3 mm). '
-                 'I have not changed the CAD yet. Tell me whether you want the bay enlarged for this pack, or a smaller pack (a 2S pack of 150–200 mAh would be thinner, but I could not verify any such pack’s dimensions).')]
+          WARN_P('<b>The V4 battery pocket is now sized for the Spektrum 300 mAh 2S.</b> Pocket 42.8 × 19.8 × 12.4 mm (0.4 mm clear per side, 0.2 mm above and below the 42 × 19 × 12 mm pack); the sled’s lower block grew from 44.8 × 22.8 to 46.8 × 23.8 mm with its corners trimmed to R25.5 so they clear the opened base ring. The housing stays 94.3 mm: the extra height came out of the 3.3 mm floor between the two layers, which is now 1.8 mm thick. '
+                 'Still to do on your side: <b>measure the real pack</b> (the 42 × 19 × 12 mm figure is one retailer’s listing), allow for the plug and the 3-pin balance lead (they need to be folded beside or on the pack), and <b>hold the pack in</b> with a strap, tape or a foam pad: the pocket is open at the bottom, so nothing but friction holds it up when the rocket stands on the pad.')]
     s += bullets([
         '<b>Mercury servo header:</b> the Altimeter Cloud flight page I found says the two onboard servo headers are GP6 and GP7, but I could not read the pin order or the signal voltage. Check its manual (the “Mercury V1 schematic” page). The SG90 usually accepts a 3.3 V signal when powered at 5 V, but test it on the bench before flying.',
         '<b>SG90 figures vary by source:</b> stall current 0.3 to 0.55 A, torque 1.2 to 1.8 kg·cm at 4.8 V depending on the version. The V3/V4 torque check used 0.176 N·m (1.8 kg·cm) at 5 V; measure your own servo.',
-        '<b>Regulator input:</b> Pololu warns of voltage spikes above its 36 V maximum with long leads at high input voltages; with a 2S pack (8.7 V full) this is not a concern. The D24V10F5 needs at least 5.1 V in, so stop flying a 2S pack that has sagged near 6 V.',
-        '<b>LiPo safety:</b> the HV pack charges to 4.35 V per cell and needs a LiHV-capable charger setting; do not discharge below about 3.3 V per cell; keep the pack away from the ejection-charge heat and from crushing; use a fire-safe bag for charging.',
+        '<b>Regulator input:</b> Pololu warns of voltage spikes above its 36 V maximum with long leads at high input voltages; with a 2S pack (8.4 V full) this is not a concern. The D24V10F5 needs at least 5.1 V in, so stop flying a 2S pack that has sagged near 6 V.',
+        '<b>LiPo safety:</b> the Spektrum is a standard LiPo (charge to 4.2 V per cell; an HV pack such as the Tattu needs a 4.35 V setting); do not discharge below about 3.3 V per cell; keep the pack away from the ejection-charge heat and from crushing; use a fire-safe bag for charging.',
         '<b>Altimeter pressure:</b> the Mercury reads static pressure, so the bay needs vent holes to the outside (not modelled in the CAD).'])
     s += [P('Sources', H2)]
     s += bullets([
         '<a href="https://www.altimetercloud.com/flights/1560/" color="blue">Altimeter Cloud flight page (GP6/GP7 servo headers, air-brake channel)</a> and the <a href="https://www.altimetercloud.com/support/mercuryv1/schematic/" color="blue">Mercury V1 schematic page</a> (not readable from this session).',
         '<a href="https://www.pololu.com/product/2831/specs" color="blue">Pololu D24V10F5 5 V, 1 A step-down regulator</a> and <a href="https://www.pololu.com/product/2832" color="blue">D24V10F6 6 V version</a>.',
-        'Tattu 300 mAh 2S listings: <a href="https://www.getfpv.com/tattu-300mah-hv-7-4v-75c-2s1p-lipo-battery-jst-phr.html" color="blue">GetFPV</a>, <a href="https://alofthobbies.com/products/tattu-2s-hv-300mah-75c-jst-phr" color="blue">Aloft Hobbies</a>, <a href="https://www.gensace.de/tattu-300mah-2s-75c-7-6v-lipo-battery.html" color="blue">Gens Ace</a>; Turnigy nano-tech 2S 300 mAh: <a href="https://botland.com.pl/en/products-withdrawn/1581-turnigy-nano-tech-li-pol-battery-pack-300mah-35c-2s-74v.html" color="blue">Botland</a>.',
+        'Spektrum 300 mAh 2S listings: <a href="https://www.readymaderc.com/products/details/85690-spektrum-7-4v-300mah-2s-30c-lipo-battery-ph" color="blue">Readymade RC</a>. Other packs considered: Tattu 300 mAh 2S listings: <a href="https://www.getfpv.com/tattu-300mah-hv-7-4v-75c-2s1p-lipo-battery-jst-phr.html" color="blue">GetFPV</a>, <a href="https://alofthobbies.com/products/tattu-2s-hv-300mah-75c-jst-phr" color="blue">Aloft Hobbies</a>, <a href="https://www.gensace.de/tattu-300mah-2s-75c-7-6v-lipo-battery.html" color="blue">Gens Ace</a>; Turnigy nano-tech 2S 300 mAh: <a href="https://botland.com.pl/en/products-withdrawn/1581-turnigy-nano-tech-li-pol-battery-pack-300mah-35c-2s-74v.html" color="blue">Botland</a>.',
         'SG90 figures: <a href="https://bit.nkust.edu.tw/~csshieh/teach/111A/mc/datasheet/SG90.pdf" color="blue">SG90 datasheet copy</a> and <a href="https://protosupplies.com/product/servo-motor-micro-sg90/" color="blue">ProtoSupplies</a>.'])
     build_pdf(DOCS / 'V4_power_and_wiring.pdf', 'V4 power and wiring - ARC BT80 airbrake', s)
 

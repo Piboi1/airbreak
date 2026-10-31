@@ -28,7 +28,7 @@ for y, w, lw in ((40, 5.0, 2.4), (37.4, 2.6, 3.6), (33.4, 5.0, 2.4), (30.8, 2.6,
     ax.plot([bx - w, bx + w], [y, y], color=K, lw=lw)
 wire([(bx, 24.2), (bx, 22)])
 label(bx + 3.5, TY - 3.2, '+', 12, RED, w='bold'); label(bx + 3.5, GY + 4.5, '–', 13, K, w='bold')
-label(bx, 63, '2S LiPo, 7.4 V\nTattu 300 mAh 2S\n≈ 46 x 16 x 12 mm, 17 g', 7.2)
+label(bx, 63, '2S LiPo, 7.4 V\nSpektrum 300 mAh 2S\n42 x 19 x 12 mm, 17 g', 7.2)
 dot(bx, GY)
 # ---- fuse + switch on the + line
 wire([(bx, TY), (22, TY)])

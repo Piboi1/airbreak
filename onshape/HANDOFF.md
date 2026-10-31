@@ -23,7 +23,7 @@ was written: "Add V4 power and wiring document"). Do not open a pull request unl
 | **V1** | same machine, screwed (M3/M4), assembly doc | 118 | 178.5 | 180 g | done, unchanged since |
 | **V2** | compact head inside the upper BT80 tube, tube slits with cut-outs glued to fins, new inward-lug + finger latch, fin top at head rim (22 mm latch drop) | 91.8 | 152.3 | 169 g | done |
 | **V3** | SG90 straight on the rotor (no spring cartridge/trigger), servo inside the housing, flush with the bottom | 91.8 | 91.8 | 106 g | done |
-| **V4** (latest) | servo flipped on top, thicker limiter/rotor parts, limiter moved to the bottom, electronics bay + sled, screwed transition ring | 94.3 | 103.4 (housing bottom to servo top) | 143 g (113 core + 16 sled + 15 transition) | done, awaiting user decisions below |
+| **V4** (latest) | servo flipped on top, thicker limiter/rotor parts, limiter moved to the bottom, electronics bay + sled, screwed transition ring | 94.3 | 103.4 (housing bottom to servo top) | 142 g (113 core + 15 sled + 15 transition) | done, awaiting user decisions below |
 
 Why each switch happened is in `docs/Design_history.pdf` (decision log, problems and fixes). Read it.
 
@@ -43,7 +43,7 @@ Why each switch happened is in `docs/Design_history.pdf` (decision log, problems
 | V4-A `ps_v4` / V4-B `ps_v4b` | `19b7c72543265f4ef8c3ee68` / `5e42421044190c404c738332` |
 | samples (unloaded springs, return leaf) `ps_samples` | `0cc7c62affc5473c214dffff` |
 | ASM-V1 / ASM-V2 | `2cc2089145215269219759e4` / `c123d3b7a80e1ab4ae20ec9f` |
-| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `c4aa234a05d78486af43a3b5` |
+| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `409b2190fe4d04e18fb0843c` (rebuilt for the Spektrum pocket) |
 
 **Correction:** an ASM-V3 link given to the user earlier in the session (`...a9209e15056d0ed7042f93da`) is dead: the
 assembly was deleted and recreated when V3 was rebuilt flush. Give the user the id above.
@@ -110,7 +110,7 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
   z 22.5..28, collar z 3.9..5.9 above a 3 mm bearing z 0.4..3.4, limiter finger 6 mm z -5.6..-0.4 (rest az 60 deg) with two
   7.6 mm stops hung from the lower spokes (engages at -3 and 67 deg). Bay ceiling z -10..-8 with a centre wire hole; lower sleeve
   to z -35.5; four bosses with M3x12 into a transition ring (R23.5..32.3, z -43.5..-35.5, bonded in the lower BT80 tube).
-  Electronics are reference bodies: Mercury V1 30 x 16.9 x 10.8, a 25 x 15 x 8 regulator, a 40 x 18 x 10 battery (placeholders).
+  Electronics are reference bodies: Mercury V1 30 x 16.9 x 10.8, a 25 x 15 x 8 regulator, a Spektrum 300 mAh 2S battery 42 x 19 x 12 (sled pocket 42.8 x 19.8 x 12.4; regulator is still a placeholder).
 
 ## 6. How to rebuild and verify
 
@@ -129,8 +129,9 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
 
 ## 7. Open items and decisions waiting on the user
 
-1. **Battery does not fit the bay.** Recommended pack: Tattu 300 mAh 2S (about 46 x 16 x 12 mm, 17 g). The sled pocket is 40.8 x 18.8 x 10.9 mm.
-   Fitting it needs a pocket about 48 x 18 x 13.6 mm and +2.7 mm bay height (housing about 97 mm). Ask whether to enlarge the bay or pick a smaller pack.
+1. **Battery: resized for the Spektrum 300 mAh 2S (42 x 19 x 12 mm as listed by one retailer).** Sled pocket 42.8 x 19.8 x 12.4, lower sled block 46.8 x 23.8 clipped to R25.5,
+   housing unchanged at 94.3 mm (the floor between the layers is now 1.8 mm). Measure the real pack. The pocket is open at the bottom: the pack needs a strap, tape or foam;
+   plug and 3-pin balance lead are not modelled. The Pololu regulator and the wiring are unchanged (the Spektrum is a standard 4.2 V/cell pack, not HV).
 2. **Mercury V1 servo header** (GP6/GP7): pin order and signal voltage unverified (site not reachable). The wiring schematic assumes the servo red wire is
    powered only by the 5 V regulator and the Mercury header power pin is left unconnected. Needs the manual page from the user.
 3. Servo and horn dimensions are standard SG90 numbers (tab holes 28.1 mm apart, horn 1.8 mm thick): the user must measure theirs.
