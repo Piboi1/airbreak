@@ -765,6 +765,48 @@ def v4():
     build_pdf(DOCS / 'V4_assembly_guide.pdf', 'V4 servo-on-top assembly guide - ARC BT80 airbrake', s)
 
 
+def wiring():
+    s = []
+    s += [P('V4 power and wiring: battery, regulator and schematic', H1),
+          P('The Mercury V1 sends the servo position signal; a small 2S battery and a 5 V regulator power the SG90. '
+            'Part sizes below come from the sellers’ listings I could reach; I could <b>not</b> read the Mercury manual (the Altimeter Cloud site is not reachable from this session), so its servo-header pin order and signal voltage are the items to confirm.', B),
+          P('1 &nbsp; Recommended parts', H2),
+          table([['Part', 'Recommendation', 'Size / weight (from listings)', 'Why'],
+                 ['Battery', '<b>Tattu 300 mAh 2S, 75C</b> (HV, 7.6 V nominal, JST-PHR plug)', '45–47 × 16–17 × 12–13 mm, 16–17 g (sellers differ by about 2 mm)', 'Small, light, high-rate 2S pack; 7.4–8.7 V in, which the regulator below accepts; 300 mAh is far more than a flight needs'],
+                 ['', 'Alternative: Turnigy nano-tech 2S 300 mAh 35C', '44 × 12 × 17 mm, 17 g', 'Thinner, but listed as discontinued'],
+                 ['Regulator', '<b>Pololu D24V10F5</b>: 5 V, 1 A step-down', '0.5 × 0.7 × 0.14 in (about 13 × 18 × 4 mm), 1 g', 'Input 5.1–36 V; the SG90 takes 4.8–6 V and draws roughly 0.3–0.55 A at stall (sources vary), so 1 A is about 2× headroom'],
+                 ['', 'Option for more torque: D24V10F6 (6 V, 1 A)', 'same footprint', 'SG90 torque rises with voltage (one source: 1.2 → 1.6 kg·cm from 4.8 → 6 V; another lists 1.8 kg·cm at 4.8 V), but this board needs at least 6.1 V in: keep the pack above about 6.5 V'],
+                 ['Capacitor C1', '470–1000 µF, 10 V, low-ESR electrolytic', 'about 6.3 mm diameter × 11 mm', 'Absorbs the servo’s current spikes so the regulator and the Mercury do not brown out'],
+                 ['Arming', 'SPST switch ≥ 1 A, or a JST pull-pin / jumper', 'small slide switch', 'Keeps the servo dead while you handle it; reach it through the transition ring'],
+                 ['Fuse (optional)', '1.1 A resettable (polyfuse)', '—', 'Limits a short; the LiPo can deliver far more than the wires should carry'],
+                 ['Wire and plugs', '24 AWG silicone for power, 28 AWG for the signal; JST-PH 2-pin on the battery (match the plug on the pack you buy)', '—', 'Flexible, heat-tolerant, small']], [24, 52, 44, 56], font=7.4),
+          P('Estimated load: the servo idles near 10 mA and draws about 100–250 mA while moving; one deployment is under a second. A 300 mAh pack therefore lasts many hours of standby (estimate: the regulator’s own draw I could not confirm).', SM),
+          PageBreak(), P('2 &nbsp; Wiring schematic', H2),
+          fig('v4_wiring_schematic.png', 178, 'Servo power and signal. The Mercury has its own 50 mAh battery and does not power the servo.', 150),
+          P('How it is wired', H3)]
+    s += bullets([
+        '<b>Power path:</b> battery + → fuse → arming switch → regulator VIN; regulator VOUT (+5 V) → servo red wire and C1; regulator GND, C1 and the servo brown wire all return to the battery −.',
+        '<b>Signal path:</b> one Mercury servo header (GP6 or GP7, set in the Mercury configuration as the air-brake servo channel) → servo orange wire. The Mercury GND goes to the same ground rail.',
+        '<b>The one rule:</b> the servo’s red wire takes power from the regulator only. If the Mercury servo header has a power pin, leave it unconnected (pull the red wire out of the Mercury-side connector shell, or use a servo lead with the red wire cut on that side). Two supplies tied together can damage the Mercury or the regulator.',
+        '<b>Order of assembly:</b> bench-test with the servo and a 5 V supply first, then the regulator on the battery, with the switch off until the last step.'])
+    s += [PageBreak(), P('3 &nbsp; What I could not verify, and what it means for the CAD', H2),
+          WARN_P('<b>The battery I recommend is bigger than the placeholder in the V4 bay.</b> The sled’s battery pocket is 40.8 × 18.8 × 10.9 mm; the Tattu is about 45–47 × 16–17 × 12–13 mm. It does not fit as modelled: the pocket would need to be about 48 × 18 × 13.6 mm, and the bay about 2.7 mm taller (housing about 97 mm instead of 94.3 mm). '
+                 'I have not changed the CAD yet. Tell me whether you want the bay enlarged for this pack, or a smaller pack (a 2S pack of 150–200 mAh would be thinner, but I could not verify any such pack’s dimensions).')]
+    s += bullets([
+        '<b>Mercury servo header:</b> the Altimeter Cloud flight page I found says the two onboard servo headers are GP6 and GP7, but I could not read the pin order or the signal voltage. Check its manual (the “Mercury V1 schematic” page). The SG90 usually accepts a 3.3 V signal when powered at 5 V, but test it on the bench before flying.',
+        '<b>SG90 figures vary by source:</b> stall current 0.3 to 0.55 A, torque 1.2 to 1.8 kg·cm at 4.8 V depending on the version. The V3/V4 torque check used 0.176 N·m (1.8 kg·cm) at 5 V; measure your own servo.',
+        '<b>Regulator input:</b> Pololu warns of voltage spikes above its 36 V maximum with long leads at high input voltages; with a 2S pack (8.7 V full) this is not a concern. The D24V10F5 needs at least 5.1 V in, so stop flying a 2S pack that has sagged near 6 V.',
+        '<b>LiPo safety:</b> the HV pack charges to 4.35 V per cell and needs a LiHV-capable charger setting; do not discharge below about 3.3 V per cell; keep the pack away from the ejection-charge heat and from crushing; use a fire-safe bag for charging.',
+        '<b>Altimeter pressure:</b> the Mercury reads static pressure, so the bay needs vent holes to the outside (not modelled in the CAD).'])
+    s += [P('Sources', H2)]
+    s += bullets([
+        '<a href="https://www.altimetercloud.com/flights/1560/" color="blue">Altimeter Cloud flight page (GP6/GP7 servo headers, air-brake channel)</a> and the <a href="https://www.altimetercloud.com/support/mercuryv1/schematic/" color="blue">Mercury V1 schematic page</a> (not readable from this session).',
+        '<a href="https://www.pololu.com/product/2831/specs" color="blue">Pololu D24V10F5 5 V, 1 A step-down regulator</a> and <a href="https://www.pololu.com/product/2832" color="blue">D24V10F6 6 V version</a>.',
+        'Tattu 300 mAh 2S listings: <a href="https://www.getfpv.com/tattu-300mah-hv-7-4v-75c-2s1p-lipo-battery-jst-phr.html" color="blue">GetFPV</a>, <a href="https://alofthobbies.com/products/tattu-2s-hv-300mah-75c-jst-phr" color="blue">Aloft Hobbies</a>, <a href="https://www.gensace.de/tattu-300mah-2s-75c-7-6v-lipo-battery.html" color="blue">Gens Ace</a>; Turnigy nano-tech 2S 300 mAh: <a href="https://botland.com.pl/en/products-withdrawn/1581-turnigy-nano-tech-li-pol-battery-pack-300mah-35c-2s-74v.html" color="blue">Botland</a>.',
+        'SG90 figures: <a href="https://bit.nkust.edu.tw/~csshieh/teach/111A/mc/datasheet/SG90.pdf" color="blue">SG90 datasheet copy</a> and <a href="https://protosupplies.com/product/servo-motor-micro-sg90/" color="blue">ProtoSupplies</a>.'])
+    build_pdf(DOCS / 'V4_power_and_wiring.pdf', 'V4 power and wiring - ARC BT80 airbrake', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -774,4 +816,5 @@ if __name__ == '__main__':
     if 'history' in which: history()
     if 'sketch' in which: sketch_v4()
     if 'v4' in which: v4()
+    if 'wiring' in which: wiring()
     print('docs written', list(DOCS.glob('*.pdf')))
