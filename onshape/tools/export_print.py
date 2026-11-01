@@ -19,8 +19,10 @@ def orient(m):
         n = mm.face_normals; a = mm.area_faces
         tri_z = mm.triangles[:, :, 2].min(1)
         over = a[(n[:, 2] < -0.7) & (tri_z > 0.15)].sum()
+        contact = a[(n[:, 2] < -0.99) & (tri_z < 0.15)].sum()   # flat area touching the bed
         h = mm.bounds[1][2]
-        score = over + 0.05 * h
+        # A part must sit on a flat face: reject orientations with under 100 mm2 of bed contact (design review F1/F2).
+        score = over + 0.05 * h + (0 if contact >= 100 else 100000)
         if best is None or score < best[0]:
             best = (score, mm, over, h)
     return best

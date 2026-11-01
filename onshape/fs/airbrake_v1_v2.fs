@@ -231,10 +231,14 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  var lowBearing=tubeMM(context,id+"lowBearing",8,5.4,flip?0.4:(definition.direct?-0.8:-15),flip?3.4:(definition.direct?2.2:-6));
  for(var i=0;i<4;i+=1) {
   var a=(45+i*90)*degree;
-  var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,(flip||definition.direct)?30.6:20,-2.5,2.5,flip?0.4:(definition.direct?-0.8:-15),flip?3.0:(definition.direct?3.0:4),a);
+  var lowSpoke=radialBox(context,id+("lowSpoke"~i),6,(flip||definition.direct)?30.6:20,flip?-3.5:-2.5,flip?3.5:2.5,flip?0.4:(definition.direct?-0.8:-15),flip?3.0:(definition.direct?3.0:4),a);
   if(!flip) {
    var spoke=radialBox(context,id+("topSpoke"~i),15,31,-2.5,2.5,68-dzT,4,a);
    opBoolean(context,id+("topSpokeJoin"~i),{"tools":qUnion([topBearing,spoke]),"operationType":BooleanOperationType.UNION});
+  }
+  if(flip) {
+   var spokeFlare=radialBox(context,id+("lowSpokeFlare"~i),22,30.6,-4.5,4.5,0.4,3.0,a);
+   opBoolean(context,id+("lowSpokeFlareJoin"~i),{"tools":qUnion([lowSpoke,spokeFlare]),"operationType":BooleanOperationType.UNION});
   }
   opBoolean(context,id+("lowSpokeJoin"~i),{"tools":qUnion([lowBearing,lowSpoke]),"operationType":BooleanOperationType.UNION});
  }
@@ -271,6 +275,13 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,flip?38.9:40.8,flip?5.9:5.2,0*degree);
    var catchBoss=radialBox(context,sub+"catchBoss",flip?16.5:18.0,flip?22.5:24.2,flip?-5.2:-4.2,flip?5.2:4.2,flip?28.6:31.4,flip?5.0:4.0,0*degree);
    opBoolean(context,sub+"catchJoin",{"tools":qUnion([catchCap,catchFinger,catchBoss]),"operationType":BooleanOperationType.UNION});
+   if(flip) {
+    // Stepped 1 mm root fillet on the inner face of the finger (three 0.33 mm steps), clear of the fin lug (z >= 41.6).
+    for(var fk=0;fk<3;fk+=1) {
+     var catchStep=radialBox(context,sub+("catchStep"~fk),22.6+0.33*fk,23.6,-3.0,3.0,38.9,0.33*(fk+1),0*degree);
+     opBoolean(context,sub+("catchStepJoin"~fk),{"tools":qUnion([catchCap,catchStep]),"operationType":BooleanOperationType.UNION});
+    }
+   }
    catchSocket=radialBox(context,sub+"catchSocket",flip?16.4:17.9,24.2,flip?-4.3:-2.75,flip?4.3:2.75,flip?33.4:36.4,flip?6.0:5.0,0*degree);
   } else {
    catchCap=radialBox(context,sub+"catchCap",22,32.6+dr,-4.2,4.2,57.4,5.4,0*degree);
@@ -458,12 +469,12 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    var hsF=k==0?18.8:-9.3;
    var ledge=radialBox(context,id+("servoLedge"~k),k==0?16.3:-30.6,k==0?30.6:-6.8,-3.5,3.5,45.1,4.3,135*degree);
    opBoolean(context,id+("servoLedgeJoin"~k),{"tools":qUnion([carrier,ledge]),"operationType":BooleanOperationType.UNION});
-   drill(context,id+("ledgePilot"~k),carrier,vector(hsF*esF[0],hsF*esF[1],49.4),vector(0,0,-1),0,3.5,0.8);
+   drill(context,id+("ledgePilot"~k),carrier,vector(hsF*esF[0],hsF*esF[1],49.4),vector(0,0,-1),0,3.5,0.9);
    if(definition.hardware)
     screwHW(context,id+("servoScrew"~k),vector(hsF*esF[0],hsF*esF[1],51.9),vector(0,0,-1),"M2BH",6,"HW servo flange screw "~(k+1)~" - M2x6 button head");
   }
   // Rotation limiter stops (thick, 8 mm) at the bottom, hanging from the lower spokes. Faces are 0.4 mm clear of the 6 mm finger at both ends of the 65 deg travel.
-  var limA=radialBox(context,id+"limStop1",10,19,-11,-3.4,-6.4,9.8,60*degree);
+  var limA=radialBox(context,id+"limStop1",10,12.8,-11,-3.4,-6.4,9.8,60*degree);
   var limB=radialBox(context,id+"limStop2",10,19,3.4,11,-6.4,9.8,125*degree);
   opBoolean(context,id+"limStop1Join",{"tools":qUnion([carrier,limA]),"operationType":BooleanOperationType.UNION});
   opBoolean(context,id+"limStop2Join",{"tools":qUnion([carrier,limB]),"operationType":BooleanOperationType.UNION});
@@ -479,7 +490,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    drill(context,bsub+"cb",carrier,bp,vector(0,0,-1),0,2.0,3.1);
    drill(context,bsub+"clr",carrier,bp,vector(0,0,-1),0,6.2,1.7);
    if(definition.hardware)
-    screwHW(context,bsub+"hw",vector(27*cos(baz),27*sin(baz),-31.5),vector(0,0,-1),"M3BH",12,"HW transition screw "~(k+1)~" - M3x12 button head");
+    screwHW(context,bsub+"hw",vector(27*cos(baz),27*sin(baz),-31.5),vector(0,0,-1),"M3BH",10,"HW transition screw "~(k+1)~" - M3x10 button head");
   }
  }
  // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.
@@ -487,6 +498,13 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   var a=(45+side*180)*degree;
   var seamBoss=radialBox(context,id+("seamBoss"~side),26,32.5+dr,-3.5,3.5,compact?51.5:63.5,3.5,a);
   opBoolean(context,id+("seamBossJoin"~side),{"tools":qUnion([carrier,seamBoss]),"operationType":BooleanOperationType.UNION});
+ }
+ if(flip) {
+  // Fill the tiny closed voids left inside the stop ring at the four window edges (CAD z -11..-10, R about 28-29): they print as hollow slivers.
+  for(var sk=0;sk<4;sk+=1) {
+   var voidFill=radialBox(context,id+("voidFillTool"~sk),27.9,28.95,-8.2,8.2,-11.0,1.1,(90*sk)*degree);
+   opBoolean(context,id+("voidFill"~sk),{"tools":qUnion([carrier,voidFill]),"operationType":BooleanOperationType.UNION});
+  }
  }
  var seamNormal=normalize(vector(1,-1,0));
  opSplitPart(context,id+"housingSplit",{"targets":carrier,"tool":plane(vector(0,0,0)*millimeter,seamNormal)});

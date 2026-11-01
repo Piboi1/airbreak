@@ -43,7 +43,7 @@ Why each switch happened is in `docs/Design_history.pdf` (decision log, problems
 | V4-A `ps_v4` / V4-B `ps_v4b` | `19b7c72543265f4ef8c3ee68` / `5e42421044190c404c738332` |
 | samples (unloaded springs, return leaf) `ps_samples` | `0cc7c62affc5473c214dffff` |
 | ASM-V1 / ASM-V2 | `2cc2089145215269219759e4` / `c123d3b7a80e1ab4ae20ec9f` |
-| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `e114e7239ef6689e424bc0ab` (rebuilt for the Spektrum pocket and strap channels) |
+| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `06e1790389ded1411a7f25aa` (rebuilt after the design-review changes) |
 
 **Correction:** an ASM-V3 link given to the user earlier in the session (`...a9209e15056d0ed7042f93da`) is dead: the
 assembly was deleted and recreated when V3 was rebuilt flush. Give the user the id above.
@@ -109,7 +109,7 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
   Rotor shaft z -6.4..44.6, hub R9 z 33.6..44.6 with a horn pocket open at the top, arms 8 x 5 mm z 33.6..38.6, cam web 5.5 mm
   z 22.5..28, collar z 3.9..5.9 above a 3 mm bearing z 0.4..3.4, limiter finger 6 mm z -5.6..-0.4 (rest az 60 deg) with two
   7.6 mm stops hung from the lower spokes (engages at -3 and 67 deg). Bay ceiling z -10..-8 with a centre wire hole; lower sleeve
-  to z -35.5; four bosses with M3x12 into a transition ring (R23.5..32.3, z -43.5..-35.5, bonded in the lower BT80 tube).
+  to z -35.5; four bosses with M3x10 into a transition ring (R23.5..32.3, z -43.5..-35.5, bonded in the lower BT80 tube).
   Electronics are reference bodies: Mercury V1 30 x 16.9 x 10.8, a 25 x 15 x 8 regulator, a Spektrum 300 mAh 2S battery 42 x 19 x 12 (sled pocket 42.8 x 19.8 x 12.4; regulator is still a placeholder).
 
 ## 6. How to rebuild and verify
@@ -133,6 +133,8 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
    housing unchanged at 94.3 mm (the floor between the layers is now 1.8 mm). Measure the real pack. The pocket is open at the bottom: a belly band (nylon tie or hook-and-loop strap up to 4 mm x 1.5 mm) runs under the pack and over a 1 mm groove in the sled top
    at x = +-17.0..21.4 (two channels; ribs notched there; transition ring has two 6.3 x 29 x 1.8 notches). A band swept in the model touches nothing; the real strap is untested.
    Plug and 3-pin balance lead are not modelled. The Pololu regulator and the wiring are unchanged (the Spektrum is a standard 4.2 V/cell pack, not HV).
+1b. **Design review (docs: see the PDF in the chat; changes applied):** bearing spokes 7 mm wide with a 9 mm flared root (CAD width was 5 mm, not the scanned 3.7), limiter stop 1 shortened to R10..12.8, enclosed voids under the ceiling filled, catch-cap finger stepped root fillet, ledge pilots O1.8, transition screws M3x10, export orientation fixed (`export_print.orient` now needs >= 100 mm2 bed contact; rotor hub down, fin on its flat side).
+1c. **Wiring has no route yet** (`docs/V4_wiring_layout_plan.pdf`, tools/wiring_plan.py): the horn blocks the rotor bore, the pocket tops are 0.2 mm under the ceiling, the pack leads have 0.4 mm at the pocket end. Proposed P1 outer strip groove + radial hole, P2 sled trough, P3 lead notch, P4 riser groove, P5 vent holes: NOT applied; waiting for the user and the Mercury header position.
 2. **Mercury V1 servo header** (GP6/GP7): pin order and signal voltage unverified (site not reachable). The wiring schematic assumes the servo red wire is
    powered only by the 5 V regulator and the Mercury header power pin is left unconnected. Needs the manual page from the user.
 3. Servo and horn dimensions are standard SG90 numbers (tab holes 28.1 mm apart, horn 1.8 mm thick): the user must measure theirs.
