@@ -43,7 +43,7 @@ Why each switch happened is in `docs/Design_history.pdf` (decision log, problems
 | V4-A `ps_v4` / V4-B `ps_v4b` | `19b7c72543265f4ef8c3ee68` / `5e42421044190c404c738332` |
 | samples (unloaded springs, return leaf) `ps_samples` | `0cc7c62affc5473c214dffff` |
 | ASM-V1 / ASM-V2 | `2cc2089145215269219759e4` / `c123d3b7a80e1ab4ae20ec9f` |
-| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `409b2190fe4d04e18fb0843c` (rebuilt for the Spektrum pocket) |
+| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `e114e7239ef6689e424bc0ab` (rebuilt for the Spektrum pocket and strap channels) |
 
 **Correction:** an ASM-V3 link given to the user earlier in the session (`...a9209e15056d0ed7042f93da`) is dead: the
 assembly was deleted and recreated when V3 was rebuilt flush. Give the user the id above.
@@ -130,8 +130,9 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
 ## 7. Open items and decisions waiting on the user
 
 1. **Battery: resized for the Spektrum 300 mAh 2S (42 x 19 x 12 mm as listed by one retailer).** Sled pocket 42.8 x 19.8 x 12.4, lower sled block 46.8 x 23.8 clipped to R25.5,
-   housing unchanged at 94.3 mm (the floor between the layers is now 1.8 mm). Measure the real pack. The pocket is open at the bottom: the pack needs a strap, tape or foam;
-   plug and 3-pin balance lead are not modelled. The Pololu regulator and the wiring are unchanged (the Spektrum is a standard 4.2 V/cell pack, not HV).
+   housing unchanged at 94.3 mm (the floor between the layers is now 1.8 mm). Measure the real pack. The pocket is open at the bottom: a belly band (nylon tie or hook-and-loop strap up to 4 mm x 1.5 mm) runs under the pack and over a 1 mm groove in the sled top
+   at x = +-17.0..21.4 (two channels; ribs notched there; transition ring has two 6.3 x 29 x 1.8 notches). A band swept in the model touches nothing; the real strap is untested.
+   Plug and 3-pin balance lead are not modelled. The Pololu regulator and the wiring are unchanged (the Spektrum is a standard 4.2 V/cell pack, not HV).
 2. **Mercury V1 servo header** (GP6/GP7): pin order and signal voltage unverified (site not reachable). The wiring schematic assumes the servo red wire is
    powered only by the 5 V regulator and the Mercury header power pin is left unconnected. Needs the manual page from the user.
 3. Servo and horn dimensions are standard SG90 numbers (tab holes 28.1 mm apart, horn 1.8 mm thick): the user must measure theirs.

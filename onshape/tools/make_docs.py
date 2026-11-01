@@ -625,6 +625,7 @@ def history():
                  ['Servo posts and pads, horn pocket, cam peak 28.6 mm, small joints left bonded', 'Me; please check the servo and horn dimensions'],
                  ['Moving the lower bearing and spokes up to make the flush servo fit', 'Me'],
                  ['Raising the servo ledges above the finger sweep; sled, transition ring, regulator placeholder', 'Me'],
+                 ['Battery strap channels in the sled and notches in the transition ring', 'You asked; me'],
                  ['Battery pocket resized for the Spektrum 300 mAh 2S (42 × 19 × 12 mm)', 'You asked; me']], [130, 46], font=7.8),
           WARN_P('Mass is solid PLA; the slicer’s infill will lower the real weights. The latch, horn pocket and servo mount have not been tested on a print.')]
     build_pdf(DOCS / 'Design_history.pdf', 'Design history - ARC BT80 airbrake', s)
@@ -746,7 +747,7 @@ def v4():
         'Hinge screws, catch caps (M3×10 into the arm bosses), rotor into one housing half, fins, second half, four seam screws, as in V3.',
         'Set the servo to its 0° position, press the horn on so that its arm lies in the slot at 45° to the crown arms, and lower the servo with its horn into the pocket on the rotor hub from above.',
         'Screw the servo tabs to the two ledges with the M2×6 screws from above. Put the horn screw in from below through the rotor bore and the ceiling hole (R3 bore, small driver).',
-        'Fill the sled: Mercury and regulator in the top pockets, battery in the bottom pocket; run the servo wires down the hollow rotor and through the ceiling hole to the bay; slide the sled up into the bay.',
+        'Fill the sled: Mercury and regulator in the top pockets, battery in the bottom pocket and strap it in (see below); run the servo wires down the hollow rotor and through the ceiling hole to the bay; slide the sled up into the bay.',
         'Bond the transition ring into the lower BT80 tube, set the module on it, and fit the four M3×12 screws down through the bosses from inside the bay (before the sled goes in, or with the sled out).',
         'Glue the tube cut-outs to the fins and slide the upper tube on with its eight M3×5 screws, as in V2 and V3. The top of the servo sits inside this tube.'])
     s += [P('7 &nbsp; Checks run on this model', H2),
@@ -792,7 +793,7 @@ def wiring():
         '<b>Order of assembly:</b> bench-test with the servo and a 5 V supply first, then the regulator on the battery, with the switch off until the last step.'])
     s += [PageBreak(), P('3 &nbsp; What I could not verify, and what it means for the CAD', H2),
           WARN_P('<b>The V4 battery pocket is now sized for the Spektrum 300 mAh 2S.</b> Pocket 42.8 × 19.8 × 12.4 mm (0.4 mm clear per side, 0.2 mm above and below the 42 × 19 × 12 mm pack); the sled’s lower block grew from 44.8 × 22.8 to 46.8 × 23.8 mm with its corners trimmed to R25.5 so they clear the opened base ring. The housing stays 94.3 mm: the extra height came out of the 3.3 mm floor between the two layers, which is now 1.8 mm thick. '
-                 'Still to do on your side: <b>measure the real pack</b> (the 42 × 19 × 12 mm figure is one retailer’s listing), allow for the plug and the 3-pin balance lead (they need to be folded beside or on the pack), and <b>hold the pack in</b> with a strap, tape or a foam pad: the pocket is open at the bottom, so nothing but friction holds it up when the rocket stands on the pad.')]
+                 '<b>Battery strap.</b> The pocket is open at the bottom, so a belly band holds the pack: a nylon tie or narrow hook-and-loop strap (up to 4 mm wide, 1.5 mm thick, about 90 mm long) runs under the pack, up the outside of the lower sled block and across a 1 mm groove in its top. Two channels are modelled, at x = ±17.0…21.4 mm (between the upper block and the end wall); use one or both. The small ribs are notched there, and the transition ring has two notches (6.3 mm × 29 mm, 1.8 mm deep) so the band has room under the sled. I checked a 3.4 mm band in the model: it does not touch the sled, the transition ring or the housing. ''Still to do on your side: <b>measure the real pack</b> (the 42 × 19 × 12 mm figure is one retailer’s listing) and allow for the plug and the 3-pin balance lead (fold them beside or on the pack).')]
     s += bullets([
         '<b>Mercury servo header:</b> the Altimeter Cloud flight page I found says the two onboard servo headers are GP6 and GP7, but I could not read the pin order or the signal voltage. Check its manual (the “Mercury V1 schematic” page). The SG90 usually accepts a 3.3 V signal when powered at 5 V, but test it on the bench before flying.',
         '<b>SG90 figures vary by source:</b> stall current 0.3 to 0.55 A, torque 1.2 to 1.8 kg·cm at 4.8 V depending on the version. The V3/V4 torque check used 0.176 N·m (1.8 kg·cm) at 5 V; measure your own servo.',

@@ -671,12 +671,19 @@ P(' stage="shaft extension";',
   subtract(context,id+"v4SledPocketA2",sled,radialBox(context,id+"v4PocketA2",-12.7,12.7,2.3,17.7,-21.2,11.3,0*degree));
   subtract(context,id+"v4SledPocketB",sled,radialBox(context,id+"v4PocketB",-21.4,21.4,-9.9,9.9,-35.4,12.4,0*degree));
   subtract(context,id+"v4SledWire",sled,cylinderMM(context,id+"v4SledWireTool",4,-24.6,-21.1));
-  label(context,sled,"N Electronics sled - slides in from below, clamped between the bay ceiling and the transition",[.30,.60,.55]);
+  // Strap channels: a belly band (nylon tie or narrow hook-and-loop strap, up to 4 mm wide and 1.5 mm thick) runs under the battery,
+  // up the outside of the lower block and across a 1 mm groove in its top, at x = +-17.0..21.4 (between the upper block and the end wall).
+  for(var k=0;k<2;k+=1) {
+   subtract(context,id+("v4StrapGroove"~k),sled,radialBox(context,id+("v4StrapGrooveTool"~k),17.0,21.4,-12.6,12.6,-22.0,2.0,(180*k)*degree));
+   subtract(context,id+("v4StrapRib"~k),sled,radialBox(context,id+("v4StrapRibTool"~k),17.0,21.4,-1.6,1.6,-22.0,8.0,(180*k)*degree));
+  }
+  label(context,sled,"N Electronics sled - slides in from below, clamped between the bay ceiling and the transition, 2 strap channels hold the battery",[.30,.60,.55]);
   // Transition on the BT80 side: bond inside the lower BT80 tube; the module is screwed down onto it.
   var trans=tubeMM(context,id+"v4TransTube",32.3,23.5,-43.5,-35.5);
   for(var k=0;k<4;k+=1) drill(context,id+("v4TransPilot"~k),trans,vector(27*cos((45+90*k)*degree),27*sin((45+90*k)*degree),-35.5),vector(0,0,-1),0,7.0,M3_PILOT);
+  for(var k=0;k<2;k+=1) subtract(context,id+("v4TransStrapNotch"~k),trans,radialBox(context,id+("v4TransStrapNotchTool"~k),16.5,22.8,-14.5,14.5,-37.3,1.9,(180*k)*degree));
   subtract(context,id+"v4TransWire",trans,atC(context,id+"v4TransWireTool",4,-43.6,-35.4,0,-26));
-  label(context,trans,"T Transition ring (BT80 side) - bond inside the lower BT80 tube, 4 M3 pilots take the module screws",[.86,.78,.55]);
+  label(context,trans,"T Transition ring (BT80 side) - bond inside the lower BT80 tube, 4 M3 pilots take the module screws, 2 notches give the battery strap room",[.86,.78,.55]);
   if(definition.tubes) {
    var lt4=tubeMM(context,id+"lowerTube",33.02,32.5,-95,-15);
    label(context,lt4,"REF BT80 lower tube - bonded to the sleeve and the transition",TUBE_TAN);
