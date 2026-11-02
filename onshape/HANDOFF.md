@@ -23,7 +23,7 @@ was written: "Add V4 power and wiring document"). Do not open a pull request unl
 | **V1** | same machine, screwed (M3/M4), assembly doc | 118 | 178.5 | 180 g | done, unchanged since |
 | **V2** | compact head inside the upper BT80 tube, tube slits with cut-outs glued to fins, new inward-lug + finger latch, fin top at head rim (22 mm latch drop) | 91.8 | 152.3 | 169 g | done |
 | **V3** | SG90 straight on the rotor (no spring cartridge/trigger), servo inside the housing, flush with the bottom | 91.8 | 91.8 | 106 g | done |
-| **V4** (latest) | servo flipped on top, thicker limiter/rotor parts, limiter moved to the bottom, electronics bay + sled, screwed transition ring | 94.3 | 103.4 (housing bottom to servo top) | 142 g (113 core + 15 sled + 15 transition) | done, awaiting user decisions below |
+| **V4** (latest) | servo flipped on top, thicker limiter/rotor parts, limiter moved to the bottom, electronics bay + sled, screwed transition ring | 96.3 | 105.4 (housing bottom to servo top) | 144 g (114 core + 16 sled + 15 transition) | done, awaiting user decisions below |
 
 Why each switch happened is in `docs/Design_history.pdf` (decision log, problems and fixes). Read it.
 
@@ -43,7 +43,7 @@ Why each switch happened is in `docs/Design_history.pdf` (decision log, problems
 | V4-A `ps_v4` / V4-B `ps_v4b` | `19b7c72543265f4ef8c3ee68` / `5e42421044190c404c738332` |
 | samples (unloaded springs, return leaf) `ps_samples` | `0cc7c62affc5473c214dffff` |
 | ASM-V1 / ASM-V2 | `2cc2089145215269219759e4` / `c123d3b7a80e1ab4ae20ec9f` |
-| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `06e1790389ded1411a7f25aa` (rebuilt after the design-review changes) |
+| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `0f89bdc00682e78b6530c87f` (rebuilt after the wiring changes) |
 
 **Correction:** an ASM-V3 link given to the user earlier in the session (`...a9209e15056d0ed7042f93da`) is dead: the
 assembly was deleted and recreated when V3 was rebuilt flush. Give the user the id above.
@@ -130,11 +130,11 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
 ## 7. Open items and decisions waiting on the user
 
 1. **Battery: resized for the Spektrum 300 mAh 2S (42 x 19 x 12 mm as listed by one retailer).** Sled pocket 42.8 x 19.8 x 12.4, lower sled block 46.8 x 23.8 clipped to R25.5,
-   housing unchanged at 94.3 mm (the floor between the layers is now 1.8 mm). Measure the real pack. The pocket is open at the bottom: a belly band (nylon tie or hook-and-loop strap up to 4 mm x 1.5 mm) runs under the pack and over a 1 mm groove in the sled top
+   floor between the layers 1.8 mm (the housing later grew 2 mm for wiring, see 1c). Measure the real pack. The pocket is open at the bottom: a belly band (nylon tie or hook-and-loop strap up to 4 mm x 1.5 mm) runs under the pack and over a 1 mm groove in the sled top
    at x = +-17.0..21.4 (two channels; ribs notched there; transition ring has two 6.3 x 29 x 1.8 notches). A band swept in the model touches nothing; the real strap is untested.
    Plug and 3-pin balance lead are not modelled. The Pololu regulator and the wiring are unchanged (the Spektrum is a standard 4.2 V/cell pack, not HV).
 1b. **Design review (docs: see the PDF in the chat; changes applied):** bearing spokes 7 mm wide with a 9 mm flared root (CAD width was 5 mm, not the scanned 3.7), limiter stop 1 shortened to R10..12.8, enclosed voids under the ceiling filled, catch-cap finger stepped root fillet, ledge pilots O1.8, transition screws M3x10, export orientation fixed (`export_print.orient` now needs >= 100 mm2 bed contact; rotor hub down, fin on its flat side).
-1c. **Wiring has no route yet** (`docs/V4_wiring_layout_plan.pdf`, tools/wiring_plan.py): the horn blocks the rotor bore, the pocket tops are 0.2 mm under the ceiling, the pack leads have 0.4 mm at the pocket end. Proposed P1 outer strip groove + radial hole, P2 sled trough, P3 lead notch, P4 riser groove, P5 vent holes: NOT applied; waiting for the user and the Mercury header position.
+1c. **Wiring paths are cut into the model** (`docs/V4_wiring_layout_plan.pdf`, tools/wiring_plan.py), from the user's Mercury photo (pads GND, GP6, GP7, OUT, IN, 3V along the long edge; pitch and position estimated): bay 2.0 mm longer (housing 96.3, ring z -45.5..-37.5), groove + hole at az 126.5 deg, centre-wall trough, lead notch, vents. The horn blocks the rotor bore, so the cable cannot go down the rotor. Still to confirm on the real board: header position/pitch, servo cable exit, signal level.
 2. **Mercury V1 servo header** (GP6/GP7): pin order and signal voltage unverified (site not reachable). The wiring schematic assumes the servo red wire is
    powered only by the 5 V regulator and the Mercury header power pin is left unconnected. Needs the manual page from the user.
 3. Servo and horn dimensions are standard SG90 numbers (tab holes 28.1 mm apart, horn 1.8 mm thick): the user must measure theirs.

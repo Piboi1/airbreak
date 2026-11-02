@@ -530,7 +530,7 @@ def history():
                  ['V2 22 mm drop', '91.8 mm', '152.3 mm', '169 g', '19 types', 'spring + SG90 trigger; inward lug + finger latch'],
                  ['V3 first (servo below)', '91.8 mm', '105.5 mm incl. servo', '108 g', '5 types', 'SG90 on the rotor; same lug + finger latch'],
                  ['V3 flush (servo inside)', '91.8 mm', '91.8 mm', '106 g', '5 types', 'same; bearing and spokes raised'],
-                 ['V4 (servo on top, bay)', '94.3 mm', '103.4 mm (servo top above the housing)', '142 g incl. sled + transition', '7 types', 'servo on top, thick limiter at the bottom']], [32, 24, 26, 20, 30, 44], font=7.6)]
+                 ['V4 (servo on top, bay)', '96.3 mm', '105.4 mm (servo top above the housing)', '144 g incl. sled + transition', '7 types', 'servo on top, thick limiter at the bottom']], [32, 24, 26, 20, 30, 44], font=7.6)]
     # --- iteration 0
     s += [PageBreak(), P('2 &nbsp; The original: your FeatureScript', H2),
           side('hist_baseline.png', bl([
@@ -592,7 +592,7 @@ def history():
               'Thicker: limiter finger 2 → 6 mm, stops 2 → 7.6 mm, crown arms 3 × 5 → 5 × 8 mm (walls at the screw 0.8 → 2.3 mm), cam web 3 → 5.5 mm.',
               'Bay: sled with the Mercury and a regulator on one layer and the battery on the other; four vertical M3 into a transition ring.',
               'The interference sweep showed the servo ledges were hit by the catch-cap fingers, so the ledges moved above them and the servo now stands 9.1 mm above the housing.',
-              '<b>Housing 94.3 mm, 103.4 mm from housing bottom to servo top, printed set 142 g</b> (113 g core + sled + transition ring).']), 52),
+              '<b>Housing 96.3 mm, 105.4 mm from housing bottom to servo top, printed set 144 g</b> (114 g core + sled + transition ring).']), 52),
           Spacer(1, 6),
           fig('v4_side.png', 120, 'V4 section from the CAD model.', 110)]
     # --- problems and decisions
@@ -697,13 +697,13 @@ def v4():
             'Feature Studio: module mode <i>4</i> with <i>V2 compact head</i> on.', SM),
           WARN_P('<b>Where it differs from the sketch:</b> (1) the servo top is <b>9.1 mm above the housing</b>, not flush: the catch-cap fingers sweep under the servo’s flange ledges, so the ledges had to move above them, which lifts the servo; it sits in the upper BT80 tube. '
                  '(2) The crown arm is 8 mm wide and 5 mm thick with no separate boss (walls beside the screw 2.3 mm, not 3.3). (3) Limiter stops are 7.6 mm wide, the cam web 5.5 mm. '
-                 '(4) The housing is 94.3 mm (Option B: +2.5 mm over V3), and 103.4 mm from the housing bottom to the top of the servo.'),
+                 '(4) The housing is 96.3 mm (Option B: +2.5 mm over V3, plus 2.0 mm of wiring headroom), and 105.4 mm from the housing bottom to the top of the servo.'),
           fig('v4_assembled.png', 55, 'V4 closed. The upper tube, with the servo showing through its window zone, covers the head as before.', 112),
           P('1 &nbsp; The numbers', H2),
           table([['', 'V3 flush', 'V4'],
-                 ['Printed housing', '91.8 mm', '94.3 mm (z −35.5 … 58.8)'],
-                 ['Housing bottom to servo top', '91.8 mm (servo inside)', '103.4 mm (servo top 9.1 mm above the housing)'],
-                 ['Printed set, solid PLA', '106 g', '<b>142 g</b>: 113 g core + 15 g sled + 15 g transition ring'],
+                 ['Printed housing', '91.8 mm', '96.3 mm (z −37.5 … 58.8)'],
+                 ['Housing bottom to servo top', '91.8 mm (servo inside)', '105.4 mm (servo top 9.1 mm above the housing)'],
+                 ['Printed set, solid PLA', '106 g', '<b>144 g</b>: 114 g core + 16 g sled + 15 g transition ring'],
                  ['Printed part types', '5', '7 (adds the electronics sled and the transition ring)'],
                  ['Servo', 'inside, shaft up, bottom flush', 'on top, flipped, shaft down'],
                  ['Rotation limiter', 'top: finger and stops about 2 mm wide', 'bottom: finger 6 mm, stops 7.6 mm'],
@@ -748,7 +748,7 @@ def v4():
         'Hinge screws, catch caps (M3×10 into the arm bosses), rotor into one housing half, fins, second half, four seam screws, as in V3.',
         'Set the servo to its 0° position, press the horn on so that its arm lies in the slot at 45° to the crown arms, and lower the servo with its horn into the pocket on the rotor hub from above.',
         'Screw the servo tabs to the two ledges with the M2×6 screws from above. Put the horn screw in from below through the rotor bore and the ceiling hole (R3 bore, small driver).',
-        'Fill the sled: Mercury and regulator in the top pockets, battery in the bottom pocket and strap it in (see below); run the servo wires down the hollow rotor and through the ceiling hole to the bay; slide the sled up into the bay.',
+        'Fill the sled: Mercury and regulator in the top pockets, battery in the bottom pocket and strap it in (see below); run the servo cable down the outer groove, through the side hole into the bay and along the wire trough (see the wiring layout document); slide the sled up into the bay.',
         'Bond the transition ring into the lower BT80 tube, set the module on it, and fit the four M3×10 screws down through the bosses from inside the bay (before the sled goes in, or with the sled out).',
         'Glue the tube cut-outs to the fins and slide the upper tube on with its eight M3×5 screws, as in V2 and V3. The top of the servo sits inside this tube.'])
     s += [P('Changes from the design review', H2)]
@@ -770,7 +770,7 @@ def v4():
                  ['ASM-V4 mates', '21 features: fin groups, four hinges, rotor revolute: all solve']], [62, 114], font=7.6),
           WARN_P('<b>Not verified, and what I need from you:</b> (1) your servo and horn dimensions (the ledge pilots and the horn pocket must match). (2) The Mercury’s servo output: which pad, and whether its 3.3 V signal level drives the SG90 (check the manual). '
                  '(3) The regulator size is a placeholder, and the battery pocket is sized for the Spektrum 300 mAh 2S as listed (42 × 19 × 12 mm): measure your pack before printing the sled, and hold it in with a strap or tape (the pocket is open at the bottom). (4) <b>Pressure:</b> the Mercury reads static pressure, so the bay needs vent holes to the outside (not modelled): about three 3 mm holes through the lower tube at the Mercury level. '
-                 '(5) The servo cable must come down through the hollow rotor (3 wires beside the 4 mm horn-screw head in a 6 mm bore): tight, to be tried on a print. (6) USB-C access to the Mercury is with the sled out. '
+                 '(5) The servo cable runs in the outer groove on the 135° strip (the horn closes the rotor bore); the Mercury header position comes from a photo, so confirm it on the board. (6) USB-C access to the Mercury is with the sled out. '
                  '(7) Latch and horn pocket not tested on a print; ground-impact FEA not run (the ledges, limiter stops and the 1.4 mm sled walls are the first places to look).')]
     build_pdf(DOCS / 'V4_assembly_guide.pdf', 'V4 servo-on-top assembly guide - ARC BT80 airbrake', s)
 
@@ -800,7 +800,7 @@ def wiring():
         '<b>The one rule:</b> the servo’s red wire takes power from the regulator only. If the Mercury servo header has a power pin, leave it unconnected (pull the red wire out of the Mercury-side connector shell, or use a servo lead with the red wire cut on that side). Two supplies tied together can damage the Mercury or the regulator.',
         '<b>Order of assembly:</b> bench-test with the servo and a 5 V supply first, then the regulator on the battery, with the switch off until the last step.'])
     s += [PageBreak(), P('3 &nbsp; What I could not verify, and what it means for the CAD', H2),
-          WARN_P('<b>The V4 battery pocket is now sized for the Spektrum 300 mAh 2S.</b> Pocket 42.8 × 19.8 × 12.4 mm (0.4 mm clear per side, 0.2 mm above and below the 42 × 19 × 12 mm pack); the sled’s lower block grew from 44.8 × 22.8 to 46.8 × 23.8 mm with its corners trimmed to R25.5 so they clear the opened base ring. The housing stays 94.3 mm: the extra height came out of the 3.3 mm floor between the two layers, which is now 1.8 mm thick. '
+          WARN_P('<b>The V4 battery pocket is now sized for the Spektrum 300 mAh 2S.</b> Pocket 42.8 × 19.8 × 12.4 mm (0.4 mm clear per side, 0.2 mm above and below the 42 × 19 × 12 mm pack); the sled’s lower block grew from 44.8 × 22.8 to 46.8 × 23.8 mm with its corners trimmed to R25.5 so they clear the opened base ring. The floor between the two layers is 1.8 mm thick. (Later the whole battery layer moved down 2.0 mm for wiring headroom: housing 96.3 mm.) '
                  '<b>Battery strap.</b> The pocket is open at the bottom, so a belly band holds the pack: a nylon tie or narrow hook-and-loop strap (up to 4 mm wide, 1.5 mm thick, about 90 mm long) runs under the pack, up the outside of the lower sled block and across a 1 mm groove in its top. Two channels are modelled, at x = ±17.0…21.4 mm (between the upper block and the end wall); use one or both. The small ribs are notched there, and the transition ring has two notches (6.3 mm × 29 mm, 1.8 mm deep) so the band has room under the sled. I checked a 3.4 mm band in the model: it does not touch the sled, the transition ring or the housing. ''Still to do on your side: <b>measure the real pack</b> (the 42 × 19 × 12 mm figure is one retailer’s listing) and allow for the plug and the 3-pin balance lead (fold them beside or on the pack).')]
     s += bullets([
         '<b>Mercury servo header:</b> the Altimeter Cloud flight page I found says the two onboard servo headers are GP6 and GP7, but I could not read the pin order or the signal voltage. Check its manual (the “Mercury V1 schematic” page). The SG90 usually accepts a 3.3 V signal when powered at 5 V, but test it on the bench before flying.',
@@ -819,54 +819,55 @@ def wiring():
 
 def wiring_plan():
     s = []
-    s += [P('V4 wiring layout plan (after the design-review changes)', H1),
-          P('Where each wire runs inside and around the V4 model, drawn on sections of the rebuilt CAD. The electrical schematic is unchanged (see the power and wiring document); what is new here is the routing, and the routing turned out to need changes to the CAD. '
-            'The model is the V4 studio after the review changes (battery pocket for the Spektrum 300 mAh 2S, strap channels, wider bearing spokes).', B),
-          WARN_P('<b>Main finding:</b> as modelled, the servo cable has <b>no route</b> to the bay, and the cable has no way into the sled pockets either. The earlier idea of running the servo wires down the hollow rotor does not work: the horn closes the top of the bore (0.2–0.5 mm gaps). '
-                 'Four small CAD changes (P1–P4 below) are proposed; <b>none is applied yet</b>, because P1 and P2 depend on where the Mercury’s servo header is (I could not read its manual), and you should pick between options.'),
-          P('1 &nbsp; Harness (unchanged)', H2),
-          fig('v4_wiring_schematic.png', 170, 'Reference schematic (battery label now Spektrum 300 mAh 2S).', 120),
+    s += [P('V4 wiring layout (applied to the CAD)', H1),
+          P('Where each wire runs inside and around the rebuilt V4 model, drawn on sections of the CAD. The Mercury V1 photo you sent gave the header pad order, and the wire paths below are now cut into the model. '
+            'The electrical schematic is unchanged (see the power and wiring document).', B),
+          WARN_P('<b>What the check found, and what was done:</b> the horn closes the top of the rotor bore, so the servo cable cannot go down the hollow rotor. The cable now runs in an <b>outer groove</b> on the 135° strip and through a hole into the bay. '
+                 'To give the Mercury’s soldered wires headroom the bay was made <b>2.0 mm longer</b> (housing 96.3 mm). <b>Pad positions are estimated from a photo</b> (6 pads at about 2.54 mm pitch, GND at x −3.5 mm with the button end at −x): check them on the real board before printing.'),
+          P('1 &nbsp; Mercury header and harness', H2),
+          P('From your photo, the pads along the right-hand long edge are, from the button end: <b>GND, GP6, GP7, OUT, IN, 3V</b>. The servo needs only <b>GND</b> and <b>GP6</b> (adjacent pads); the servo’s +5 V comes from the regulator, not from the 3V pad. '
+            'The Mercury sits with this edge toward the centre wall of the sled and the button end at −x, so GND and GP6 are the pads closest to the end where the servo cable arrives.', B),
+          fig('v4_wiring_schematic.png', 165, 'Reference schematic (battery label now Spektrum 300 mAh 2S).', 110),
           table([['Wire', 'Function', 'From → to', 'Wire', 'Length (est.)'],
                  ['W1', 'Battery + through the arming jumper', 'pack plug → polyfuse → J1 (lower tube) → regulator VIN', '24 AWG red', '60 mm + 110 mm'],
                  ['W2', 'Battery −', 'pack plug → regulator GND (the ground rail)', '24 AWG black', '105 mm'],
                  ['W3', '+5 V', 'regulator VOUT → C1+ → servo red (inside the servo cable)', '24 AWG red', '40 mm + cable'],
-                 ['W4', 'Ground rail', 'regulator GND → C1− → Mercury GND → servo brown', '24 AWG black', '40 mm + cable'],
-                 ['W5', 'Servo cable (3 cores)', 'servo → outer groove (P1) → radial hole → bay → splice point', 'servo’s own lead', 'about 150 mm'],
-                 ['W6', 'Signal', 'Mercury GP6 (or GP7) servo-header signal pin → servo orange', '28 AWG', '25 mm'],
+                 ['W4', 'Ground rail', 'regulator GND → C1− → Mercury GND pad → servo brown', '24 AWG black', '40 mm + cable'],
+                 ['W5', 'Servo cable (3 cores)', 'servo → groove (z 58.8 → −21.5) → hole → bay → trough', 'servo’s own lead', 'about 190 mm'],
+                 ['W6', 'Signal', 'Mercury GP6 pad → servo orange', '28 AWG', '25 mm'],
                  ['J1', 'Arming jumper', 'remove-before-flight 2-pin plug in the lower tube, just below the ring wire hole', 'JST-PH or header', '—']],
                 [11, 34, 78, 26, 26], font=7.4),
-          P('Lengths are read off the routes drawn below (±15 mm) and do not include slack: add about 20 mm to each. The servo’s own lead is usually 200–250 mm (seller dependent): enough if you cut it at the bay end. '
-            'Cap C1 (470–1000 µF, 6.3 × 11 mm) stands beside the regulator in its pocket (the pocket is 11.3 mm deep).', SM),
+          P('Lengths are read off the drawn routes (±15 mm) without slack: add about 20 mm each. The servo’s own lead is usually 200–250 mm (seller dependent): cut it at the bay end. Cap C1 (470–1000 µF, 6.3 × 11 mm) stands beside the regulator; the pocket is now 13.3 mm deep.', SM),
           PageBreak(), P('2 &nbsp; Layout drawings', H2),
-          fig('v4_wiring_plan_views.png', 178, 'Plan sections of the rebuilt model with the routes (orange: servo cable, red: +5 V and battery +, black: battery −; dashed red: proposed openings).', 100),
-          fig('v4_wiring_plan_elev.png', 120, 'Elevation through the 45°/225° plane. Orange: proposed servo-cable route (P1). Red dashed with a cross: the rotor-bore route that does not work.', 205),
-          PageBreak(), P('3 &nbsp; What is in the way, and the proposed changes', H2),
-          table([['Id', 'Problem found while drawing the routes', 'Proposed change (not applied)', 'Touches'],
-                 ['P1', 'Servo cable: the horn blocks the rotor bore; the housing wall around the strips is too thin for a hole; the 0.7 mm gap under the upper tube is too small.',
-                  'Cut an outer groove 4.0 wide × 1.6 deep in the strip at azimuth 225°, offset 10 mm from its centre line (clear of the tube screws), from z −13 to the housing top (58.8). Add a radial O4.5 hole at z −13 into the bay. Remaining wall 1.2 mm; strip carries no load except the tube screws.', 'housing halves; check cam peak 28.6 vs wall 29.5 (clear)'],
-                 ['P2', 'The ceiling hole and the pocket tops are only 0.2 mm below the ceiling, so no wire can enter the Mercury or regulator pockets.',
-                  'Cut a 4 wide trough through the sled wall at the cable side (x −17.2…−14.2, z −16…−12) and a 3 mm channel between the two pockets; position finalised once the Mercury header position is known.', 'sled'],
-                 ['P3', 'Battery leads leave the pack end, where the pocket wall is only 0.4 mm away.',
-                  'Cut a lead notch 6 wide × 6 tall in the +x pocket end wall (y ±3, z −34…−28), open to the bottom, so the leads fold under the pack toward the ring hole.', 'sled'],
-                 ['P4', 'The two layers connect only through the R4 floor hole, which is closed below by the battery (0.2 mm).',
-                  'Cut a 4 wide riser groove, 1.5 deep, on the −y outer face of the lower block (z −35 to −23) so battery+ and − reach the upper layer outside the pack.', 'sled'],
-                 ['P5', 'Static pressure (existing open item).', 'Three O3 vent holes through the lower tube and the housing wall at z −16, azimuths 0°, 120°, 240° (Mercury level).', 'housing, tube']],
-                [10, 62, 82, 22], font=7.3),
+          fig('v4_wiring_plan_views.png', 178, 'Plan sections of the rebuilt model with the routes (orange: servo cable, red: +5 V and battery +, black: battery −, blue: GP6). The trough, lead notch, strap channels and ring notches are cut in the model.', 100),
+          fig('v4_wiring_plan_elev.png', 120, 'Elevation through the 126.5° plane. Orange: the servo-cable route (groove and hole). Red dashed with a cross: the rotor bore, which does not work as a cable route.', 205),
+          PageBreak(), P('3 &nbsp; What was cut into the V4 model', H2),
+          table([['Item', 'Problem', 'Change in the model', 'Touches'],
+                 ['Bay 2.0 mm longer', 'Wires soldered to the Mercury’s through-hole pads need 2 mm of headroom; the Mercury top was 0.4 mm below the ceiling.',
+                  'Battery layer and everything below moved down 2.0 mm; the Mercury and regulator pockets lowered 2.0 mm (floor between the layers stays 1.8 mm). Housing 94.3 → 96.3 mm (z −37.5 … 58.8), transition ring z −45.5 … −37.5.', 'housing, sled, ring'],
+                 ['P1 cable groove + hole', 'Horn blocks the rotor bore; the wall is too thin for a hole; the 0.7 mm gap under the upper tube is too small.',
+                  'Outer groove 3.2 wide × 1.6 deep at azimuth 126.5° on the 135° strip, z −21.5 … 58.8; hole 3.2 × 4.5 into the bay at z −21.5 … −17.0. The strips are only 25° wide between the 65° fins, and the 135°/315° strips carry no seam screws. A 3 mm ribbon fits the groove and the hole without touching any part (checked).', 'housing halves'],
+                 ['P2 wire trough', 'Pocket tops were 0.2 mm under the ceiling: no way in.',
+                  'Trough along the centre wall of the sled, y −0.35 … 2.3, x ±17.5, z −13.4 … −9.8; it joins the Mercury and regulator pockets and is open at both ends. A route from the groove hole round the sled corner to the trough keeps at least 0.8 mm from every part (checked).', 'sled'],
+                 ['P3 lead notch', 'Battery leads had 0.4 mm at the pack end.', 'Notch 6 wide × 6 tall in the +x pocket end wall (y ±3, z −37.5 … −31.4), open to the bottom.', 'sled'],
+                 ['P5 vents', 'Mercury reads static pressure.', 'Three 3 × 3 mm holes through the lower sleeve at z −18.5 … −15.5, azimuths 0°, 120°, 240°, and three O3 holes in the reference lower tube.', 'housing, tube']],
+                [26, 52, 76, 22], font=7.2),
+          P('P4 (a riser groove on the sled) is no longer needed: the battery leads come up the open side of the sled to z −14 and round the sled corner into the trough.', SM),
           P('4 &nbsp; Harness assembly order', H2)]
     s += bullets([
         'Bench-test first: servo, regulator and Mercury on a table with a 5 V supply; confirm the servo moves from the Mercury signal alone (power only from the regulator).',
-        'Crimp or solder the servo lead (P1 route), and pull the servo’s red wire out of the Mercury-side connector so only signal and ground reach the Mercury.',
-        'Fit the servo to the ledges (M2×6, O1.8 pilots), feed its cable down the outer groove and through the radial hole into the bay.',
-        'Fill the sled: regulator and C1 in their pocket, Mercury in its pocket, wires through the trough; battery in the bottom pocket with its leads folded out through the notch; strap it (two ties or one hook-and-loop strap).',
-        'Run battery + and − down through the ring wire hole to J1 in the lower tube and back up the riser groove; leave J1 open (disarmed).',
-        'Slide the sled up, fit the transition ring, check that no wire is pinched between the sled and the ring (the ring has strap notches for exactly this); only then close the jumper.'])
-    s += [P('5 &nbsp; Open items for you', H2)]
+        'Prepare the servo lead: pull the red wire out of the Mercury side and keep it for the +5 V line; solder 28 AWG leads from the brown and orange to the Mercury GND and GP6 pads, from the top, bending them flat toward the centre wall.',
+        'Fit the servo to the ledges (M2×6, O1.8 pilots), feed the cable down the outer groove, through the hole, round the sled corner and into the trough.',
+        'Fill the sled: regulator and C1 in their pocket, Mercury in its pocket (header edge to the trough), wires in the trough; battery in the bottom pocket with its leads folded out through the notch; strap it (two ties or one hook-and-loop strap).',
+        'Run battery + and − down through the ring wire hole to J1 in the lower tube and back up; leave J1 open (disarmed).',
+        'Slide the sled up, fit the transition ring, check that no wire is pinched between the sled and the ring (the ring has strap notches), and only then close the jumper.'])
+    s += [P('5 &nbsp; Still open', H2)]
     s += bullets([
-        'The <b>Mercury servo header</b>: which pad is GP6/GP7, pin order, and signal voltage (3.3 V into the SG90 at 5 V usually works; bench-test it). P2 is placed once the header position is known.',
-        'Where the <b>servo cable leaves your servo</b> (the drawing assumes the top end when the servo is flipped), and its length.',
-        'Do you want <b>P1–P5</b> applied as drawn, or a different cable route (for example a slot in the servo ledge and a groove on the inside wall)?',
-        'The Spektrum pack’s <b>plug type</b> (PH 2.0 listed, check) and the length of its leads.'])
-    build_pdf(DOCS / 'V4_wiring_layout_plan.pdf', 'V4 wiring layout plan - ARC BT80 airbrake', s)
+        'The pad positions come from a photo: confirm the header position and pad pitch on the real Mercury (and its case: it has a loop tab) before printing the sled.',
+        'Where the servo cable leaves your SG90 (the drawing assumes the end that is on top) and its length.',
+        'The Spektrum pack’s plug type (PH 2.0 listed) and its lead length.',
+        'Not printed or tried: groove depth against your wire, and whether the cable bends easily at the sled corner.'])
+    build_pdf(DOCS / 'V4_wiring_layout_plan.pdf', 'V4 wiring layout - ARC BT80 airbrake', s)
 
 
 if __name__ == '__main__':

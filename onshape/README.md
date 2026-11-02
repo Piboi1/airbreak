@@ -14,7 +14,7 @@ Everything here was generated from your FeatureScript (`fs/v0_original.fs`, unch
 
 V3 = the 22 mm V2 with the spring cartridge, trigger and every layer under the rotor replaced by one SG90 on the rotor (module mode 3): printed set 106 g (V2: 169 g), 91.8 mm overall with the servo flush inside the housing (V2: 152.3 mm). `tools/torque_check.py` estimates the servo torque.
 
-V4 = V3 with the servo flipped on top (module mode 4), the limiter moved to the bottom, thicker limiter and rotor parts, a screwed transition and a bay for the Mercury V1 altimeter, a Spektrum 300 mAh 2S servo battery and a regulator: housing 94.3 mm, 103.4 mm from housing bottom to servo top, printed set 142 g (113 g core + sled + transition ring).
+V4 = V3 with the servo flipped on top (module mode 4), the limiter moved to the bottom, thicker limiter and rotor parts, a screwed transition and a bay for the Mercury V1 altimeter, a Spektrum 300 mAh 2S servo battery and a regulator: housing 96.3 mm, 105.4 mm from housing bottom to servo top, printed set 144 g (113 g core + sled + transition ring).
 
 V2 has the latch stack dropped 22 mm into the fin height: printed housing 91.8 mm (V1: 118 mm), whole printed assembly 152.3 mm (V1: 178.5 mm).
 

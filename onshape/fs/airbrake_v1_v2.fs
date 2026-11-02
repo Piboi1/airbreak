@@ -192,7 +192,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  // Inline BT80 housing. Two 18 mm glue shoulders, 64.6 mm OD.
  var carrier=tubeMM(context,id+"carrier",rOut,30.2+dr,-15,topZ);
  var base=tubeMM(context,id+"base",33.02,flip?26:18,-15,-11);
- var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,flip?-35.5:-33,-14.9);
+ var lower=tubeMM(context,id+"lowerShoulder",32.3,29.9,flip?-37.5:-33,-14.9);
  var joinParts=[carrier,base,lower];
  if(!compact) joinParts=append(joinParts,tubeMM(context,id+"upperShoulder",32.3,29.9,66.9,85));
  opBoolean(context,id+"baseJoin",{"tools":qUnion(joinParts),"operationType":BooleanOperationType.UNION});
@@ -478,20 +478,26 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   var limB=radialBox(context,id+"limStop2",10,19,3.4,11,-6.4,9.8,125*degree);
   opBoolean(context,id+"limStop1Join",{"tools":qUnion([carrier,limA]),"operationType":BooleanOperationType.UNION});
   opBoolean(context,id+"limStop2Join",{"tools":qUnion([carrier,limB]),"operationType":BooleanOperationType.UNION});
-  // Bay ceiling (wires come down the hollow rotor and through the centre hole), and four bosses that take the screws into the transition.
+  // Bay ceiling (centre hole kept for the horn-screw driver; the horn blocks the bore, so the servo cable uses the outer groove), and four bosses that take the screws into the transition.
   var bayCeil=cylinderMM(context,id+"bayCeiling",30.5,-10,-8);
   opBoolean(context,id+"bayCeilingJoin",{"tools":qUnion([carrier,bayCeil]),"operationType":BooleanOperationType.UNION});
   subtract(context,id+"bayWireHole",carrier,cylinderMM(context,id+"bayWireTool",4,-10.1,-7.9));
   for(var k=0;k<4;k+=1) {
    var baz=(45+90*k)*degree;var bsub=id+("transBoss"~k);
-   var tboss=radialBox(context,bsub,23.5,30.2,-4.5,4.5,-35.5,6.0,baz);
+   var tboss=radialBox(context,bsub,23.5,30.2,-4.5,4.5,-37.5,6.0,baz);
    opBoolean(context,bsub+"join",{"tools":qUnion([carrier,tboss]),"operationType":BooleanOperationType.UNION});
-   var bp=vector(27*cos(baz),27*sin(baz),-29.5);
+   var bp=vector(27*cos(baz),27*sin(baz),-31.5);
    drill(context,bsub+"cb",carrier,bp,vector(0,0,-1),0,2.0,3.1);
    drill(context,bsub+"clr",carrier,bp,vector(0,0,-1),0,6.2,1.7);
    if(definition.hardware)
-    screwHW(context,bsub+"hw",vector(27*cos(baz),27*sin(baz),-31.5),vector(0,0,-1),"M3BH",10,"HW transition screw "~(k+1)~" - M3x10 button head");
+    screwHW(context,bsub+"hw",vector(27*cos(baz),27*sin(baz),-33.5),vector(0,0,-1),"M3BH",10,"HW transition screw "~(k+1)~" - M3x10 button head");
   }
+  // Servo-cable route: an outer groove (3.2 wide x 1.6 deep) up the 135 deg strip at azimuth 126.5 deg (the strips are only 25 deg wide, between the 65 deg fins; the 135/315 strips carry no seam screws), from z -21.5 to the housing top, and a
+  // 3.2 x 4.5 mm hole into the bay at z -21.5..-17.0. Three 3 mm static-pressure vents into the bay at z -18.5..-15.5.
+  subtract(context,id+"cableGroove",carrier,radialBox(context,id+"cableGrooveTool",30.7,35.0,-1.6,1.6,-21.5,80.3,126.5*degree));
+  subtract(context,id+"cableHole",carrier,radialBox(context,id+"cableHoleTool",29.0,35.0,-1.6,1.6,-21.5,4.5,126.5*degree));
+  for(var vk=0;vk<3;vk+=1)
+   subtract(context,id+("bayVent"~vk),carrier,radialBox(context,id+("bayVentTool"~vk),29.0,35.0,-1.5,1.5,-18.5,3.0,(120*vk)*degree));
  }
  // Four seam registration pins (slip fit; do not force). Split along 45 degrees, through fixed posts.
  for(var side=0;side<2;side+=1) {
@@ -697,26 +703,29 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   label(context,sBody4,"E SG90 servo REFERENCE - flipped on top, shaft down, flange screwed to the two housing ledges - measure your servo",[.35,.38,.43]);
   stage="v4 bay";
   // Electronics: Mercury V1 altimeter (30 x 16.9 x 10.8) and a 5 V regulator (25 x 15 x 8, placeholder) in the upper layer, a Spektrum 300 mAh 2S LiPo (42 x 19 x 12) in the lower layer.
-  var merc=radialBox(context,id+"v4Mercury",-15,15,-17.45,-0.55,-21.2,10.8,0*degree);
-  label(context,merc,"E2 Mercury V1 altimeter REFERENCE (30 x 16.9 x 10.8, Altimeter Cloud)",[.55,.35,.75]);
-  var regu=radialBox(context,id+"v4Regulator",-12.5,12.5,2.5,17.5,-21.2,8.0,0*degree);
+  var merc=radialBox(context,id+"v4Mercury",-15,15,-17.45,-0.55,-23.2,10.8,0*degree);
+  label(context,merc,"E2 Mercury V1 altimeter REFERENCE (30 x 16.9 x 10.8). Place it with the header edge (GND, GP6, GP7, OUT, IN, 3V; about 2.54 mm pitch, from a photo) towards the centre trough and the button end at -x: GND is then near x -3.5 and GP6 near x -1",[.55,.35,.75]);
+  var regu=radialBox(context,id+"v4Regulator",-12.5,12.5,2.5,17.5,-23.2,8.0,0*degree);
   label(context,regu,"E3 5 V 3 A regulator REFERENCE (placeholder 25 x 15 x 8)",[.94,.54,.63]);
-  var batt=radialBox(context,id+"v4Battery",-21,21,-9.5,9.5,-35.2,12.0,0*degree);
+  var batt=radialBox(context,id+"v4Battery",-21,21,-9.5,9.5,-37.2,12.0,0*degree);
   label(context,batt,"E4 Servo battery Spektrum 300 mAh 2S LiPo REFERENCE (42 x 19 x 12, as listed - measure yours)",[.95,.83,.36]);
   // Electronics sled: slides in from below, held between the bay ceiling and the transition.
   // Skeletal sled: a block round the upper layer, a block round the battery, and four thin centring ribs; pockets cut after.
-  var sled=radialBox(context,id+"v4SledA",-17.0,17.0,-19.2,19.2,-23.0,12.8,0*degree);
-  var sledB=radialBox(context,id+"v4SledB",-23.4,23.4,-11.9,11.9,-35.3,14.3,0*degree);
+  var sled=radialBox(context,id+"v4SledA",-17.0,17.0,-19.2,19.2,-25.2,15.0,0*degree);
+  var sledB=radialBox(context,id+"v4SledB",-23.4,23.4,-11.9,11.9,-37.3,16.3,0*degree);
   subtract(context,id+"v4SledBClip",sledB,tubeMM(context,id+"v4SledBClipTool",40,25.5,-36,-20));
   opBoolean(context,id+"v4SledJoinB",{"tools":qUnion([sled,sledB]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<4;k+=1) {
-   var sribk=radialBox(context,id+("v4SledRib"~k),16,29.3,-1.0,1.0,-35.3,19.5,(90*k)*degree);
+   var sribk=radialBox(context,id+("v4SledRib"~k),16,29.3,-1.0,1.0,-37.3,21.5,(90*k)*degree);
    opBoolean(context,id+("v4SledRibJoin"~k),{"tools":qUnion([sled,sribk]),"operationType":BooleanOperationType.UNION});
   }
-  subtract(context,id+"v4SledPocketA1",sled,radialBox(context,id+"v4PocketA1",-15.2,15.2,-17.65,-0.35,-21.2,11.3,0*degree));
-  subtract(context,id+"v4SledPocketA2",sled,radialBox(context,id+"v4PocketA2",-12.7,12.7,2.3,17.7,-21.2,11.3,0*degree));
-  subtract(context,id+"v4SledPocketB",sled,radialBox(context,id+"v4PocketB",-21.4,21.4,-9.9,9.9,-35.4,12.4,0*degree));
-  subtract(context,id+"v4SledWire",sled,cylinderMM(context,id+"v4SledWireTool",4,-24.6,-21.1));
+  subtract(context,id+"v4SledPocketA1",sled,radialBox(context,id+"v4PocketA1",-15.2,15.2,-17.65,-0.35,-23.2,13.3,0*degree));
+  subtract(context,id+"v4SledPocketA2",sled,radialBox(context,id+"v4PocketA2",-12.7,12.7,2.3,17.7,-23.2,13.3,0*degree));
+  subtract(context,id+"v4SledPocketB",sled,radialBox(context,id+"v4PocketB",-21.4,21.4,-9.9,9.9,-37.4,12.4,0*degree));
+  // Wire trough along the centre wall (the servo cable and the Mercury GND/GP6 wires run in it; the sled ends are open) and a lead notch for the battery.
+  subtract(context,id+"v4SledTrough",sled,radialBox(context,id+"v4SledTroughTool",-17.5,17.5,-0.35,2.3,-13.4,3.6,0*degree));
+  subtract(context,id+"v4LeadNotch",sled,radialBox(context,id+"v4LeadNotchTool",21.0,24.0,-3.0,3.0,-37.5,6.1,0*degree));
+  subtract(context,id+"v4SledWire",sled,cylinderMM(context,id+"v4SledWireTool",4,-26.6,-23.1));
   // Strap channels: a belly band (nylon tie or narrow hook-and-loop strap, up to 4 mm wide and 1.5 mm thick) runs under the battery,
   // up the outside of the lower block and across a 1 mm groove in its top, at x = +-17.0..21.4 (between the upper block and the end wall).
   for(var k=0;k<2;k+=1) {
@@ -725,14 +734,15 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   }
   label(context,sled,"N Electronics sled - slides in from below, clamped between the bay ceiling and the transition, 2 strap channels hold the battery",[.30,.60,.55]);
   // Transition on the BT80 side: bond inside the lower BT80 tube; the module is screwed down onto it.
-  var trans=tubeMM(context,id+"v4TransTube",32.3,23.5,-43.5,-35.5);
-  for(var k=0;k<4;k+=1) drill(context,id+("v4TransPilot"~k),trans,vector(27*cos((45+90*k)*degree),27*sin((45+90*k)*degree),-35.5),vector(0,0,-1),0,7.0,M3_PILOT);
-  for(var k=0;k<2;k+=1) subtract(context,id+("v4TransStrapNotch"~k),trans,radialBox(context,id+("v4TransStrapNotchTool"~k),16.5,22.8,-14.5,14.5,-37.3,1.9,(180*k)*degree));
-  subtract(context,id+"v4TransWire",trans,atC(context,id+"v4TransWireTool",4,-43.6,-35.4,0,-26));
+  var trans=tubeMM(context,id+"v4TransTube",32.3,23.5,-45.5,-37.5);
+  for(var k=0;k<4;k+=1) drill(context,id+("v4TransPilot"~k),trans,vector(27*cos((45+90*k)*degree),27*sin((45+90*k)*degree),-37.5),vector(0,0,-1),0,7.0,M3_PILOT);
+  for(var k=0;k<2;k+=1) subtract(context,id+("v4TransStrapNotch"~k),trans,radialBox(context,id+("v4TransStrapNotchTool"~k),16.5,22.8,-14.5,14.5,-39.3,1.9,(180*k)*degree));
+  subtract(context,id+"v4TransWire",trans,atC(context,id+"v4TransWireTool",4,-45.6,-37.4,0,-26));
   label(context,trans,"T Transition ring (BT80 side) - bond inside the lower BT80 tube, 4 M3 pilots take the module screws, 2 notches give the battery strap room",[.86,.78,.55]);
   if(definition.tubes) {
-   var lt4=tubeMM(context,id+"lowerTube",33.02,32.5,-95,-15);
-   label(context,lt4,"REF BT80 lower tube - bonded to the sleeve and the transition",TUBE_TAN);
+   var lt4=tubeMM(context,id+"lowerTube",33.02,32.5,-97,-15);
+   for(var vk=0;vk<3;vk+=1) radialDrill(context,id+("lowerTubeVent"~vk),lt4,(120*vk)*degree,-17.0,31.0,33.6,3.0);
+   label(context,lt4,"REF BT80 lower tube - bonded to the sleeve and the transition, 3 vent holes O3 at z -17 (static pressure for the altimeter)",TUBE_TAN);
   }
   return;
  }
