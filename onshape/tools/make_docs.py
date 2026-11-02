@@ -870,6 +870,62 @@ def wiring_plan():
     build_pdf(DOCS / 'V4_wiring_layout_plan.pdf', 'V4 wiring layout - ARC BT80 airbrake', s)
 
 
+def modular():
+    s = []
+    s += [P('Modular airbrake concept: swappable module, reusable electronics head', H1),
+          P('A concept for review, in the same spirit as the V4 sketch: <b>nothing is built in CAD yet</b>. Dimensions come from the V4 model; V5 values are concept numbers to be set in CAD once you pick the options at the end.', B),
+          WARN_P('<b>Answer:</b> yes. Put the servo, Mercury, regulator and battery in a <b>head</b> on top of the airbrake. The head carries the servo with its horn pointing down, and the horn already drops into the rotor hub slot in V4, so <b>no wire crosses any joint</b> and the groove, hole and trough of the V4 wiring plan disappear. '
+                 'The part that breaks (housing, rotor, fins, catch caps, slit skin) becomes the <b>module</b>, a bolt-on consumable that costs about 105 g of PLA; the head and the base ring stay.'),
+          P('1 &nbsp; The three groups', H2),
+          table([['Group', 'Contains', 'Fate', 'Joint'],
+                 ['<b>Head</b> (reusable)', 'servo cup with the two servo ledges, SG90, plate, Mercury V1, regulator + C1, 2S battery, slide switch, USB-C window, vent holes, head sleeve and head tube', 'moves to the next module', 'I1 (to the module), I3 (to the upper airframe)'],
+                 ['<b>Module</b> (consumable)', 'housing halves, rotor, 4 fins with their tube cut-outs, 4 catch caps, hinge screws, slit skin tube', 'replaced after a rough flight', 'I1 (top), I2 (bottom)'],
+                 ['<b>Base</b> (stays)', 'transition ring bonded in the lower tube (the strap notches and sled features go away)', 'never moves', 'I2']], [30, 85, 32, 35], font=7.6),
+          fig('v5_stack_compare.png', 172, 'V4 today and the modular concept at the same scale. Green is the module, blue the head, tan the base.', 118),
+          PageBreak(), P('2 &nbsp; Swap procedure and the two interfaces', H2),
+          fig('v5_exploded.png', 120, 'Swap: unscrew I1 and lift the head, unscrew I2 and lift the module, drop in the new module, refit both. The horn re-enters the hub slot as the head goes back down.', 175),
+          P('<b>I1 head to module</b>, z 58.8: the module skin extends 12 mm above the housing top and the head sleeve slides into it; four radial M3×5 screws, one off-centre dowel (O2.5) so it fits only one way. The head’s servo cup goes down inside the housing top (its two ledges replace the ones that are in the housing now). '
+            '<b>I2 module to base</b>, z −22: the same four-screw pattern (or four captive thumb screws) onto the ring that stays bonded in the lower tube. <b>I3 head to upper airframe</b>: the same coupler again, so the head is one section you can lift out.', B),
+          PageBreak(), P('3 &nbsp; Interface details', H2),
+          fig('v5_interface.png', 178, 'I1 detail: sleeve, screws, key and the horn-in-slot drive (left); plan of the screw circle, key and drive axis (right).', 100),
+          P('<b>Drive coupling.</b> The horn stays on the servo in the head; the rotor hub slot (4.4 mm wide, horn arm 3.4 mm) gets a 45° lead-in 1.8 × 1.8 mm. With the rotor parked at its closed stop (−3°) and the servo parked at the same angle, the funnel absorbs about ±8° of error. '
+            '<b>Rotor park:</b> add a light detent at the closed position so the rotor does not wander while the head is off. <b>Rotor keeper:</b> V4 holds the rotor with the horn from above; with the head off the rotor can lift out, so add a clip or printed collar on the module. '
+            '<b>Drive fuse:</b> make the horn arm a printed dog that breaks before the SG90 gears do (the failing torque is to be tested; an idea, not a verified number).', B),
+          PageBreak(), P('4 &nbsp; The head', H2),
+          fig('v5_head.png', 178, 'Head, elevation and plan of the electronics layer (concept). The servo is below the plate; battery and Mercury sit side by side in one layer inside O59.8, the regulator beside the Mercury.', 100),
+          P('Battery (42 × 19) and Mercury (30 × 16.9) fit side by side inside O59.8 (corner radii 29.0 and 23.7 mm); the 13 × 18 regulator stands at the side of the Mercury, and the layer is 16 mm high. Servo lead (3 cores, ~40 mm) goes to the Mercury GND and GP6 pads and the regulator; the longest wire in the head is the battery lead (~50 mm). '
+            'The slide switch (arming) and USB-C window are in the head tube wall, so you can arm and charge without opening anything; three O3 vent holes at the Mercury level. These all sit in the head, so the module never needs an opening for them.', B),
+          PageBreak(), P('5 &nbsp; Where the V4 design changes', H2),
+          table([['V4 part', 'Change for the modular design', 'Where'],
+                 ['Electronics bay and sled (z −37.5 … −10)', '<b>Delete.</b> The sled, strap channels, wire trough, lead notch and the 2 mm of headroom go away; the bay ceiling becomes the module’s bottom plate with the horn-screw hole.', 'housing, sled, ring'],
+                 ['Cable groove, hole and vents in the housing wall', '<b>Delete.</b> No cable leaves the head.', 'housing halves'],
+                 ['Housing lower shoulder and four bosses (z −37.5 … −31.5)', 'Shorten to a 12 mm bottom sleeve (z −22 … −10) with I2 screw pilots; or a quarter-turn bayonet for tool-free swaps.', 'housing halves'],
+                 ['Transition ring', 'Moves up to z −30 … −22, keeps its four pilots; becomes the permanent base. Strap notches and sled seat removed.', 'transition ring'],
+                 ['Servo ledges in the housing (z 45.1 … 49.4)', '<b>Move to the head cup.</b> The housing loses its ledges and the two M2 pilots.', 'housing, new cup'],
+                 ['Housing top and skin', 'Skin tube extends 12 mm above the housing top as the I1 socket; four M3×5 pilots plus the key hole.', 'housing, skin'],
+                 ['Upper tube', 'Splits in two: a slit skin that belongs to the module, and a head tube that belongs to the head.', 'tubes'],
+                 ['Rotor', 'Lead-in on the hub slot, closed-position detent, lift-off keeper. Everything else stays (limiter, cam, caps).', 'rotor'],
+                 ['Fins, catch caps, hinge screws', 'No change in shape; they are part of the module and swap with it. Optional: make the cut-outs printed so no tube has to be cut each time.', 'fins'],
+                 ['Mercury, regulator, battery, servo', 'Move into the head; no change to the parts or the schematic (wire lengths drop to 25–50 mm).', 'head']], [46, 100, 30], font=7.4),
+          P('6 &nbsp; Breakage strategy and numbers', H2),
+          table([['Item', 'V4', 'Modular concept (estimates from V4 dimensions)'],
+                 ['Parts that break and are replaced', 'housing, rotor, fins, caps, tube pieces, sled screwed in with the electronics', 'module only: about 105 g of PLA (housing ~50 g, rotor 17 g, fins 33 g, caps 5 g)'],
+                 ['Parts that must survive', 'servo, Mercury, regulator, battery all inside the bay beneath the impact', 'head about 55 g, away from the fin zone, foam-mounted; plus one cheap sacrificial drive dog'],
+                 ['Length', '105.4 mm (bay to servo top)', 'module 80.8 mm; head adds 30 mm above the module; overall about 111 mm (+5.6 mm)'],
+                 ['Wires crossing a joint', 'servo cable, battery leads, pressure vents', 'none'],
+                 ['Swap time', 'not designed for it', 'about 5 minutes with 8 M3 screws; about 1 minute with captive thumb screws or a bayonet (to be tried)']], [44, 62, 70], font=7.6),
+          P('7 &nbsp; Risks and choices for you', H2)]
+    s += bullets([
+        '<b>Overall length</b> grows about 5.6 mm because the electronics sit above the servo. Putting them beside the servo is not possible: the fin latch lugs and catch fingers fill the space around it.',
+        '<b>Head hangs over the module.</b> The head’s mass sits 60–90 mm above the module, which is fine for the rocket’s balance but adds a 55 g load on the I1 screws in a rough landing: use four M3 and a foam seat, and test it.',
+        '<b>Alignment on assembly.</b> The horn has to find the slot blind. The lead-in and the closed-position detent handle ±8°; a drop of 0.2 mm clearance each side keeps it from binding. Not tested on a print.',
+        '<b>Skin tube:</b> keep cutting a real BT80 piece for the module (cheap, strong, but a chore), or print the skin and fin cut-outs (no cutting, more PLA). Your choice.',
+        '<b>Swap method:</b> screws at I1/I2/I3 (simple), or thumb screws or a bayonet (faster, more parts and more tolerance).',
+        '<b>Other airbrakes:</b> the head fits another brake if that brake offers the same I1: O64.6 sleeve socket, four M3 pilots with the key, the horn slot on the tube axis, closed stop at −3° and 65° of travel. Those numbers are the interface drawing in section 3; write them down before you design the other brake.',
+        '<b>Not verified:</b> every V5 number here is a concept dimension from the V4 model, not a CAD result; the Mercury pad position and the SG90 cable exit are still from a photo and standard figures.'])
+    build_pdf(DOCS / 'V5_modular_concept.pdf', 'Modular airbrake concept - ARC BT80', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -881,4 +937,5 @@ if __name__ == '__main__':
     if 'v4' in which: v4()
     if 'wiring' in which: wiring()
     if 'wiringplan' in which: wiring_plan()
+    if 'modular' in which: modular()
     print('docs written', list(DOCS.glob('*.pdf')))
