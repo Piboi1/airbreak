@@ -992,6 +992,60 @@ def option_fasteners():
     build_pdf(DOCS / 'V5_choice2_fastening.pdf', 'V5 choice 2: head and module fastening - ARC BT80', s)
 
 
+def insert_concept():
+    s = []
+    s += [P('V5 insert concept: one BT80 tube, swappable module and head', H1),
+          P('Your plan, in my words: the rocket gets <b>one BT80 tube</b>, cut once. The airbrake module slides into it; when it breaks you take it out and put another in, and <b>no piece of BT80 is glued to any fin</b>. '
+            'The electronics head goes in the same tube, on top of the module. Concept only; the numbers come from the V4 model, not from tested CAD.', B),
+          WARN_P('<b>The one catch:</b> the tube windows stay open. A fin that carries its own skin out to the tube’s outside diameter cannot slide into the tube, because the skin would hit the tube wall on the way in. '
+                 'So the fins stay inside the tube (R32.2) and the four windows are left open or covered. Three ways to deal with that are drawn below; I suggest covering them with tape.'),
+          P('1 &nbsp; What gets simpler', H2)]
+    s += bullets([
+        'The <b>module skin disappears</b>: the tube is the skin. No cut tube pieces per module, no glue, no printed skin (choice 1 from the earlier sheet is settled).',
+        'No sockets, sleeves or raised bands at the joints, and no bayonet question: the module and the head are plain cylinders (OD 64.4 mm) that slide into the 65.0 mm bore with 0.3 mm clearance.',
+        'The head and the module are <b>both inserts from the top</b>. Swapping a module is: open the top of the tube section, lift the head out (4 screws), lift the module out, drop in the new one, refit the head.',
+        'The module <b>rests on the base ring</b> (bonded in the tube) and is clamped by the head from above, so it needs only two index screws, not eight.',
+        'The tube carries everything else once: the windows, the screw holes, the vent holes, the switch slot and the USB-C window. The module and the head carry no skin and no vent features.'])
+    s += [fig('ins_architecture.png', 150, 'The tube section with the base ring, the module insert and the head insert; the arrows show the removal path (concept, heights from the module seat).', 170),
+          PageBreak(), P('2 &nbsp; The windows', H2),
+          P('The windows are the same 65° × 42 mm openings as the V4 cut-outs (38.5 × 43 mm with 0.5 mm clearance). With no cut-outs glued to the fins, they have to be dealt with on their own.', B),
+          fig('ins_clash.png', 160, 'Why the fins cannot carry a skin: left, a fin without skin slides past the tube wall; right, a skin on the fin would hit the tube wall.', 75),
+          fig('ins_windows.png', 172, 'Section at the fin zone: windows left open, covered with tape, or a fin skin (which blocks insertion).', 80),
+          table([['Option', 'What it is', 'Good', 'Bad'],
+                 ['S1 open windows', 'four 38.5 × 43 mm holes in the tube, fins closed behind them', 'simplest; the Mercury sees outside static pressure through the open windows', 'about 6.6 cm² of holes, 27 % of this tube section’s skin; the drag cost is not measured; the fins can be seen and hit through the holes'],
+                 ['<b>S1+ tape</b>', 'S1 plus a patch of foil or Kapton tape over each window, renewed every flight; the fins burst it when they open (the system deploys once)', 'smooth outside surface; no glue on the fins; renewing is seconds', 'wind suction (about 2.3 kPa at 80 m/s with the torque-check assumption) pulls about 3.8 N on each patch: it could bulge or tear early; needs a test'],
+                 ['S2 slotted tube', 'windows open to the tube end as U-slots, fin skin to R33.02 slides through them', 'flush skin, nothing to tape', 'the tube becomes four fingers: weak; the end must be closed by the head sleeve']], [30, 56, 40, 50], font=7.3),
+          PageBreak(), P('3 &nbsp; Swap procedure', H2),
+          fig('ins_swap.png', 178, 'Swap in five steps (concept).', 85),
+          P('<b>Index and retention:</b> the module is keyed by two radial M3 index screws through the tube into the module supports (at 45° and 225°, z_t 22), and by the windows: a module turned the wrong way puts its fins behind the tube strips and the screw holes do not line up. The head is held by four radial M3 screws into heat-set inserts in its sleeve (45, 135, 250, 290°), so the electronics layer clears the bosses. '
+            '<b>Opening the top:</b> the tube section must be separable from the airframe above it; your recovery layout decides where.', B),
+          P('4 &nbsp; Numbers', H2),
+          table([['Item', 'Value (concept)'],
+                 ['Tube', 'one BT80 section, OD 66.04, ID 65.0, about 120 mm long (windows, screws, vents cut once; template supplied 1:1)'],
+                 ['Module insert', 'OD 64.4 (0.3 mm clearance), 68.8 mm long (module frame z −10 … 58.8), about 105 g of PLA (estimate)'],
+                 ['Head insert', 'sleeve and cup, servo, Mercury, regulator, battery, about 55 g, 30 mm above the module top'],
+                 ['Base ring', 'R26.5 … 32.5, 8 mm thick, bonded in the tube bottom; it is the module seat'],
+                 ['Windows', '4 × 38.5 × 43 mm, centres at 0/90/180/270°, heights 17.5 … 60.5 above the seat'],
+                 ['Stack inside the tube', 'base 8 + module 68.8 + head 30 = about 107 mm (V4 was 105.4 mm)'],
+                 ['Swap effort', '4 head screws + 2 index screws (6 screws); not timed']], [40, 136], font=7.6),
+          P('5 &nbsp; What changes in the V4 model', H2),
+          table([['V4 part', 'Change'],
+                 ['Housing (C1/C2)', 'outside radius 32.3 → 32.2; the bay, the lower shoulder, the four bosses, the cable groove, the cable hole and the vent holes are all <b>deleted</b>; the bottom becomes a plate on the base ring; the support strips keep two M3 index pilots.'],
+                 ['Servo ledges', 'move into the head cup (the head carries the servo), as in the modular concept.'],
+                 ['Fins and catch caps', 'unchanged shape; outer face at R32.2 (no skin, no glue); the 0.5 mm window clearance replaces the saw kerf.'],
+                 ['Upper tube', 'becomes the one tube, cut once with the template; its windows and holes replace the glued cut-outs.'],
+                 ['Transition ring', 'becomes the base ring bonded inside the tube bottom.'],
+                 ['Electronics', 'as in the modular concept: all in the head, no wire crosses a joint.']], [42, 134], font=7.6),
+          P('6 &nbsp; Risks and what to test first', H2)]
+    s += bullets([
+        '<b>Open or taped windows</b> are the main unknown (drag, suction on the tape, appearance). Test: print one fin and a 60 mm module slice, put them in a real BT80 piece with one window, and check that the module slides in and out, the fin opens through the window, and a tape patch survives a fan.',
+        '<b>Slip fit after a crash:</b> a module that has been hit may be stuck in the tube. Print the module OD at R32.2 (0.3 clearance), not tighter, and add two finger notches at the top to pull it out.',
+        '<b>Tube alignment:</b> the windows must sit exactly over the fins. The index screws take this up; check it on the first assembly.',
+        '<b>The square holes in V4</b> (the vents and the cable hole) are gone in this concept: the vents move to the tube above the head, and nothing needs a cable hole any more.',
+        '<b>Not verified:</b> the printed fit, the tape, the drag of the open windows, and the 3.8 N suction (it uses the Cp −0.6 assumption from the torque check).'])
+    build_pdf(DOCS / 'V5_insert_concept.pdf', 'V5 insert concept - ARC BT80', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -1006,4 +1060,5 @@ if __name__ == '__main__':
     if 'modular' in which: modular()
     if 'optskin' in which: option_skin()
     if 'optfast' in which: option_fasteners()
+    if 'insert' in which: insert_concept()
     print('docs written', list(DOCS.glob('*.pdf')))
