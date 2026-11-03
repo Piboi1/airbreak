@@ -1,90 +1,59 @@
-# HANDOFF: BT80 cam kick-out airbrake CAD project (V1 to V4 built, V5 planned)
+# HANDOFF: BT80 cam kick-out airbrake CAD project (V1 to V5 built; V5 = modular, not printed)
 
 Read this first. It is written so a new agent can continue with no other context. Repo: `piboi1/airbreak`, branch
-`claude/nice-maxwell-1lmh2h`, folder `onshape/`. Everything described here is committed and pushed (last commit when this
-was written: "V5 sketch 4: how the tube, head, module and transition connect"). Do not open a pull request unless the user asks.
+`claude/nice-maxwell-1lmh2h`, folder `onshape/`. Everything described here is committed and pushed. Do not open a pull request unless the user asks.
 
-## 0. Where we are now: V5 (modular design) is PLANNED, NOT BUILT. Read this section first.
+## 0. Where we are now: V5 (modular design) is BUILT and checked in CAD (not printed). Read this section first.
 
-V4 is built and verified (sections 2 to 7). The user then asked for a **modular** version, because the airbrake will break every flight and they
-want to swap the whole module. A long design conversation produced the decisions below. **No V5 CAD exists yet**: only concept PDFs and the
-drawing scripts. The user's last answers were: option B for the bolt path, "try the housing one piece", and they do not know the transition's
-diameters. The next step is to build V5 in CAD (a new `mode 5` in the FeatureScript, from V4) once the user confirms the open question at the end of this section.
+V1 to V4 are built (sections 2 to 7). The user wanted a **modular** version because the airbrake will break every flight and they want to swap the whole module. After a long design conversation and the go-ahead
+("go ahead and build V5") it was built as **mode 5** of the same FeatureScript. Current picture: `docs/V5_assembly_guide.pdf` (what is built) and `docs/V5_complete_concept.pdf` (the idea and the decisions).
 
-### 0.1 The V5 concept (current source of truth = `docs/V5_sketch4_how_it_fits.pdf` plus this section)
+### 0.1 What V5 is (all numbers from the CAD model; V4 frame: rotor axis z, module bottom z = -10, housing top 58.8)
 
-* **Stack, nose up:** upper BT80 airframe, then **one BT80 tube cut once** (66.04 OD, 65.02 ID) that goes round the module and the electronics head and is the skin,
-  then the **transition** (BT80 to BT70) on the bottom, then the BT70 tube (OD 56.3 mm; the BT70 ID is unknown). The BT70 section falls off at recovery and is
-  **not touched** by this project (the recovery system is in it; "I do not have much space in the transition").
-* **Two inserts slide into the tube:** the **module** (housing, rotor, 4 fins, caps: the part that breaks) and the **head** (SG90, Mercury V1, regulator, 2S battery, switch,
-  USB-C window, vents: reusable). The head sits above the module and stays fixed in the tube; the SG90 horn drops into the rotor hub slot, so **no wire crosses any joint**.
-* **No BT80 glued to the fins, no module skin.** The tube windows stay **open** (tape over them is optional and was only a suggestion): 4 windows at 0/90/180/270 deg,
-  **67 deg wide x 63.5 mm tall (38.6 x 63.5 mm), z -9.0..54.5 in the V4 frame**, measured on the V4 reference tube. (Earlier drafts said 43 mm tall: wrong, fixed.)
-  A fin with its own skin cannot slide into the tube, so fins stay inside R32.2.
-* **Fasteners (user's rules):** **M3 bolts and nuts wherever possible, no heat-set inserts, no self-tapping into plastic.** All bolts are **radial, from the outside through the BT80 tube,
-  on the BT80 side only** (nothing from below). Nuts sit in slots open to the inside of the part, filled before assembly. **Bolt path B** (chosen): three independent sets of 4 bolts,
-  each through the tube: set 1 head (into bosses in the head sleeve), set 2 module (nuts in its wall), set 3 transition (nuts in its shoulder). No module sleeve over the transition plug.
-  Every hole is a plain clearance hole; new modules reuse the same 12 tube holes, so holes are reused, never multiplied.
-* **Housing in one piece:** the user does not want snap hooks or a band. Plan: **move the limiter finger and its stops above the bearing ring** (V4 has them below), so the rotor can drop in from
-  the top and the housing needs **no seam, no seam screws, no pegs**. Also remove the V4 support blocks, servo ledges (they move to the head cup), seam bosses and bay features.
-  Catch caps printed with the rotor arms (no cap screws). Hinges: M3 bolt + nut instead of M4 (print-in-place pins would be an option, weaker). Fallback if one piece fails: two halves joined by a sliding dovetail along the seam.
-* **Swap (on the ground, BT70 section already off):** pull the 4 transition bolts, slide the transition out of the tube bottom; pull the 4 module bolts, slide the module out of the bottom (the horn leaves the slot);
-  slide the new module in (nuts first), 4 bolts; transition back in, 4 bolts. 8 bolts per swap. The head (set 1) is not touched.
-* **Screw count:** V4 27 (4 seam, 4 cap, 4 hinge M4, 4 boss, 8 tube support, 3 M2) to V5 about 15 (4+4+4 M3 + nut, 4 hinge M3 + nut counted in the 12, 3 M2 servo): see sketch 2.
-* **Numbers used in the drawings (all concept, not CAD):** module OD R32.2 in the 65.02 bore (0.3 mm clearance), module 68.8 long (V4 z -10..58.8, no bay), module seat = transition plug top;
-  transition plug R26.0..29.6 12 mm, shoulder R26.0..32.3 12 mm (inside the tube), cone 35 mm to BT70 (placeholder), M3x8 button heads, nut slots 5.7 wide x 2.6 deep; head sleeve R29.9..32.2 with four 7 mm inside bosses
-  (bolt azimuths 45, 135, 250, 290 deg so they clear the battery and Mercury); head height 30 mm above the module; overall about 107 mm; module about 105 g PLA, head about 55 g (estimates).
+* **Stack, nose up:** upper airframe, then **one BT80 tube cut once** (R32.51/R33.02, the skin) around the **head** (z 59.0..88.3) and the **module** (z -10..58.8), then the **transition** (BT80 side: shoulder R26.0..32.2 z -34..-22, plug R26.0..29.6 z -22..-10.2 = the module seat). The BT70 side is **not touched**; the cone is a placeholder.
+* **Module** (the part that breaks, about 85 g solid PLA): one-piece housing (OD 64.4, no seam, no pegs, no seam screws, floor plate with an 8 mm hole), rotor with **integral catch caps** (no cap screws), 4 fins (same shape, **M3x25 hinge bolt + nut** in the +Y ear slot). The **limiter finger and its two stops are above the bearing ring** (finger z 6.4..11.6, stops z 0.4..14), which is what makes the one-piece housing possible: the rotor drops in from the top at any angle 0..60 deg.
+* **Head** (reusable, about 33 g + electronics): cup (sleeve, floor z 68.5..70.3, two servo ledge posts at 135/315 deg hanging to z 45.1, pockets for the 2S battery, Mercury V1 and the regulator stood on its edge, vents, USB-C window, switch slot, cable slot) + lid (disc + 4 nut bosses). The SG90 horn drops into the rotor hub socket (tapered lead-in, about +-10 deg): no wire crosses a joint.
+* **Fasteners (user's rules kept):** 12 radial **M3x8 button head bolts + nuts** from the outside through the tube, BT80 side only, in **three independent sets of 4**: set 1 head (z 82, azimuth 45/135/250/290; the nuts are in the **lid** bosses, the bolts clamp cup and lid together), set 2 module (z 12, azimuth 45+90k, nuts in hex pockets in wall bosses), set 3 transition (z -28, azimuth 45+90k, nuts in hex pockets in the shoulder). All pockets are hexagons open to the inside. Tube holes are plain clearance holes cut once; a new module reuses the same 12. Plus 4 hinge M3x25 + nut, 2 M2x6 servo bolts + M2 nuts, 1 horn screw: **19 fasteners** (V4: 27). No heat-set inserts, no self-tapping, no snap hooks, no bands.
+* **Swap (8 bolts, the head stays):** route 1 (main) out of the bottom: transition bolts, transition out, module bolts, module out. Route 2 (the user asked for it too): head bolts, head out of the top, module bolts, module out of the top (needs the upper airframe separated at the top of the tube: **assumption, not confirmed by the user**). Both routes are collision-free in the CAD.
+* **Windows** stay open (67 deg x 63.8 mm, z -9.2..54.6, tape optional, not decided). USB-C window (9.2 x 3.4), switch slot (12 x 6) and 3 vents O3 (z 74..75) are provisional.
+* Solid PLA: housing 29.4 g, rotor 22.4 g, fins 4 x 8.3 g, head cup 25.0 g, lid 8.1 g, transition 41.3 g (placeholder cone). Overall module bottom to head top 98.3 mm.
 
-### 0.2 Open questions for the user (ask these, do not guess)
+### 0.2 Onshape, repo, and how to rebuild V5
 
-**Answered on 2026-11-03 (latest session):**
-* **Exit direction: mainly the bottom, but the module must also be able to come out of the top once all the screws are out.** Route 1 (main): transition bolts (set 3) out, transition out of the bottom, module bolts (set 2) out, module out of the bottom. Route 2: head bolts (set 1) out, head out of the top, module bolts out, module out of the top; the transition stays. 8 bolts either way. Design rule added: nothing on the module or head wider than the bore, no flange or lip that blocks either direction, hub slot open toward the head. Assumption still to confirm with the user: Route 2 needs the upper airframe separated at the top of this tube.
-* **Go-ahead for the V5 CAD: NOT given.** The user first asked for a drawing document of the entire V5 idea with the context of the recent decisions: `docs/V5_complete_concept.pdf` (script `tools/v5_overview.py`). Do not start the CAD until they say go.
-* Push branch: the user wants work to continue on `claude/nice-maxwell-1lmh2h`.
+* Onshape (same document, section 3): `ps_v5` = **V5-A** closed `ec80a21d010785fb8bbefb14`, `ps_v5b` = **V5-B** open (fins 90, rotor 65) `5e34f91d2af57a906275e874`, `asm_v5` = **ASM-V5** `8af6af6faa7f346dec5eae52` (17 features, all OK). Add these to `ids.json`.
+* **Elements in the document that were NOT made by this build** and were left untouched: `V5 isolated modular source - preserves V1 to V4` (`08a1a1ab4b63f93ea25787b8`), `V5 - removable module and reusable head` (`2854463aa1ae4b58be7d12f4`), and an assembly `V5 modular assembly` with its BOM, created 2026-11-03 15:55 to 15:58 UTC by another Onshape user id. They are an unverified parallel attempt (same base, similar choices; one real flaw found: its battery corner sits at R30.4 inside the R29.9 sleeve). Ask the user whether to delete them.
+* Source: `tools/build_fs.py` now ends with `exec(tools/build_fs_v5.py)` (the mode-5 patches, 118 patches in all). Mode 5 = `mono` flag in `camKickBrake` (module) plus a `definition.mode==5` block in `modularBrake` (head, transition, tube, hardware). V1..V4 are guarded off and stay volume-identical.
+* Rebuild and check: `export AIRBRAKE_WORK=<scratch>` (needs `ids.json`, section 4), `python3 tools/rebuild_v5.py` (generate, upload, build V5-A and V5-B, cache `fin_v5.pkl` and `fin_v5b.pkl`), `python3 tools/check_v5.py all` (offline), `python3 tools/regress_v1v4.py` (rebuilds V1..V4 in scratch studios and compares every part volume with baselines `base_<tag>_parts.pkl` taken with `check.py` BEFORE changing the script; deletes the scratch studios), `python3 tools/v5_sections.py`, `python3 tools/make_figs_v5.py`, `python3 tools/make_docs_v5.py`.
+* Export used: `export_print.export('ps_v5','../exports/v5/print','v5',names={'C':'module_housing','R':'rotor','P1':'fin','H':'head_cup','K':'head_lid','T':'transition_BT80_side_PLACEHOLDER_cone'},force={'R':1})` (rotor forced hub-down), STEP with `osapi.export_step`.
+* Pip packages the scripts need in a fresh container: trimesh manifold3d scipy shapely networkx rtree numba matplotlib reportlab pillow requests.
 
-**Still open (original list):**
+### 0.3 What was checked (offline on the exported meshes unless stated)
 
-1. ~~Bottom or top exit?~~ Answered above (bottom mainly, top also possible).
-2. ~~Go-ahead to start the V5 CAD~~ not given yet (see above). Original text: go-ahead to start the V5 CAD (several hours: FeatureScript mode 5, new transition BT80 side, head, assembly, checks). They said "ok ye try the housing one piece".
-3. The transition: they do not know its diameters. Plan: model the BT80 side (plug and shoulder) ourselves; cone and BT70 sleeve are placeholders; BT70 ID needed later.
-4. Windows open or taped (tape was a suggestion; optional).
+No printed overlaps closed or open (only the SG90 spline in the horn and the horn screw in horn and servo, reference parts); no non-watertight bodies; fin opening 0..90 clear of housing, tube, head; latch holds from about 1.5 deg of fin opening, frees at about 14 deg of rotor travel, cam first touches at about 25.5 deg, limiter stops at about -2 and +66.5 deg (the V4 margin); rotor drop-in from the top free for 0..60 deg; fins install radially through the windows only with the rotor parked at about 14..24 deg; hinge nut loading, hinge bolt and key lines clear; head lowers onto the module clear with the horn within +-3 deg (the tapered socket must do the rest, not measurable offline); both exit routes clear; 2.0 mm key reaches all 12 radial bolts; V1..V4 volumes identical in all 8 states (checked after the last mode-5 change that touches shared code; re-run `regress_v1v4.py` after any further edit). ASM-V5 mates are built (OK) but **mate motion has not been driven** (the API cannot): tell the user to drag a fin and the rotor.
 
-### 0.3 Facts found during the V5 work that matter for the CAD
+### 0.4 Findings and design choices that surprised
 
-* The one-piece housing check was done **on paper only**: the cam (peak R28.6) is 0.9 mm smaller than the housing interior (R29.48), so the rotor can drop in if the V4 support blocks (R27.4..30.6), servo ledges
-  (z 45.1..49.4), seam bosses and the finger below the ring are removed. **Still to verify in CAD:** finger/stop clearance above the ring (concept: ring z 0.4..3.4, collar 3.9..5.9, finger about z 6.4..11.6, stops on the spokes up to about z 14),
-  the rotor sweep and latch timing, hinge-bolt access through the windows (fins are installed radially through the windows), the cam against the module-wall nut bosses at z 12 and 36, and fin installation order.
-* The module-to-tube bolts need nut bosses: the wall is 2.7 mm (R29.5..32.2); the V4 supports (R27.4..30.6) gave 4.8 mm. Nut bosses (about R27.6..29.9) must not hit the cam during the drop-in (cam lobe azimuths vs bosses at 45+90k deg: check from the rotor mesh).
-* The reference tube in V4 is not the whole story: windows in `REF BT80 upper tube` are z -9..54.5 (checked by point-in-mesh). Tube screw holes in the V4 reference tube are at z 12 and 36 on the 45+90k strips.
-* The fins carry 4 N total suction at 80 m/s (Cp -0.6) by the torque-check assumption; the latch takes about half (2 N). Tape over a window would see about 5.6 N.
-* Corrections made during the work: BT70 OD 56.3 mm (2.217 in), BT80 ID 65.02 / OD 66.04 (retailer listings; BT70 ID not found); the V4 "lower BT80 tube + flat transition ring" was a misunderstanding: there is no lower BT80 tube, the "transition ring" is the top of the transition.
-* V4 defects noticed late (still in the V4 files): the three vent holes (3x3 square, az 0/120/240) and the cable hole (3.2x4.5 at az 126.5) in the housing lower sleeve are only about 0.7 mm apart at 120/126.5 deg; all disappear in V5.
+* The hinge bolts cannot be tightened through the tube windows with a straight key (it would need about 40 deg of tilt), so each hinge has a 6.6 mm channel through the housing wall along the hinge axis: **hinge bolts are bench-only (module out of the tube)**.
+* The lid has no snap hook, so the set-1 bolts pass through the cup wall into nuts in **lid** bosses (not into bosses of the sleeve as the concept sheets say). Until bolted the lid just lies on the cup (hold it with masking tape while sliding the head in).
+* V4 had the hinge ears (R5.2 about x=25, out to y=12) and the hard-stop block corner reaching R32.5 to R32.6, i.e. touching the tube; V5 trims them (ears R4.9, block R31.6) so the housing stays inside R32.2.
+* The catch finger was 0.2 mm proud of the hub top; V5 makes it flush so the rotor prints hub-down on one plane.
+* The rotor is **not axially retained** in the module (the head holds it down, 0.6 mm above the hub). A keeper would have to be a snap hook or a band, so none was added: carry the module upright.
+* Assembly order that works: nuts into the housing wall pockets, rotor in from the top (park at about 18 deg), fins in through the windows with hinge nuts and bolts, rotor back to 0. Head cup: M2 nuts into the ledge pockets, servo, electronics, lid nuts, lid. Then head into the tube from the bottom, module from the bottom, transition from the bottom.
 
-### 0.4 V5 documents (all in `docs/`; the repo history shows the order). Which is current:
+### 0.5 Open items for the next agent and the user
 
-| File | Status |
-|---|---|
-| `V5_complete_concept.pdf` | **current, start here**: the whole V5 idea on 5 pages (stack, bolt sets, joints, one-piece housing, both exit routes, decision log, open items, checks); script `tools/v5_overview.py` (needs only numpy and matplotlib) |
-| `V5_sketch4_how_it_fits.pdf` | **current**: how tube, head, module and transition connect; bolt sets; why holes are reused; swap steps |
-| `V5_sketch3_sleeve_and_seam.pdf` | current: sleeve in the bolt path (A) vs no sleeve (B, chosen); one-piece housing idea |
-| `V5_sketch2_fasteners.pdf` | partly superseded: bolt path A (sleeve); screw count table and the nut-in-slot detail still valid |
-| `V5_final_plan.pdf` | partly superseded: its fastening (heat-set inserts, 4 head + 2 index) is replaced by M3 bolt + nut sets 1 to 3; layout, transition seat idea and CAD build plan still useful |
-| `V5_insert_concept.pdf`, `V5_insert_tube_template_1to1.pdf` | partly superseded: window size corrected to 38.6 x 63.5; base ring replaced by the transition; template hole list uses heat-set-insert positions |
-| `V5_sketch_transition.pdf` | superseded (screws from below were rejected) |
-| `V5_modular_concept.pdf`, `V5_choice1_skin.pdf`, `V5_choice2_fastening.pdf`, `V5_skin_cutting_template_1to1.pdf` | superseded (module skin and bayonet options were dropped; the tube is the skin) |
+1. **Confirm route 2** (the upper airframe separates at the top of this tube).
+2. The **transition**: the user does not know its diameters. The cone and the BT70 side are placeholders; the BT70 ID is needed.
+3. **Windows open or taped** (still undecided).
+4. **Delete or keep** the two other-session V5 elements (see 0.2).
+5. Electronics layout is from catalogue sizes (battery 42 x 19 x 12, Mercury 30 x 16.9 x 10.8, regulator 25 x 15 x 8 placeholder); USB-C window, switch slot, vents, servo cable slot positions are provisional; SG90 and horn numbers are standard values (measure the real ones).
+6. Nothing has been printed. Ground-impact FEA has still not been done. First places to look: lid bosses, nut bosses in the 2.7 mm housing wall, servo ledges (2.4 mm under the nut pocket), limiter stops, hinge ears and bolts.
+7. Possible improvement: a printed keeper for the rotor would need a rule exception (snap hook or band).
 
-Drawing scripts (in `tools/`, each writes PNG to `$AIRBRAKE_WORK/fig/` and PDFs to `docs/`): `modular_drawings.py`, `option_drawings.py`, `insert_drawings.py`, `final_drawings.py`, `sketch_v5.py`, `sketch_v5b.py`, `sketch_v5c.py`, `sketch_v5d.py`;
-`make_docs.py` functions `modular`, `option_skin`, `option_fasteners`, `insert_concept`, `final_plan` (CLI names `modular optskin optfast insert finalplan`).
+### 0.6 Superseded concept documents (kept in `docs/` for the history)
 
-### 0.5 What the next agent should do first
+`V5_sketch4_how_it_fits.pdf`, `V5_sketch3_*`, `V5_sketch2_*`, `V5_final_plan.pdf`, `V5_insert_*`, `V5_modular_concept.pdf`, `V5_choice*`, `V5_skin_cutting_template_1to1.pdf`, `V5_sketch_transition.pdf`: concept sheets from before the build (see the old list in the git history of this file). `V5_complete_concept.pdf` is the one-document summary of the idea and decisions; `V5_assembly_guide.pdf` is current.
 
-1. Recreate the work dir and `ids.json` (section 4), then ask the user the open questions in 0.2 (at least the go-ahead and the exit direction).
-2. Build V5 as a new FeatureScript branch (`mode 5`, flag `mono`) from the V4 patches in `tools/build_fs.py`: keep V1 to V4 volume-identical (regression rebuild, section 6). Steps: housing without bay/bosses/supports/ledges/seam; limiter above the ring;
-   rotor with integral caps and a hub slot lead-in; fins unchanged shape with M3 hinge bolt + nut slots; the head (sleeve with four bosses and nut slots, cup with servo ledges, plate, single-layer sled, top cap);
-   the transition BT80 side (plug, shoulder, nut slots) with placeholder cone; the reference tube with the 12 clearance holes, windows 67 deg x 63.5 mm, and the switch, USB-C and vent holes; an assembly with mates.
-3. Checks before calling it done: no printed overlaps closed or open; the module slides along the tube and the fins open through the windows; the head goes on and the horn finds the slot (about +-8 deg); rotor sweep; latch and cam timing; hex-key (2.0 mm) access to all 12 bolts;
-   nut slots clear of the cam during the rotor drop-in; STL and STEP export (use the print orientations from the design review: rotor hub down, fins on the flat side, housing upright with supports); documents updated; commit and push.
-4. Do not touch the BT70 side of the transition. Do not use heat-set inserts, snap hooks or a band. Do not add screws from below.
 
 ## 1. The project and the user
 
@@ -97,7 +66,7 @@ Drawing scripts (in `tools/`, each writes PNG to `$AIRBRAKE_WORK/fig/` and PDFs 
   assumption and proceed. They prefer small overall size and light weight. They sometimes type quickly with typos.
 * The user's own Onshape document (ARC) is read-only for us and is only used as a mate template (see `asm.py`).
 
-## 2. State: four design versions, all built, verified and exported
+## 2. State: five design versions, all built, verified and exported (V5 not printed)
 
 | Version | What it is | Housing | Overall | Printed (solid PLA) | Status |
 |---|---|---|---|---|---|
@@ -105,7 +74,8 @@ Drawing scripts (in `tools/`, each writes PNG to `$AIRBRAKE_WORK/fig/` and PDFs 
 | **V1** | same machine, screwed (M3/M4), assembly doc | 118 | 178.5 | 180 g | done, unchanged since |
 | **V2** | compact head inside the upper BT80 tube, tube slits with cut-outs glued to fins, new inward-lug + finger latch, fin top at head rim (22 mm latch drop) | 91.8 | 152.3 | 169 g | done |
 | **V3** | SG90 straight on the rotor (no spring cartridge/trigger), servo inside the housing, flush with the bottom | 91.8 | 91.8 | 106 g | done |
-| **V4** (latest) | servo flipped on top, thicker limiter/rotor parts, limiter moved to the bottom, electronics bay + sled, screwed transition ring | 96.3 | 105.4 (housing bottom to servo top) | 144 g (114 core + 16 sled + 15 transition) | done, awaiting user decisions below |
+| **V5** (latest) | modular: one BT80 tube is the skin; one-piece module (limiter above the ring, integral caps, M3 hinges) + head (SG90, electronics) + transition, 12 radial M3 bolts + nuts | 68.8 (module) | 98.3 (module bottom to head top) | module 85 g + head 33 g + transition 41 g (placeholder cone) | built, checked, awaiting print and the user's open items (0.5) |
+| **V4** | servo flipped on top, thicker limiter/rotor parts, limiter moved to the bottom, electronics bay + sled, screwed transition ring | 96.3 | 105.4 (housing bottom to servo top) | 144 g (114 core + 16 sled + 15 transition) | done, awaiting user decisions below |
 
 Why each switch happened is in `docs/Design_history.pdf` (decision log, problems and fixes). Read it.
 
@@ -125,7 +95,9 @@ Why each switch happened is in `docs/Design_history.pdf` (decision log, problems
 | V4-A `ps_v4` / V4-B `ps_v4b` | `19b7c72543265f4ef8c3ee68` / `5e42421044190c404c738332` |
 | samples (unloaded springs, return leaf) `ps_samples` | `0cc7c62affc5473c214dffff` |
 | ASM-V1 / ASM-V2 | `2cc2089145215269219759e4` / `c123d3b7a80e1ab4ae20ec9f` |
-| **ASM-V3 (current)** / ASM-V4 | `d071de26baa2e2f9ef97f361` / `0f89bdc00682e78b6530c87f` (rebuilt after the wiring changes) |
+| V5-A closed `ps_v5` / V5-B open `ps_v5b` | `ec80a21d010785fb8bbefb14` / `5e34f91d2af57a906275e874` |
+| **ASM-V5 (current)** `asm_v5` | `8af6af6faa7f346dec5eae52` |
+| ASM-V3 / ASM-V4 | `d071de26baa2e2f9ef97f361` / `0f89bdc00682e78b6530c87f` (rebuilt after the wiring changes) |
 
 **Correction:** an ASM-V3 link given to the user earlier in the session (`...a9209e15056d0ed7042f93da`) is dead: the
 assembly was deleted and recreated when V3 was rebuilt flush. Give the user the id above.
@@ -157,6 +129,7 @@ assembly was deleted and recreated when V3 was rebuilt flush. Give the user the 
   V4), `render.py` + `figures.py` (own z-buffer renderer and figure helpers), `diagrams.py` (tube templates),
   `sweep_open.py`, `sweep_rotor.py`, `sweep_rotor_v4.py`, `timing_offline.py` (offline checks), `mech_*.py`, `history_figs.py`,
   `v4_sketch.py`, `wiring_schematic.py`, `make_figs_v2/v3/v4.py`, `make_docs.py` (all PDFs), `torque_check.py`.
+* V5 tools: `build_fs_v5.py` (mode-5 patches, exec'd by `build_fs.py`), `rebuild_v5.py`, `check_v5.py`, `regress_v1v4.py`, `v5_sections.py`, `make_figs_v5.py`, `make_docs_v5.py`, `v5_overview.py`; `asm.build_v5`; `export_print.export(..., force={tok: candidate})`. `exports/v5/` (STEP + print STLs).
 * `docs/*.pdf`: `V1/V2/V3/V4_assembly_guide`, `V3_mechanics_diagrams`, `Design_history`, `V4_concept_sketch`,
   `V4_power_and_wiring`, `V4_wiring_layout_plan`, and the `V5_*` concept sheets (section 0.4). `docs/img` holds figures. `exports/v1..v4/print/*.stl` (one file per unique part, `_xN` = quantity)
   and `exports/v*/*.step.gz` (closed state with hardware and reference tubes).
@@ -174,7 +147,7 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
 ## 5. FeatureScript architecture and the traps
 
 * One feature `modularBrake` with `mode`: 0 spring cartridge (user's), 1 user's direct servo, 2 spring samples,
-  **3 = V3, 4 = V4**. Boolean `compact` = V2 head (always on for V2/V3/V4). `camKickBrake` takes `direct` (mode 3) and `flip`
+  **3 = V3, 4 = V4, 5 = V5** (`mono` flag, see section 0). Boolean `compact` = V2 head (always on for V2/V3/V4). `camKickBrake` takes `direct` (mode 3) and `flip`
   (mode 4) so shared geometry changes only under those flags. V1/V2/V3 geometry must stay **volume-identical** after any change:
   rebuild them and compare part volumes against the cached pickles (done after the V4 work, all identical).
 * Traps that already cost time: (1) `flip?[a,b]:[c]` fails to compile because `?[` is one token: write `flip ? [a] : [b]`;

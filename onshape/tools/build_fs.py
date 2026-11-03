@@ -724,6 +724,8 @@ P(' stage="shaft extension";',
  }
  stage="shaft extension";''')
 
+exec(open(ROOT / 'tools' / 'build_fs_v5.py').read())
+
 # ------------------------------------------------------------------ apply
 import os
 if os.environ.get('PATCH_LIMIT'): patches = patches[:int(os.environ['PATCH_LIMIT'])]

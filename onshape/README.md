@@ -1,4 +1,4 @@
-# ARC BT80 airbrake - screwed V1 and compact V2
+# ARC BT80 airbrake - V1 to V5 (V5 = modular module + head)
 
 Everything here was generated from your FeatureScript (`fs/v0_original.fs`, unchanged) and built in Onshape.
 
@@ -9,6 +9,7 @@ Everything here was generated from your FeatureScript (`fs/v0_original.fs`, unch
 | Assembly guides (PDF) | `docs/V1_assembly_guide.pdf`, `docs/V2_assembly_guide.pdf`, `docs/V3_assembly_guide.pdf`, `docs/V3_mechanics_diagrams.pdf` (stage-by-stage motion, timing curve, load path, every part's motion), `docs/Design_history.pdf` (every iteration, to-scale comparison, why each switch happened), `docs/V4_concept_sketch.pdf` (the sketch you reviewed), `docs/V4_assembly_guide.pdf` (V4: servo on top, thicker parts, electronics bay), `docs/V4_power_and_wiring.pdf`, `docs/V4_wiring_layout_plan.pdf` (battery and regulator recommendation, wiring schematic) |
 | STEP (gzip), closed state, all parts + hardware + reference tubes | `exports/v1/*.step.gz`, `exports/v2/*.step.gz`, `exports/v3/*.step.gz`, `exports/v4/*.step.gz` |
 | Print STLs, one file per unique part (`_xN` = quantity) | `exports/v1/print`, `exports/v2/print`, `exports/v3/print`, `exports/v4/print`, `exports/samples` |
+| **V5 (latest)** | `docs/V5_assembly_guide.pdf` (what is built, bench assembly, swap routes, what was checked), `docs/V5_complete_concept.pdf` (the idea and the decisions), `exports/v5/` (STEP + print STLs), `HANDOFF.md` section 0 |
 | Design notes | `DESIGN_NOTES.md` |
 | Design-only prompt for the 22 mm V2 | `V2_22mm_BUILD_PROMPT.md` |
 
@@ -16,14 +17,20 @@ V3 = the 22 mm V2 with the spring cartridge, trigger and every layer under the r
 
 V4 = V3 with the servo flipped on top (module mode 4), the limiter moved to the bottom, thicker limiter and rotor parts, a screwed transition and a bay for the Mercury V1 altimeter, a Spektrum 300 mAh 2S servo battery and a regulator: housing 96.3 mm, 105.4 mm from housing bottom to servo top, printed set 144 g (113 g core + sled + transition ring).
 
+V5 = the modular version (module mode 5): one BT80 tube is the skin; the module (one-piece housing, rotor with integral catch caps, four fins) and the head (SG90, Mercury V1, regulator, 2S battery) slide into it; the transition (BT80 side) sits below. 12 radial M3x8 bolts with nuts from the outside (4 head, 4 module, 4 transition), 4 hinge M3x25 bolts with nuts, 2 M2 servo bolts with nuts, 1 horn screw: 19 fasteners (V4: 27), no heat-set inserts, no snap hooks, no bands. Module 68.8 mm (85 g solid PLA), head 29.3 mm on top (33 g solid PLA plus electronics), 98.3 mm from module bottom to head top. Cone and BT70 side are placeholders. **Built and checked in CAD, not printed.**
+
 V2 has the latch stack dropped 22 mm into the fin height: printed housing 91.8 mm (V1: 118 mm), whole printed assembly 152.3 mm (V1: 178.5 mm).
 
 ## Onshape elements
 * `00 - Baseline source (as supplied)` and `01 - Baseline modularBrake mode 0 (locked)`: your model reproduced bit-for-bit in size (Z -93.5..85, 36 parts).
 * `01 - V1 screwed + V2 compact (source)`: Feature Studio.
+* **V5:** `V5-A` closed (module + head + transition + tube, hardware), `V5-B` open (fins 90 deg, rotor 65 deg), `ASM-V5` assembly (17 features). There are also elements from another session that are NOT part of this build and were left untouched: `V5 isolated modular source - preserves V1 to V4`, `V5 - removable module and reusable head`, `V5 modular assembly` (+ BOM).
 * `V1-A` closed, `V1-B` fully open, `V2-A` closed, `V2-B` fully open, `V3-A` closed, `V3-B` fully open, `V4-A` closed, `V4-B` fully open, `SAMPLES` unloaded spirals and return leaf.
 * `ASM-V1`, `ASM-V2`, `ASM-V3`, `ASM-V4`: assemblies. Mates are cloned from your Assembly 23 (stationary and rotor mate groups, four hinge revolutes 0-90 deg, rotor revolute 0-65 deg, trigger slider 0-4.5 mm, servo-pusher revolute).
 
 ## Rebuild from source
 `tools/` needs `ONSHAPE_ACCESS_KEY` / `ONSHAPE_SECRET_KEY` in the environment (never stored in files).
-`python3 tools/build_fs.py` regenerates the FeatureScript, `python3 tools/pipeline.py` rebuilds the studios and assemblies and re-runs the interference checks.
+`python3 tools/build_fs.py` (it also runs `tools/build_fs_v5.py`, the mode-5 patches) regenerates the FeatureScript, `python3 tools/pipeline.py` rebuilds the studios and assemblies and re-runs the interference checks.
+
+
+V5 checks and tools: `tools/rebuild_v5.py` (build V5-A/B and cache meshes), `tools/check_v5.py` (offline overlap, sweeps, drop-in, fin install, head insertion, exit routes, access), `tools/regress_v1v4.py` (V1-V4 volume regression in scratch studios), `tools/v5_sections.py`, `tools/make_figs_v5.py`, `tools/make_docs_v5.py`, `tools/v5_overview.py`.

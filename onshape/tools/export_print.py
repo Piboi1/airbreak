@@ -36,7 +36,14 @@ def candidates():
     return out
 
 
-def export(ps_key, outdir, tag, names=None):
+def orient_forced(m, k):
+    mm = m.copy(); mm.apply_transform(candidates()[k]); mm.apply_translation([0, 0, -mm.bounds[0][2]])
+    n = mm.face_normals; a = mm.area_faces; tz = mm.triangles[:, :, 2].min(1)
+    over = a[(n[:, 2] < -0.7) & (tz > 0.15)].sum()
+    return 0, mm, over, mm.bounds[1][2]
+
+
+def export(ps_key, outdir, tag, names=None, force=None):
     NAMES_ = names or NAMES
     d = run.ids()
     parts = geom.fetch_parts(d['did'], d['wid'], d[ps_key], chord=0.015, ang=0.1)
@@ -45,7 +52,7 @@ def export(ps_key, outdir, tag, names=None):
     for pid, (name, m) in parts.items():
         tok = name.split(' ')[0]
         if tok in NAMES_ and name.split(' ')[0] == tok and 'REFERENCE' not in name and not name.startswith(('HW', 'REF', 'TP')):
-            sc, mm, over, h = orient(m)
+            sc, mm, over, h = orient_forced(m, force[tok]) if force and tok in force else orient(m)
             n = REPEAT.get(tok, 1)
             fn = f"{outdir}/{tok.rstrip('1234') if tok in ('P1','L1') else tok}_{NAMES_[tok]}_x{n}.stl"
             fn = fn.replace('/P_', '/P_').replace('/L_', '/L_')

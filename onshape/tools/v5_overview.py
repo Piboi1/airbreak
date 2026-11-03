@@ -15,7 +15,7 @@ R_ID, R_OD, R_MOD, R70 = 32.51, 33.02, 32.2, 56.3 / 2
 BLUE, GREEN, TAN, GREY, RED = '#4f8fd8', '#4caf7a', '#c8a46a', '#9aa0a6', '#c62828'
 C1, C2, C3 = '#1565c0', '#2e7d32', '#e65100'          # bolt sets: head, module, transition
 WZ0, WZ1 = 1.0, 64.5                                  # window z range (module frame)
-Z_B1, Z_B2, Z_B3 = 74.8, 22.0, -18.0                  # bolt heights: head, module, transition
+Z_B1, Z_B2, Z_B3 = 92.0, 22.0, -18.0                  # bolt heights: head, module, transition
 A4 = (11.69, 8.27)
 
 
@@ -188,12 +188,12 @@ def p_unroll(ax):
         ax.plot(az, Z_B2, 'o', color=C2, ms=5); ax.plot(az, Z_B3, 'o', color=C3, ms=5)
     for az in (45, 135, 250, 290):
         ax.plot(az, Z_B1, 'o', color=C1, ms=5)
-    ax.add_patch(Rectangle((0, 82), 360, 14, fc='#f2f2f2', ec='#888', lw=.5, ls=':'))
-    ax.text(180, 89, 'switch slot, USB-C window, 3 vents (above the head, positions set in CAD)', fontsize=5.6, ha='center', va='center', color='#555')
+    ax.add_patch(Rectangle((0, 83), 360, 9, fc='#f2f2f2', ec='#888', lw=.5, ls=':'))
+    ax.text(180, 87, 'switch slot, USB-C window, 3 vents (above the head, positions set in CAD)', fontsize=5.6, ha='center', va='center', color='#555')
     for az, z, t, col in ((45, Z_B2 + 5, 'set 2', C2), (45, Z_B3 + 5, 'set 3', C3), (250, Z_B1 + 5, 'set 1', C1)):
         ax.text(az, z, t, fontsize=5.6, color=col, ha='center')
     ax.text(0, 33, 'window', fontsize=5.6, color=RED, ha='center'); ax.text(90, 33, 'window', fontsize=5.6, color=RED, ha='center')
-    ax.set_xlim(0, 360); ax.set_ylim(-26, 100); ax.set_xticks(range(0, 361, 45)); ax.grid(alpha=.15); ax.tick_params(labelsize=5.5)
+    ax.set_xlim(0, 360); ax.set_ylim(-26, 104); ax.set_xticks(range(0, 361, 45)); ax.grid(alpha=.15); ax.tick_params(labelsize=5.5)
     ax.set_xlabel('azimuth (deg), unrolled', fontsize=6); ax.set_ylabel('z from the module seat (mm)', fontsize=6)
     ax.set_title('D  The tube unrolled: 4 windows and the 12 clearance holes, cut once', fontsize=7.2, loc='left')
     # windows centered at 0 wrap: draw the wrap-around part
@@ -243,7 +243,7 @@ def p_route(ax, which):
 def make(path):
     with PdfPages(path) as pdf:
         # ------------------------------------------------ page 1
-        f = page('V5 complete concept: the modular airbrake', 'The whole idea on five pages. Status: PLANNED, no V5 CAD exists yet; the build waits for your go-ahead.')
+        f = page('V5 complete concept: the modular airbrake', 'The whole idea on five pages (concept drawings). Status: BUILT in CAD as mode 5 and checked, not printed. What is built: V5_assembly_guide.pdf.')
         text(f, 0.03, 0.89, 'What V5 is, in one paragraph', 8.6, weight='bold')
         text(f, 0.03, 0.865,
              'The airbrake will break every flight, so V5 is built to swap the part that breaks. One BT80 tube, cut once, is the skin. Two inserts slide into it: the MODULE (housing,\n'
@@ -275,7 +275,7 @@ def make(path):
         p_stack(f)
         text(f, 0.40, 0.89, 'The three independent bolt sets (bolt path B, no sleeve)', 8.6, weight='bold')
         rows = [('Set', 'What it holds', 'Where', 'Nut', 'Azimuths'),
-                ('1  head', 'head to tube', 'tube + head sleeve boss', 'slot in the boss', '45, 135, 250, 290'),
+                ('1  head', 'head and lid to tube', 'tube + head cup wall + lid boss', 'hex pocket in the lid boss', '45, 135, 250, 290'),
                 ('2  module', 'module to tube', 'tube + module wall (nut boss R27.6..29.9)', 'slot open inward', '45, 135, 225, 315'),
                 ('3  transition', 'transition to tube', 'tube + transition shoulder (R26.0..32.3)', 'slot in the shoulder', '45, 135, 225, 315')]
         table(f, 0.40, 0.865, rows, [0.075, 0.095, 0.185, 0.1, 0.1], fs=6.6, rh=0.04,
@@ -335,17 +335,17 @@ def make(path):
                 ('5', 'M3 bolts + nuts, no heat-set inserts, no self-tapping', 'rule', 'decided'),
                 ('6', 'All bolts radial, from outside, BT80 side only; screws from below rejected', 'rule: "I do not have much space in the transition"', 'decided'),
                 ('7', 'Bolt path B: three independent sets of 4, no module sleeve over the plug', 'sleeve adds 12 mm, clamps the part that breaks', 'decided'),
-                ('8', 'Housing in one piece ("ok ye try the housing one piece"); no snap hooks, no band', 'removes seam, 4 seam screws, pegs', 'to verify in CAD'),
+                ('8', 'Housing in one piece ("ok ye try the housing one piece"); no snap hooks, no band', 'removes seam, 4 seam screws, pegs', 'verified in CAD: rotor drops in at any angle 0..60 deg'),
                 ('9', 'Head is a separate reusable insert; no wire crosses a joint', 'V4 vents and cable hole disappear', 'decided'),
                 ('10', 'Module comes out of the bottom mainly; also out of the top when all screws are out', 'your answer today', 'decided; design rule added'),
-                ('11', 'Go-ahead for the CAD build', 'you asked for this document first', 'NOT given yet')]
+                ('11', 'Go-ahead for the CAD build', 'you asked for this document first, then "go ahead and build V5"', 'given; V5 built, not printed')]
         table(f, 0.03, 0.915, rows, [0.03, 0.42, 0.31, 0.19], fs=6.4, rh=0.033)
         text(f, 0.03, 0.49, 'Replaced along the way', 7.8, weight='bold')
         wtext(f, 0.03, 0.468,
               'heat-set inserts with 4 head + 2 index screws (V5_final_plan)\nmodule skin and bayonet options (choice 1 and 2 sheets)\nscrews from below (transition sketch)\nbolt path A with a module sleeve (sketch 2; its screw table and nut-in-slot detail still hold)\n"open the top only" as the single swap route (insert concept; now bottom is the main route)', 0.46, 6.8)
         text(f, 0.03, 0.345, 'Still open (I will not guess these)', 7.8, weight='bold')
         wtext(f, 0.03, 0.323,
-              '1  Go-ahead for the V5 CAD (several hours: FeatureScript mode 5, transition BT80 side, head, assembly, checks, exports).\n'
+              '1  (done) V5 CAD built: FeatureScript mode 5, transition BT80 side, head, assembly, checks, exports. Print and fit tests are next.\n'
               '2  Transition diameters unknown: I model the BT80 plug and shoulder; cone and BT70 sleeve are placeholders; the BT70 ID is needed later.\n'
               '3  Windows open or taped (tape is optional).\n'
               '4  Route 2 needs the upper airframe to open at the top of this tube: please confirm this matches your recovery layout.\n'

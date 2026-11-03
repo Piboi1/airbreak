@@ -61,6 +61,15 @@ Source: `fs/v0_original.fs` (your FeatureScript, unchanged). `fs/airbrake_v1_v2.
 * Printed set 144 g solid PLA (core 114 g + sled 16 g + transition ring 15 g). Checked: no printed-part overlaps closed or open, rotor swept -1.5..66.5 deg clear, latch and cam timing as V3, V1/V2/V3 rebuilt identical.
 * Assumed, not measured: servo and horn dimensions, battery and regulator sizes, the Mercury's servo output pad and signal level. Not modelled: static pressure ports for the altimeter, the servo cable route (through the hollow rotor).
 
+## V5 = modular: one-piece module + head + transition in one BT80 tube (module mode 5)
+Numbers are from the CAD model (V4 frame: rotor axis z, module bottom z = -10, housing top 58.8).
+* Module: housing OD 64.4 (R32.2), inner R29.48, z -10..58.8, one piece (no seam, pegs or seam screws), floor plate z -10..-8 with an 8 mm hole, 4 nut bosses R27.6..30.2 at z 12 (azimuth 45+90k) with hex pockets (5.7 AF, open inward). Limiter finger z 6.4..11.6 and its two stops z 0.4..14 are above the bearing ring (V4: below), so the rotor drops in from the top at any angle 0..60 deg. Catch caps are printed with the rotor (finger top flush with the hub, z 44.6). Fins unchanged in shape; hinge M3x25 bolt + nut in the +Y ear slot; ears trimmed to R4.9. 6.6 mm channels along each hinge axis for the bench tightening.
+* Head: cup (sleeve R29.9..32.2, floor z 68.5..70.3, two ledge posts at 135/315 deg hanging to z 45.1, 3 electronics pockets, vents, USB-C window, switch slot, servo cable slot) + lid (disc z 86.3..88.3, 4 nut bosses). z 59.0..88.3. The set-1 bolts (z 82, azimuth 45/135/250/290) clamp cup and lid together.
+* Transition (BT80 side): shoulder R26.0..32.2 z -34..-22, plug R26.0..29.6 z -22..-10.2 (module seat, 0.2 mm gap), 4 nut pockets at z -28; cone to R28.15 over 35 mm is a placeholder.
+* Tube: R32.51/R33.02, z -34..100; windows 67 deg x 63.8 mm (z -9.2..54.6); holes at z 12 (module), -28 (transition), 82 (head); vents O3, USB-C and switch at z 74..75 (provisional).
+* Solid PLA: housing 29.4 g, rotor 22.4 g, fins 4 x 8.3 g (module 85 g); head cup 25.0 g + lid 8.1 g; transition 41.3 g (with the placeholder cone).
+* Timing is the V4 timing: latch holds from about 1.5 deg of fin opening, frees at about 14 deg of rotor travel, cam first touches at about 25.5 deg, limiter stops at about -2 and +66.5 deg.
+
 ## Correction made while building V3
 The V2 reference upper tube in the CAD still had a 60.2 mm window (top z 51.0) while the fin top is at z 54: the fin tip would have hit the tube at the first degree of opening. The window is now 63.8 mm
 (top z 54.6, as the guide always said); fin plus glued cut-out are clear of the tube at every opening angle 0.5..90 deg (`tools/sweep_open.py`). Printed parts were not affected.
