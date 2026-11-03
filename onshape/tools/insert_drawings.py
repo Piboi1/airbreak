@@ -9,8 +9,8 @@ import figures as F
 
 R_OD, R_ID, R_MOD = 33.02, 32.5, 32.2
 BLUE, GREEN, TAN, GREY = '#4f8fd8', '#4caf7a', '#c8a46a', '#9aa0a6'
-WIN_Z0, WIN_Z1 = 17.5, 60.5          # window, z_t (module frame z 7.5 .. 50.5)
-WIN_W = 38.5                          # 65 deg at R33.02 is 37.5 mm, plus 0.5 each side
+WIN_Z0, WIN_Z1 = 1.0, 64.5            # window, z_t: measured on the V4 reference tube, z -9.0 .. 54.5 in the module frame
+WIN_W = 38.6                          # 67 deg at R33.02 (measured on the V4 reference tube)
 
 
 def box(ax, x0, x1, z0, z1, col, alpha=.85, ec='k', lw=.6, label=None, fs=6.0, tc='k', ls='-', hatch=None):
@@ -27,7 +27,7 @@ def architecture():
         x0, x1 = sorted((sx * R_ID, sx * R_OD))
         box(ax, x0, x1, -8, WIN_Z0, '#cfcfcf', alpha=1); box(ax, x0, x1, WIN_Z1, TOP, '#cfcfcf', alpha=1)
         ax.add_patch(Rectangle((x0 - 0.2, WIN_Z0), x1 - x0 + 0.4, WIN_Z1 - WIN_Z0, fc='white', ec='#c62828', lw=.8, ls='--'))
-    ax.text(36, 30, 'window 38.5 x 43\n(cut once in the tube)', fontsize=6.4, color='#c62828')
+    ax.text(36, 30, 'window 38.6 x 63.5\n(cut once in the tube)', fontsize=6.4, color='#c62828')
     # base ring bonded in the tube bottom
     for sx in (-1, 1):
         x0, x1 = sorted((sx * 26.5, sx * R_ID)); box(ax, x0, x1, -8, 0, TAN)
@@ -87,16 +87,16 @@ def windows():
 def clash():
     fig, axs = plt.subplots(1, 2, figsize=(10.6, 4.8))
     for ax, skin in zip(axs, (False, True)):
-        box(ax, R_ID, R_OD, 0, 17.5, '#cfcfcf', alpha=1); box(ax, R_ID, R_OD, 60.5, 70, '#cfcfcf', alpha=1)
-        ax.add_patch(Rectangle((R_ID - 0.1, 17.5), R_OD - R_ID + .2, 43, fc='white', ec='#c62828', lw=.7, ls='--'))
+        box(ax, R_ID, R_OD, -4, WIN_Z0, '#cfcfcf', alpha=1); box(ax, R_ID, R_OD, WIN_Z1, 70, '#cfcfcf', alpha=1)
+        ax.add_patch(Rectangle((R_ID - 0.1, WIN_Z0), R_OD - R_ID + .2, WIN_Z1 - WIN_Z0, fc='white', ec='#c62828', lw=.7, ls='--'))
         box(ax, 29.9, R_MOD, 0, 68.8, GREEN, alpha=.5)
-        box(ax, 29.9, R_MOD, 20, 58, '#4caf7a')
+        box(ax, 29.9, R_MOD, 6, 62, '#4caf7a')
         if skin:
-            box(ax, R_ID, R_OD, 20, 58, '#c62828', alpha=.8)
+            box(ax, R_ID, R_OD, 6, 62, '#c62828', alpha=.8)
             ax.annotate('', xy=(35.5, 24), xytext=(35.5, 8), arrowprops=dict(arrowstyle='-|>', lw=1.5))
             ax.text(36, 14, 'module moves up\nor down along\nthe tube', fontsize=6.2)
             ax.plot([R_ID + .2, R_OD - .2], [19, 21], color='k', lw=0); ax.text(24.5, 62, 'fin skin R32.5..33.02 hits the\ntube wall below the window', fontsize=6.4, color='#c62828')
-            ax.plot([R_ID - 1, R_OD + 1], [16.5, 16.5], color='#c62828', lw=2.0)
+            ax.plot([R_ID - 1, R_OD + 1], [WIN_Z0 - .5, WIN_Z0 - .5], color='#c62828', lw=2.0)
             ax.set_title('S2: fin with its own skin: blocked on insertion', fontsize=8)
         else:
             ax.annotate('', xy=(35.5, 24), xytext=(35.5, 8), arrowprops=dict(arrowstyle='-|>', lw=1.5))
@@ -153,7 +153,7 @@ def template_pdf(path):
     for k in range(4):
         xc = x0 + arc(90 * k)
         ax.add_patch(Rectangle((xc - WIN_W / 2, Y(WIN_Z0)), WIN_W, WIN_Z1 - WIN_Z0, fc='#e8e8e8', ec='k', lw=1.0))
-        ax.text(xc, Y(39), 'WINDOW\n38.5 x 43', fontsize=6.5, ha='center', va='center')
+        ax.text(xc, Y(33), 'WINDOW\n38.6 x 63.5', fontsize=6.5, ha='center', va='center')
     def hole(az, zt, d, lab=None):
         xc = x0 + arc(az); ax.add_patch(Circle((xc, Y(zt)), d / 2, fc='none', ec='k', lw=1.0)); ax.plot([xc - 4, xc + 4], [Y(zt)] * 2, color='k', lw=.4); ax.plot([xc] * 2, [Y(zt) - 4, Y(zt) + 4], color='k', lw=.4)
         if lab: ax.text(xc + 4.5, Y(zt) + 3.5, lab, fontsize=5.0)

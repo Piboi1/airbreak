@@ -1008,12 +1008,12 @@ def insert_concept():
         'The tube carries everything else once: the windows, the screw holes, the vent holes, the switch slot and the USB-C window. The module and the head carry no skin and no vent features.'])
     s += [fig('ins_architecture.png', 150, 'The tube section with the base ring, the module insert and the head insert; the arrows show the removal path (concept, heights from the module seat).', 170),
           PageBreak(), P('2 &nbsp; The windows', H2),
-          P('The windows are the same 65° × 42 mm openings as the V4 cut-outs (38.5 × 43 mm with 0.5 mm clearance). With no cut-outs glued to the fins, they have to be dealt with on their own.', B),
+          P('The windows are the V4 tube slots, 67° × 63.5 mm; the V4 cut-outs glued to the fins (65° × 42 mm) filled only part of them (38.6 × 63.5 mm, measured on the V4 reference tube). With no cut-outs glued to the fins, they have to be dealt with on their own.', B),
           fig('ins_clash.png', 160, 'Why the fins cannot carry a skin: left, a fin without skin slides past the tube wall; right, a skin on the fin would hit the tube wall.', 75),
           fig('ins_windows.png', 172, 'Section at the fin zone: windows left open, covered with tape, or a fin skin (which blocks insertion).', 80),
           table([['Option', 'What it is', 'Good', 'Bad'],
-                 ['S1 open windows', 'four 38.5 × 43 mm holes in the tube, fins closed behind them', 'simplest; the Mercury sees outside static pressure through the open windows', 'about 6.6 cm² of holes, 27 % of this tube section’s skin; the drag cost is not measured; the fins can be seen and hit through the holes'],
-                 ['<b>S1+ tape</b>', 'S1 plus a patch of foil or Kapton tape over each window, renewed every flight; the fins burst it when they open (the system deploys once)', 'smooth outside surface; no glue on the fins; renewing is seconds', 'wind suction (about 2.3 kPa at 80 m/s with the torque-check assumption) pulls about 3.8 N on each patch: it could bulge or tear early; needs a test'],
+                 ['S1 open windows', 'four 38.6 × 63.5 mm holes in the tube, fins closed behind them', 'simplest; the Mercury sees outside static pressure through the open windows', 'about 9.8 cm² of holes, 33 % of this tube section’s skin; the drag cost is not measured; the fins can be seen and hit through the holes'],
+                 ['<b>S1+ tape</b>', 'S1 plus a patch of foil or Kapton tape over each window, renewed every flight; the fins burst it when they open (the system deploys once)', 'smooth outside surface; no glue on the fins; renewing is seconds', 'wind suction (about 2.3 kPa at 80 m/s with the torque-check assumption) pulls about 5.6 N on each patch: it could bulge or tear early; needs a test'],
                  ['S2 slotted tube', 'windows open to the tube end as U-slots, fin skin to R33.02 slides through them', 'flush skin, nothing to tape', 'the tube becomes four fingers: weak; the end must be closed by the head sleeve']], [30, 56, 40, 50], font=7.3),
           PageBreak(), P('3 &nbsp; Swap procedure', H2),
           fig('ins_swap.png', 178, 'Swap in five steps (concept).', 85),
@@ -1025,7 +1025,7 @@ def insert_concept():
                  ['Module insert', 'OD 64.4 (0.3 mm clearance), 68.8 mm long (module frame z −10 … 58.8), about 105 g of PLA (estimate)'],
                  ['Head insert', 'sleeve and cup, servo, Mercury, regulator, battery, about 55 g, 30 mm above the module top'],
                  ['Base ring', 'R26.5 … 32.5, 8 mm thick, bonded in the tube bottom; it is the module seat'],
-                 ['Windows', '4 × 38.5 × 43 mm, centres at 0/90/180/270°, heights 17.5 … 60.5 above the seat'],
+                 ['Windows', '4 × 38.6 × 63.5 mm, centres at 0/90/180/270°, heights 1.0 … 64.5 above the seat'],
                  ['Stack inside the tube', 'base 8 + module 68.8 + head 30 = about 107 mm (V4 was 105.4 mm)'],
                  ['Swap effort', '4 head screws + 2 index screws (6 screws); not timed']], [40, 136], font=7.6),
           P('5 &nbsp; What changes in the V4 model', H2),
@@ -1042,7 +1042,7 @@ def insert_concept():
         '<b>Slip fit after a crash:</b> a module that has been hit may be stuck in the tube. Print the module OD at R32.2 (0.3 clearance), not tighter, and add two finger notches at the top to pull it out.',
         '<b>Tube alignment:</b> the windows must sit exactly over the fins. The index screws take this up; check it on the first assembly.',
         '<b>The square holes in V4</b> (the vents and the cable hole) are gone in this concept: the vents move to the tube above the head, and nothing needs a cable hole any more.',
-        '<b>Not verified:</b> the printed fit, the tape, the drag of the open windows, and the 3.8 N suction (it uses the Cp −0.6 assumption from the torque check).'])
+        '<b>Not verified:</b> the printed fit, the tape, the drag of the open windows, and the 5.6 N suction (it uses the Cp −0.6 assumption from the torque check).'])
     build_pdf(DOCS / 'V5_insert_concept.pdf', 'V5 insert concept - ARC BT80', s)
 
 
@@ -1051,13 +1051,13 @@ def final_plan():
     s += [P('V5 final plan, before the CAD', H1),
           P('Your two questions first, then the plan I will build V5 from. Concept numbers, not yet in CAD.', B),
           P('1 &nbsp; Why tape the windows?', H2),
-          P('Because the tube windows are <b>holes in the airframe</b> while the fins sit closed behind them: with no BT80 glued to the fins, nothing fills the four 38.5 × 43 mm openings (about 27 % of this tube section’s skin). Tape is there only to close them until the fins open. What it buys:', B)]
+          P('Because the tube windows are <b>holes in the airframe</b> while the fins sit closed behind them: with no BT80 glued to the fins, nothing fills the four 38.6 × 63.5 mm openings (about 33 % of this tube section’s skin). Tape is there only to close them until the fins open. What it buys:', B)]
     s += bullets([
         '<b>A smooth outside surface.</b> Air flowing over open cavities adds drag and turbulence. I have <b>not measured</b> how much, and for a short airbrake section it may be small.',
         '<b>No air through the section.</b> Open windows let outside air in and out of the airbrake section, so the pressure inside follows the airflow. The altimeter should be protected from that by its own vent holes, but I cannot prove it without a test.',
         '<b>Clean fins and mechanism.</b> Dust and grit stay out until the fins are out.',
         '<b>It costs nothing at deployment.</b> The brake deploys once and stays out, so tape that the fins burst through never has to be closed again; you put a fresh strip on for the next flight in seconds. One wrap of foil or Kapton tape round the tube covers all four windows at once.'])
-    s += [P('<b>It is optional.</b> The brake works with open windows. I recommended tape as the default to keep the outside clean; the risks are that wind suction (about 2.3 kPa, about 3.8 N per window by the torque-check assumption) could lift or tear it early, and that I do not know the drag of open windows. If you would rather not tape, we leave them open and decide after a test.', B),
+    s += [P('<b>It is optional.</b> The brake works with open windows. I recommended tape as the default to keep the outside clean; the risks are that wind suction (about 2.3 kPa, about 5.6 N per window by the torque-check assumption) could lift or tear it early, and that I do not know the drag of open windows. If you would rather not tape, we leave them open and decide after a test.', B),
           PageBreak(), P('2 &nbsp; The layout, corrected', H2),
           P('You are right about the stack, and it corrects my V4 drawing. The airbrake’s BT80 tube sits <b>directly on the transition</b>, and the transition tapers down to the BT70 tube below it. In V4 I had drawn a lower BT80 tube with a flat ring bonded inside it; there is no lower BT80 tube. What I called the transition ring is really the top of the transition. '
             'BT80 is 66.04 mm outside and 65.02 mm inside (Estes listings); BT70 is 56.3 mm outside (2.217 in); I could not confirm the BT70 inside diameter, which I need for the lower sleeve of the transition.', B),
@@ -1068,7 +1068,7 @@ def final_plan():
           table([['Topic', 'Decision'],
                  ['Architecture', 'one BT80 tube cut once; <b>module</b> and <b>head</b> are inserts from the top; the base is the transition.'],
                  ['Skin', 'the tube is the skin. No glued BT80 on the fins, no printed skin. Fin outer face at R32.2.'],
-                 ['Windows', '4 × 38.5 × 43 mm at 0/90/180/270°, 17.5 … 60.5 above the seat. Default open, or one wrap of tape: your call (section 1).'],
+                 ['Windows', '4 × 38.6 × 63.5 mm at 0/90/180/270°, 1.0 … 64.5 above the seat (measured on the V4 tube). Default open, or one wrap of tape: your call (section 1).'],
                  ['Fastening', 'radial M3×5 button screws into heat-set inserts: <b>4 for the head</b> (45, 135, 250, 290°) and <b>2 index screws</b> for the module (45, 225°). The module is also clamped between the transition seat and the head.'],
                  ['Wiring', 'servo, Mercury, regulator and battery all in the head; no wire crosses a joint; the cable groove, cable hole and V4 vents are deleted.'],
                  ['Tube features', 'switch slot, USB-C window and three O3 vents are cut in the tube above the head, once.'],

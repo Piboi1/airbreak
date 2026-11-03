@@ -23,8 +23,8 @@ def layout():
     for sx in (-1, 1):
         # BT80 tube (airbrake section) with windows
         x0, x1 = sorted((sx * R_ID, sx * R_OD))
-        box(ax, x0, x1, -12, 17.5, '#cfcfcf', alpha=1); box(ax, x0, x1, 60.5, 132, '#cfcfcf', alpha=1)
-        ax.add_patch(Rectangle((x0 - .2, 17.5), x1 - x0 + .4, 43, fc='white', ec='#c62828', lw=.8, ls='--'))
+        box(ax, x0, x1, -12, 1.0, '#cfcfcf', alpha=1); box(ax, x0, x1, 64.5, 132, '#cfcfcf', alpha=1)
+        ax.add_patch(Rectangle((x0 - .2, 1.0), x1 - x0 + .4, 63.5, fc='white', ec='#c62828', lw=.8, ls='--'))
         # upper airframe (BT80, continues)
         box(ax, x0, x1, 132, 160, '#e8e8e8', alpha=1)
         # transition: spigot inside tube, cone outside
