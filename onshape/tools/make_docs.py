@@ -1046,6 +1046,61 @@ def insert_concept():
     build_pdf(DOCS / 'V5_insert_concept.pdf', 'V5 insert concept - ARC BT80', s)
 
 
+def final_plan():
+    s = []
+    s += [P('V5 final plan, before the CAD', H1),
+          P('Your two questions first, then the plan I will build V5 from. Concept numbers, not yet in CAD.', B),
+          P('1 &nbsp; Why tape the windows?', H2),
+          P('Because the tube windows are <b>holes in the airframe</b> while the fins sit closed behind them: with no BT80 glued to the fins, nothing fills the four 38.5 × 43 mm openings (about 27 % of this tube section’s skin). Tape is there only to close them until the fins open. What it buys:', B)]
+    s += bullets([
+        '<b>A smooth outside surface.</b> Air flowing over open cavities adds drag and turbulence. I have <b>not measured</b> how much, and for a short airbrake section it may be small.',
+        '<b>No air through the section.</b> Open windows let outside air in and out of the airbrake section, so the pressure inside follows the airflow. The altimeter should be protected from that by its own vent holes, but I cannot prove it without a test.',
+        '<b>Clean fins and mechanism.</b> Dust and grit stay out until the fins are out.',
+        '<b>It costs nothing at deployment.</b> The brake deploys once and stays out, so tape that the fins burst through never has to be closed again; you put a fresh strip on for the next flight in seconds. One wrap of foil or Kapton tape round the tube covers all four windows at once.'])
+    s += [P('<b>It is optional.</b> The brake works with open windows. I recommended tape as the default to keep the outside clean; the risks are that wind suction (about 2.3 kPa, about 3.8 N per window by the torque-check assumption) could lift or tear it early, and that I do not know the drag of open windows. If you would rather not tape, we leave them open and decide after a test.', B),
+          PageBreak(), P('2 &nbsp; The layout, corrected', H2),
+          P('You are right about the stack, and it corrects my V4 drawing. The airbrake’s BT80 tube sits <b>directly on the transition</b>, and the transition tapers down to the BT70 tube below it. In V4 I had drawn a lower BT80 tube with a flat ring bonded inside it; there is no lower BT80 tube. What I called the transition ring is really the top of the transition. '
+            'BT80 is 66.04 mm outside and 65.02 mm inside (Estes listings); BT70 is 56.3 mm outside (2.217 in); I could not confirm the BT70 inside diameter, which I need for the lower sleeve of the transition.', B),
+          fig('fin_layout.png', 150, 'Final stack, nose up (concept, to scale). The airbrake section is one BT80 tube cut once; the module sits on the transition top; the head sits on the module; the section opens at its top.', 175),
+          PageBreak(),
+          fig('fin_seat.png', 150, 'The transition top: spigot glued into the tube bottom, seat face under the module, cone down to BT70. The cone length and the BT70 sleeve are placeholders.', 100),
+          P('3 &nbsp; The decisions', H2),
+          table([['Topic', 'Decision'],
+                 ['Architecture', 'one BT80 tube cut once; <b>module</b> and <b>head</b> are inserts from the top; the base is the transition.'],
+                 ['Skin', 'the tube is the skin. No glued BT80 on the fins, no printed skin. Fin outer face at R32.2.'],
+                 ['Windows', '4 × 38.5 × 43 mm at 0/90/180/270°, 17.5 … 60.5 above the seat. Default open, or one wrap of tape: your call (section 1).'],
+                 ['Fastening', 'radial M3×5 button screws into heat-set inserts: <b>4 for the head</b> (45, 135, 250, 290°) and <b>2 index screws</b> for the module (45, 225°). The module is also clamped between the transition seat and the head.'],
+                 ['Wiring', 'servo, Mercury, regulator and battery all in the head; no wire crosses a joint; the cable groove, cable hole and V4 vents are deleted.'],
+                 ['Tube features', 'switch slot, USB-C window and three O3 vents are cut in the tube above the head, once.'],
+                 ['Drive', 'horn on the servo, in the rotor hub slot; add a 45° lead-in, a closed-position detent and a rotor lift-off keeper.'],
+                 ['Module fit', 'OD 64.4 in the 65.0 bore (0.3 mm), two finger notches at the top to pull it out.'],
+                 ['Swap', 'open the top of the tube section; 4 head screws; lift the head; 2 index screws; lift the module; reverse. Six screws, not timed.'],
+                 ['Print orientation', 'as in the design review (rotor hub down with supports, fins flat, housing upright with supports at two levels).']], [32, 144], font=7.6),
+          P('4 &nbsp; The V5 CAD build plan', H2),
+          table([['Part', 'Work', 'Based on'],
+                 ['Tube (reference)', 'BT80 ID 65.02, OD 66.04, 144 mm: windows, 6 screw holes, 4 head holes, vents, switch, USB-C, from the 1:1 template', 'V4 upper tube'],
+                 ['Transition (new)', 'spigot 12 mm, seat face R26.0 … 32.3, cone 35 mm, BT70 sleeve (OD placeholder until you give me the BT70 ID)', 'V4 ring, redone'],
+                 ['Module housing C1/C2', 'OD R32.2; remove the bay, bosses, cable groove and hole, vents; bottom plate on the seat; two index pilots; finger notches', 'V4 housing'],
+                 ['Rotor', 'lead-in on the hub slot, closed detent, lift-off keeper', 'V4 rotor'],
+                 ['Fins, catch caps, hardware', 'fin outer face to R32.2; the rest unchanged', 'V4'],
+                 ['Head (new)', 'sleeve R29.9 … 32.2 with four insert bosses, cup with the two servo ledges, plate, single-layer sled (battery + Mercury + regulator), top cap', 'V4 sled, ledges, wiring plan'],
+                 ['Assembly', 'module on the seat, head on the module, tube around; mates as before', 'asm V4']], [34, 106, 36], font=7.4),
+          P('<b>Checks before I call V5 done:</b> no overlaps closed or open; the module slides along the tube and the fins open through the windows; the head goes down and the horn finds the slot at ±8°; rotor sweep −1.5° to 66.5° clear; latch and cam timing unchanged; V1–V3 volumes identical; hex-key access to the six screws; STL and STEP export; guide and head layout documents updated.', B),
+          P('5 &nbsp; What I need from you', H2)]
+    s += bullets([
+        '<b>BT70 inside diameter</b> (or the tube’s part number) and the <b>length of the cone</b> you want (I draw 35 mm). Until then the BT70 sleeve is a placeholder.',
+        '<b>Windows:</b> open, or one wrap of tape. I will model them the same either way; the tape is not in the CAD.',
+        '<b>Where the section opens</b> (the top joint): this decides the top coupler, which I will leave as an open reference until you tell me.',
+        '<b>Go-ahead for the V5 build</b> from V4. It is several hours of work: FeatureScript changes, the new transition and head, the assembly and the checks.'])
+    s += [P('6 &nbsp; Risks', H2)]
+    s += bullets([
+        'The open or taped windows: drag and tape suction are unmeasured.',
+        'The slip fit after a crash: a hit module may stick; the 0.3 mm clearance and the finger notches are meant to help.',
+        'The BT70 sleeve and the cone are placeholders until the tube is measured.',
+        'Nothing here has been printed or tested; every V5 dimension is a concept number.'])
+    build_pdf(DOCS / 'V5_final_plan.pdf', 'V5 final plan - ARC BT80', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -1061,4 +1116,5 @@ if __name__ == '__main__':
     if 'optskin' in which: option_skin()
     if 'optfast' in which: option_fasteners()
     if 'insert' in which: insert_concept()
+    if 'finalplan' in which: final_plan()
     print('docs written', list(DOCS.glob('*.pdf')))

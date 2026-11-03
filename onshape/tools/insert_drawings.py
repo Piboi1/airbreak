@@ -144,11 +144,11 @@ def swap():
 
 
 def template_pdf(path):
-    C = 2 * math.pi * R_OD; H = 120.0
+    C = 2 * math.pi * R_OD; H = 132.0
     arc = lambda az: math.radians((az + 45) % 360) * R_OD      # sheet starts at az -45 (middle of a strip)
     fig = plt.figure(figsize=(297 / 25.4, 210 / 25.4)); ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, 297); ax.set_ylim(0, 210); ax.axis('off')
-    x0, y0 = 45.0, 50.0                        # sheet origin; y = z_t + 8 (bottom edge of the tube = z_t -8)
-    Y = lambda zt: y0 + zt + 8.0
+    x0, y0 = 45.0, 40.0                        # sheet origin; y = z_t + 12 (bottom edge of the tube = z_t -12)
+    Y = lambda zt: y0 + zt + 12.0
     ax.add_patch(Rectangle((x0, y0), C, H, fc='none', ec='k', lw=.8))
     for k in range(4):
         xc = x0 + arc(90 * k)
@@ -162,7 +162,7 @@ def template_pdf(path):
     for az in (90, 210, 330): hole(az, 87, 3.0, 'vent O3')
     xc = x0 + arc(0); ax.add_patch(Rectangle((xc - 6, Y(86) - 2), 12, 4, fc='none', ec='k', lw=1.0)); ax.text(xc + 7, Y(86), 'switch slot 12 x 4', fontsize=5.0, va='center')
     xc = x0 + arc(180); ax.add_patch(Rectangle((xc - 5, Y(88) - 2.5), 10, 5, fc='none', ec='k', lw=1.0)); ax.text(xc + 6, Y(88), 'USB-C window 10 x 5', fontsize=5.0, va='center')
-    ax.plot([x0, x0 + C], [Y(0), Y(0)], color='#c62828', lw=.8, ls='--'); ax.text(x0 + 1.5, Y(0) + 1.5, 'module seat (z_t 0): the base ring top; the ring is bonded in the bottom 8 mm', fontsize=5.4, color='#c62828')
+    ax.plot([x0, x0 + C], [Y(0), Y(0)], color='#c62828', lw=.8, ls='--'); ax.text(x0 + 1.5, Y(0) + 1.5, 'module seat (z_t 0): the top of the transition; its 12 mm spigot is glued in the tube bottom', fontsize=5.4, color='#c62828')
     for mm_ in range(0, int(C) + 1, 10):
         ax.plot([x0 + mm_] * 2, [y0 - 3, y0], color='k', lw=.5); ax.text(x0 + mm_, y0 - 7, str(mm_), fontsize=4.8, ha='center')
     for mm_ in range(0, int(H) + 1, 10):
