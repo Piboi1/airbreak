@@ -1,8 +1,82 @@
-# HANDOFF: BT80 cam kick-out airbrake CAD project (V1 to V4)
+# HANDOFF: BT80 cam kick-out airbrake CAD project (V1 to V4 built, V5 planned)
 
 Read this first. It is written so a new agent can continue with no other context. Repo: `piboi1/airbreak`, branch
 `claude/nice-maxwell-1lmh2h`, folder `onshape/`. Everything described here is committed and pushed (last commit when this
-was written: "Add V4 power and wiring document"). Do not open a pull request unless the user asks.
+was written: "V5 sketch 4: how the tube, head, module and transition connect"). Do not open a pull request unless the user asks.
+
+## 0. Where we are now: V5 (modular design) is PLANNED, NOT BUILT. Read this section first.
+
+V4 is built and verified (sections 2 to 7). The user then asked for a **modular** version, because the airbrake will break every flight and they
+want to swap the whole module. A long design conversation produced the decisions below. **No V5 CAD exists yet**: only concept PDFs and the
+drawing scripts. The user's last answers were: option B for the bolt path, "try the housing one piece", and they do not know the transition's
+diameters. The next step is to build V5 in CAD (a new `mode 5` in the FeatureScript, from V4) once the user confirms the open question at the end of this section.
+
+### 0.1 The V5 concept (current source of truth = `docs/V5_sketch4_how_it_fits.pdf` plus this section)
+
+* **Stack, nose up:** upper BT80 airframe, then **one BT80 tube cut once** (66.04 OD, 65.02 ID) that goes round the module and the electronics head and is the skin,
+  then the **transition** (BT80 to BT70) on the bottom, then the BT70 tube (OD 56.3 mm; the BT70 ID is unknown). The BT70 section falls off at recovery and is
+  **not touched** by this project (the recovery system is in it; "I do not have much space in the transition").
+* **Two inserts slide into the tube:** the **module** (housing, rotor, 4 fins, caps: the part that breaks) and the **head** (SG90, Mercury V1, regulator, 2S battery, switch,
+  USB-C window, vents: reusable). The head sits above the module and stays fixed in the tube; the SG90 horn drops into the rotor hub slot, so **no wire crosses any joint**.
+* **No BT80 glued to the fins, no module skin.** The tube windows stay **open** (tape over them is optional and was only a suggestion): 4 windows at 0/90/180/270 deg,
+  **67 deg wide x 63.5 mm tall (38.6 x 63.5 mm), z -9.0..54.5 in the V4 frame**, measured on the V4 reference tube. (Earlier drafts said 43 mm tall: wrong, fixed.)
+  A fin with its own skin cannot slide into the tube, so fins stay inside R32.2.
+* **Fasteners (user's rules):** **M3 bolts and nuts wherever possible, no heat-set inserts, no self-tapping into plastic.** All bolts are **radial, from the outside through the BT80 tube,
+  on the BT80 side only** (nothing from below). Nuts sit in slots open to the inside of the part, filled before assembly. **Bolt path B** (chosen): three independent sets of 4 bolts,
+  each through the tube: set 1 head (into bosses in the head sleeve), set 2 module (nuts in its wall), set 3 transition (nuts in its shoulder). No module sleeve over the transition plug.
+  Every hole is a plain clearance hole; new modules reuse the same 12 tube holes, so holes are reused, never multiplied.
+* **Housing in one piece:** the user does not want snap hooks or a band. Plan: **move the limiter finger and its stops above the bearing ring** (V4 has them below), so the rotor can drop in from
+  the top and the housing needs **no seam, no seam screws, no pegs**. Also remove the V4 support blocks, servo ledges (they move to the head cup), seam bosses and bay features.
+  Catch caps printed with the rotor arms (no cap screws). Hinges: M3 bolt + nut instead of M4 (print-in-place pins would be an option, weaker). Fallback if one piece fails: two halves joined by a sliding dovetail along the seam.
+* **Swap (on the ground, BT70 section already off):** pull the 4 transition bolts, slide the transition out of the tube bottom; pull the 4 module bolts, slide the module out of the bottom (the horn leaves the slot);
+  slide the new module in (nuts first), 4 bolts; transition back in, 4 bolts. 8 bolts per swap. The head (set 1) is not touched.
+* **Screw count:** V4 27 (4 seam, 4 cap, 4 hinge M4, 4 boss, 8 tube support, 3 M2) to V5 about 15 (4+4+4 M3 + nut, 4 hinge M3 + nut counted in the 12, 3 M2 servo): see sketch 2.
+* **Numbers used in the drawings (all concept, not CAD):** module OD R32.2 in the 65.02 bore (0.3 mm clearance), module 68.8 long (V4 z -10..58.8, no bay), module seat = transition plug top;
+  transition plug R26.0..29.6 12 mm, shoulder R26.0..32.3 12 mm (inside the tube), cone 35 mm to BT70 (placeholder), M3x8 button heads, nut slots 5.7 wide x 2.6 deep; head sleeve R29.9..32.2 with four 7 mm inside bosses
+  (bolt azimuths 45, 135, 250, 290 deg so they clear the battery and Mercury); head height 30 mm above the module; overall about 107 mm; module about 105 g PLA, head about 55 g (estimates).
+
+### 0.2 Open questions for the user (ask these, do not guess)
+
+1. **Does the module come out of the bottom** (needs the transition off, matches what they said) **or the top** (needs the head off and the tube top open)? The plan assumes the bottom. Their last message did not answer this yet.
+2. **Go-ahead to start the V5 CAD** (several hours: FeatureScript mode 5, new transition BT80 side, head, assembly, checks). They said "ok ye try the housing one piece".
+3. The transition: they do not know its diameters. Plan: model the BT80 side (plug and shoulder) ourselves; cone and BT70 sleeve are placeholders; BT70 ID needed later.
+4. Windows open or taped (tape was a suggestion; optional).
+
+### 0.3 Facts found during the V5 work that matter for the CAD
+
+* The one-piece housing check was done **on paper only**: the cam (peak R28.6) is 0.9 mm smaller than the housing interior (R29.48), so the rotor can drop in if the V4 support blocks (R27.4..30.6), servo ledges
+  (z 45.1..49.4), seam bosses and the finger below the ring are removed. **Still to verify in CAD:** finger/stop clearance above the ring (concept: ring z 0.4..3.4, collar 3.9..5.9, finger about z 6.4..11.6, stops on the spokes up to about z 14),
+  the rotor sweep and latch timing, hinge-bolt access through the windows (fins are installed radially through the windows), the cam against the module-wall nut bosses at z 12 and 36, and fin installation order.
+* The module-to-tube bolts need nut bosses: the wall is 2.7 mm (R29.5..32.2); the V4 supports (R27.4..30.6) gave 4.8 mm. Nut bosses (about R27.6..29.9) must not hit the cam during the drop-in (cam lobe azimuths vs bosses at 45+90k deg: check from the rotor mesh).
+* The reference tube in V4 is not the whole story: windows in `REF BT80 upper tube` are z -9..54.5 (checked by point-in-mesh). Tube screw holes in the V4 reference tube are at z 12 and 36 on the 45+90k strips.
+* The fins carry 4 N total suction at 80 m/s (Cp -0.6) by the torque-check assumption; the latch takes about half (2 N). Tape over a window would see about 5.6 N.
+* Corrections made during the work: BT70 OD 56.3 mm (2.217 in), BT80 ID 65.02 / OD 66.04 (retailer listings; BT70 ID not found); the V4 "lower BT80 tube + flat transition ring" was a misunderstanding: there is no lower BT80 tube, the "transition ring" is the top of the transition.
+* V4 defects noticed late (still in the V4 files): the three vent holes (3x3 square, az 0/120/240) and the cable hole (3.2x4.5 at az 126.5) in the housing lower sleeve are only about 0.7 mm apart at 120/126.5 deg; all disappear in V5.
+
+### 0.4 V5 documents (all in `docs/`; the repo history shows the order). Which is current:
+
+| File | Status |
+|---|---|
+| `V5_sketch4_how_it_fits.pdf` | **current**: how tube, head, module and transition connect; bolt sets; why holes are reused; swap steps |
+| `V5_sketch3_sleeve_and_seam.pdf` | current: sleeve in the bolt path (A) vs no sleeve (B, chosen); one-piece housing idea |
+| `V5_sketch2_fasteners.pdf` | partly superseded: bolt path A (sleeve); screw count table and the nut-in-slot detail still valid |
+| `V5_final_plan.pdf` | partly superseded: its fastening (heat-set inserts, 4 head + 2 index) is replaced by M3 bolt + nut sets 1 to 3; layout, transition seat idea and CAD build plan still useful |
+| `V5_insert_concept.pdf`, `V5_insert_tube_template_1to1.pdf` | partly superseded: window size corrected to 38.6 x 63.5; base ring replaced by the transition; template hole list uses heat-set-insert positions |
+| `V5_sketch_transition.pdf` | superseded (screws from below were rejected) |
+| `V5_modular_concept.pdf`, `V5_choice1_skin.pdf`, `V5_choice2_fastening.pdf`, `V5_skin_cutting_template_1to1.pdf` | superseded (module skin and bayonet options were dropped; the tube is the skin) |
+
+Drawing scripts (in `tools/`, each writes PNG to `$AIRBRAKE_WORK/fig/` and PDFs to `docs/`): `modular_drawings.py`, `option_drawings.py`, `insert_drawings.py`, `final_drawings.py`, `sketch_v5.py`, `sketch_v5b.py`, `sketch_v5c.py`, `sketch_v5d.py`;
+`make_docs.py` functions `modular`, `option_skin`, `option_fasteners`, `insert_concept`, `final_plan` (CLI names `modular optskin optfast insert finalplan`).
+
+### 0.5 What the next agent should do first
+
+1. Recreate the work dir and `ids.json` (section 4), then ask the user the open questions in 0.2 (at least the go-ahead and the exit direction).
+2. Build V5 as a new FeatureScript branch (`mode 5`, flag `mono`) from the V4 patches in `tools/build_fs.py`: keep V1 to V4 volume-identical (regression rebuild, section 6). Steps: housing without bay/bosses/supports/ledges/seam; limiter above the ring;
+   rotor with integral caps and a hub slot lead-in; fins unchanged shape with M3 hinge bolt + nut slots; the head (sleeve with four bosses and nut slots, cup with servo ledges, plate, single-layer sled, top cap);
+   the transition BT80 side (plug, shoulder, nut slots) with placeholder cone; the reference tube with the 12 clearance holes, windows 67 deg x 63.5 mm, and the switch, USB-C and vent holes; an assembly with mates.
+3. Checks before calling it done: no printed overlaps closed or open; the module slides along the tube and the fins open through the windows; the head goes on and the horn finds the slot (about +-8 deg); rotor sweep; latch and cam timing; hex-key (2.0 mm) access to all 12 bolts;
+   nut slots clear of the cam during the rotor drop-in; STL and STEP export (use the print orientations from the design review: rotor hub down, fins on the flat side, housing upright with supports); documents updated; commit and push.
+4. Do not touch the BT70 side of the transition. Do not use heat-set inserts, snap hooks or a band. Do not add screws from below.
 
 ## 1. The project and the user
 
@@ -76,7 +150,7 @@ assembly was deleted and recreated when V3 was rebuilt flush. Give the user the 
   `sweep_open.py`, `sweep_rotor.py`, `sweep_rotor_v4.py`, `timing_offline.py` (offline checks), `mech_*.py`, `history_figs.py`,
   `v4_sketch.py`, `wiring_schematic.py`, `make_figs_v2/v3/v4.py`, `make_docs.py` (all PDFs), `torque_check.py`.
 * `docs/*.pdf`: `V1/V2/V3/V4_assembly_guide`, `V3_mechanics_diagrams`, `Design_history`, `V4_concept_sketch`,
-  `V4_power_and_wiring`. `docs/img` holds figures. `exports/v1..v4/print/*.stl` (one file per unique part, `_xN` = quantity)
+  `V4_power_and_wiring`, `V4_wiring_layout_plan`, and the `V5_*` concept sheets (section 0.4). `docs/img` holds figures. `exports/v1..v4/print/*.stl` (one file per unique part, `_xN` = quantity)
   and `exports/v*/*.step.gz` (closed state with hardware and reference tubes).
 * `DESIGN_NOTES.md` (numbers per version), `README.md`, `V2_22mm_BUILD_PROMPT.md` (a design-only prompt for the V2).
 
@@ -138,7 +212,7 @@ folder is not in the repo and will be gone:** regenerate pickles with `python3 c
 2. **Mercury V1 servo header** (GP6/GP7): pin order and signal voltage unverified (site not reachable). The wiring schematic assumes the servo red wire is
    powered only by the 5 V regulator and the Mercury header power pin is left unconnected. Needs the manual page from the user.
 3. Servo and horn dimensions are standard SG90 numbers (tab holes 28.1 mm apart, horn 1.8 mm thick): the user must measure theirs.
-4. Static-pressure vent holes for the altimeter and the servo cable route (down the hollow R3 rotor bore, beside the horn-screw head) are not modelled.
+4. (Resolved in V4: vents and a servo-cable groove were cut into the V4 housing; the hollow-rotor cable route does not work because the horn closes the bore. All of this goes away in V5, where the electronics sit in the head.)
 5. **Ground-impact FEA** was asked for and has not been done. First places to look: servo ledges, limiter stops, 1.4 mm sled walls, hinge screws and the
    fin hinges.
 6. Latch, horn pocket and servo mount have never been tested on a print. The V4 limiter has about 1.5 deg margin at each end of the 65 deg travel.
