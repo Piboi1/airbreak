@@ -37,8 +37,15 @@ diameters. The next step is to build V5 in CAD (a new `mode 5` in the FeatureScr
 
 ### 0.2 Open questions for the user (ask these, do not guess)
 
-1. **Does the module come out of the bottom** (needs the transition off, matches what they said) **or the top** (needs the head off and the tube top open)? The plan assumes the bottom. Their last message did not answer this yet.
-2. **Go-ahead to start the V5 CAD** (several hours: FeatureScript mode 5, new transition BT80 side, head, assembly, checks). They said "ok ye try the housing one piece".
+**Answered on 2026-11-03 (latest session):**
+* **Exit direction: mainly the bottom, but the module must also be able to come out of the top once all the screws are out.** Route 1 (main): transition bolts (set 3) out, transition out of the bottom, module bolts (set 2) out, module out of the bottom. Route 2: head bolts (set 1) out, head out of the top, module bolts out, module out of the top; the transition stays. 8 bolts either way. Design rule added: nothing on the module or head wider than the bore, no flange or lip that blocks either direction, hub slot open toward the head. Assumption still to confirm with the user: Route 2 needs the upper airframe separated at the top of this tube.
+* **Go-ahead for the V5 CAD: NOT given.** The user first asked for a drawing document of the entire V5 idea with the context of the recent decisions: `docs/V5_complete_concept.pdf` (script `tools/v5_overview.py`). Do not start the CAD until they say go.
+* Push branch: the user wants work to continue on `claude/nice-maxwell-1lmh2h`.
+
+**Still open (original list):**
+
+1. ~~Bottom or top exit?~~ Answered above (bottom mainly, top also possible).
+2. ~~Go-ahead to start the V5 CAD~~ not given yet (see above). Original text: go-ahead to start the V5 CAD (several hours: FeatureScript mode 5, new transition BT80 side, head, assembly, checks). They said "ok ye try the housing one piece".
 3. The transition: they do not know its diameters. Plan: model the BT80 side (plug and shoulder) ourselves; cone and BT70 sleeve are placeholders; BT70 ID needed later.
 4. Windows open or taped (tape was a suggestion; optional).
 
@@ -57,6 +64,7 @@ diameters. The next step is to build V5 in CAD (a new `mode 5` in the FeatureScr
 
 | File | Status |
 |---|---|
+| `V5_complete_concept.pdf` | **current, start here**: the whole V5 idea on 5 pages (stack, bolt sets, joints, one-piece housing, both exit routes, decision log, open items, checks); script `tools/v5_overview.py` (needs only numpy and matplotlib) |
 | `V5_sketch4_how_it_fits.pdf` | **current**: how tube, head, module and transition connect; bolt sets; why holes are reused; swap steps |
 | `V5_sketch3_sleeve_and_seam.pdf` | current: sleeve in the bolt path (A) vs no sleeve (B, chosen); one-piece housing idea |
 | `V5_sketch2_fasteners.pdf` | partly superseded: bolt path A (sleeve); screw count table and the nut-in-slot detail still valid |
