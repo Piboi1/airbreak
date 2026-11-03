@@ -926,6 +926,72 @@ def modular():
     build_pdf(DOCS / 'V5_modular_concept.pdf', 'Modular airbrake concept - ARC BT80', s)
 
 
+def option_skin():
+    s = []
+    s += [P('Choice 1: the module skin, cut BT80 or printed', H1),
+          P('The <b>skin</b> is the outer surface of the swappable module. In V4 it is a real BT80 tube (outside diameter 66.04 mm) with four windows cut in it; each cut-out piece is glued to a fin so the fin closes flush with the tube. For the modular design the module has to be rebuilt after every rough flight, so how the skin is made decides how long a swap takes. '
+            'Everything below is a concept drawn from the V4 model; the printed-skin numbers are my calculations, not a CAD result.', B),
+          P('1 &nbsp; The two options', H2),
+          table([['', 'Option 1: cut BT80 skin (as V4)', 'Option 2: printed skin'],
+                 ['What it is', 'A 92.8 mm piece of real BT80 with four windows 37.5 × 42 mm. The four cut-outs are glued to the fins. The skin is screwed to the housing.', 'The housing strips and the fins are printed out to the BT80 outside diameter, R33.02 (0.72 mm more than V4). No tube in the fin zone; the real BT80 above and below butts against it.'],
+                 ['What you do per module', 'Cut a tube piece to length, mark and cut four windows (template supplied), cut-outs glued to the fins, wait for the glue, screw the skin on.', 'Print the module. Optionally sand and paint. No cutting, no glue, no cut-outs to line up.'],
+                 ['Why it can be better', 'The surface is the real tube, smooth and the right diameter; no extra PLA; the tube is cheap and strong.', 'Repeatable and fast to rebuild; no glue joint between fin and cut-out (that joint is a place a fin can fail); the walls get thicker (strips 3.5 mm, fins 3.1 mm) so the module is stiffer.'],
+                 ['Why it can be worse', 'Hand cutting four 65° windows to a sub-millimetre fit takes time and the gap varies; glue needs cure time; every module consumes a tube piece and a gluing session.', 'About +17 g of PLA per module (see the numbers); layer lines need sanding for a smooth finish (drag not measured); the printed OD may be ±0.2 mm, which matters where it butts the real tube.'],
+                 ['Works with which fastening', 'Screws only: a 0.52 mm tube wall cannot take a recess or a bayonet slot.', 'Screws, or thumb screws, or a bayonet (see the fastening document).']], [26, 74, 76], font=7.4),
+          P('2 &nbsp; The numbers', H2),
+          table([['Item', 'Option 1', 'Option 2'],
+                 ['Skin outside diameter', '66.04 mm (real tube)', '66.04 mm (printed, same)'],
+                 ['Skin length', '92.8 mm (z −22 … 70.8: 12 mm base sleeve, mechanism, 12 mm head socket)', '92.8 mm'],
+                 ['Windows / fin interface', 'four 37.5 × 42 mm cut-outs, glued; gaps equal to the saw kerf (assume 1.5° each side)', 'designed gap 0.4 mm all round; the fin carries its own skin'],
+                 ['Wall at the fin zone', 'tube 0.52 + fin shell 2.4 (two parts joined by glue)', 'one printed part 3.1 mm (fin), 3.5 mm (strip)'],
+                 ['Extra printed mass', '0 g (the tube is a separate purchase: weigh yours)', 'about +17 g per module: π × (33.02² − 32.3²) × 92.8 mm × 1.24 g/cm³ (module about 122 g instead of 105 g)'],
+                 ['Hands-on work per module', 'cutting plus gluing plus cure time (not timed: my guess is tens of minutes plus the cure)', 'none beyond optional sanding; print time is unattended'],
+                 ['Risk', 'fit of the cut-outs; glue failure', 'printed OD tolerance; surface finish; the first print will need a fit check']], [38, 70, 68], font=7.4),
+          PageBreak(), P('3 &nbsp; Drawings', H2),
+          fig('opt_skin_sections.png', 172, 'Section at z = 30 through the fin zone. Left: V4 style, real tube strips and glued cut-outs outside the fins and strips. Right: printed skin, fins and strips printed out to the BT80 outside diameter.', 98),
+          fig('opt_skin_elev.png', 172, 'Top: the Option 1 skin developed flat (window sizes and spacing). Bottom: the Option 2 module outline with the head and base joints, outside diameter 66.04 mm all the way.', 118),
+          PageBreak(), P('4 &nbsp; What I recommend', H2)]
+    s += bullets([
+        '<b>Go with the printed skin (Option 2) for the module</b>, because the module is the part you will rebuild after every rough flight and cutting and gluing four fin cut-outs each time is the slowest, most variable step. It also lets the swap joints be built into the printed module (next document).',
+        '<b>First test:</b> print one fin and a 60 mm skin sector and check three things: the fin-to-strip gap closes without binding, the printed outside diameter (66.04 ±0.2) against a real BT80 end, and the surface after sanding. Do this before printing a whole module.',
+        '<b>Keep Option 1 available.</b> The 1:1 cutting template (a separate file) lets you build a V4-style skin from a real tube in the meantime; it is derived from the V4 windows and should be checked against your own tube before cutting.',
+        '<b>Not verified:</b> drag of a printed surface against the tube, the effect of the extra 17 g on the rocket’s balance and apogee, and whether the printed fin skin cracks at the hinge ears on a hard landing (it is thicker than V4, so it should not be worse, but nothing has been tested).'])
+    build_pdf(DOCS / 'V5_choice1_skin.pdf', 'V5 choice 1: module skin - ARC BT80', s)
+
+
+def option_fasteners():
+    s = []
+    s += [P('Choice 2: how the head and the module are fastened', H1),
+          P('The swap points are the joints I1 (head to module) and I2 (module to base). To swap the module you open both; to move the head to another brake you open I1 and the joint above it. '
+            'There are three ways to make these joints. The drawings show why the third is awkward: the space between the electronics and the outside of the rocket is only <b>3.1 mm</b> in the radial direction. Concept numbers, not CAD.', B),
+          P('1 &nbsp; The three options', H2),
+          table([['', 'A: screws (with heat-set inserts)', 'B: captive thumb screws', 'C: collar bayonet'],
+                 ['What it is', 'Four M3×5 button-head screws, radial, through the skin and the head sleeve into brass inserts in four 7 mm bosses inside the sleeve. Same at I2.', 'The same four bosses and inserts, but with knurled M3 thumb screws that you turn by hand.', 'Three lugs on a ring (collar) that turns 24.5° in three L-slots in a raised socket. The collar turns; the head body does not.'],
+                 ['Tools', '2.0 mm hex driver', 'none', 'none (one safety screw or pin as a secondary lock)'],
+                 ['Swap effort (estimate, not timed)', '8 screws out and in: about 5 minutes', 'about 1 minute', 'about 1 minute'],
+                 ['Strength', 'best: steel screws in brass inserts carry shear and tension; used in V4 already', 'about the same as A if the thumb screw is steel; the heads stand 3.5 mm proud', 'weakest: three 6 mm printed lugs in a 1.2 mm collar; it needs testing'],
+                 ['Wear', 'printed threads strip after repeated swaps, so use heat-set inserts (the checklist’s advice for parts assembled many times)', 'same as A (inserts)', 'lugs and slots wear; a detent bump wears'],
+                 ['Surface', 'screw heads 1.7 mm proud', 'heads about 3.5 mm proud: a flush recess does not fit (the wall is 3.1 mm)', 'a 1 mm raised band round the joint (R34.0), or 1 mm of electronics radius given up'],
+                 ['Main catch', 'the slowest to swap and screws can be lost', 'bigger heads in the airstream; hardware choice must be checked', 'the whole head cannot be twisted (see drawing): the rotor would move']], [26, 54, 48, 48], font=7.2),
+          P('2 &nbsp; What each one costs in the design', H2),
+          fig('opt_radial.png', 172, 'Radial budget at I1: the head sleeve, the skin and the fastener between R29.9 (the electronics’ inside limit) and R33.02 (the BT80 outside).', 74),
+          PageBreak(), P('3 &nbsp; Drawings', H2),
+          fig('opt_fast_screws.png', 172, 'Option A: section through the joint (left) and the four insert bosses in plan (right). The bosses are at 45, 135, 250 and 290° so they clear the battery and the Mercury; at 225/315° they would hit the battery corners. The earlier concept sheet drew them 90° apart: this plan corrects it.', 82),
+          fig('opt_fast_thumb.png', 172, 'Option B: the same bosses with captive thumb screws; the heads stand proud because a recess does not fit.', 74),
+          PageBreak(),
+          fig('opt_fast_bayonet.png', 172, 'Option C: one L-slot developed flat (left) and the collar with three lugs in plan (right).', 96),
+          fig('opt_twist.png', 120, 'A bayonet must turn a collar, not the head: the horn is engaged in the rotor, so turning the whole head would turn the rotor past the point where the fin latch lets go.', 60),
+          PageBreak(), P('4 &nbsp; What I recommend', H2)]
+    s += bullets([
+        '<b>Start with Option A, screws into heat-set inserts.</b> It uses hardware V4 already has, it is the strongest, and the inserts survive many swaps. The four bosses go in the head sleeve at 45, 135, 250 and 290°.',
+        '<b>Option B is a screw swap, not a redesign.</b> It uses the same bosses and inserts, so you can try thumb screws on the same parts. Check the real head height: if the heads stand 3.5 mm proud it is a trade of speed for a small obstacle in the airstream.',
+        '<b>Leave Option C for later.</b> It needs a raised 1 mm band or less electronics radius, three 6 mm printed lugs in thin walls, and a collar that has to be tested; the drive coupling stays safe only if the collar, not the head, turns.',
+        '<b>Decide where the rocket separates for recovery.</b> If the airbrake joints are where the airframe comes apart, they must carry the parachute shock, which favours screws. If the rocket separates elsewhere, the joints see only compression and handling loads.',
+        '<b>First test (cheap):</b> print a 20 mm slice of the sleeve and skin with one boss, press in one insert, and screw it ten times. If the insert holds, build the full I1 sleeve.',
+        '<b>Not verified:</b> every number is a concept dimension (3.1 mm radial space, boss sizes, lug sizes, swap times). The 24.5° turn of Option C and the latch-release angle of about 15° of rotor travel come from the V4 model; the rest is estimated.'])
+    build_pdf(DOCS / 'V5_choice2_fastening.pdf', 'V5 choice 2: head and module fastening - ARC BT80', s)
+
+
 if __name__ == '__main__':
     which = sys.argv[1:] or ['v1', 'v2', 'v3']
     if 'v1' in which: v1()
@@ -938,4 +1004,6 @@ if __name__ == '__main__':
     if 'wiring' in which: wiring()
     if 'wiringplan' in which: wiring_plan()
     if 'modular' in which: modular()
+    if 'optskin' in which: option_skin()
+    if 'optfast' in which: option_fasteners()
     print('docs written', list(DOCS.glob('*.pdf')))
