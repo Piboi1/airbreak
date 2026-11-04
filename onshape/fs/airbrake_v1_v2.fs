@@ -828,7 +828,7 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
  }
  if(definition.mode==5) {
   stage="v5 rotor top";
-  var hz=3.2;   // V5.5: servo ledges and everything above them are raised by hz so the servo screws (up to M2x10) clear the rotor hub
+  var hz=0.0;   // vertical shift of the head stack (kept as a parameter; 0 after the V5.6 redesign)
   var es5=vector(cos(135*degree),sin(135*degree),0);
   // Horn pocket + arm slot open at the top of the hub, with a three-step tapered lead-in (slot +-2.2 widening to +-4.3 mm) so the horn finds the slot and turns the free rotor into line (about +-10 deg).
   var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,35.0,45.0);
@@ -868,27 +868,23 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([head5,cylinderMM(context,id+"v5HeadFloor",30.1,68.5+hz,70.3+hz)]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<2;k+=1) {
    var pa=(135+180*k)*degree;var ps5=id+("v5Post"~k);
-   var postLow=radialBox(context,ps5+"low",25.5,28.9,-3.5,3.5,45.1+hz,14.4-hz,pa);
+   var postLow=radialBox(context,ps5+"low",25.5,28.9,-3.5,3.5,51.9+hz,7.6-hz,pa);
    var postUp=radialBox(context,ps5+"up",25.5,30.1,-3.5,3.5,59.0,11.0+hz,pa);
-   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.9,-3.5,3.5,45.1+hz,4.3,pa);
+   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.9,-3.5,3.5,51.9+hz,4.3,pa);
    opBoolean(context,ps5+"join",{"tools":qUnion([head5,postLow,postUp,ledge5]),"operationType":BooleanOperationType.UNION});
-   // M2 nut pocket in the ledge top face (the servo tab covers it), clearance hole down through the ledge.
+   // M2 nut recess in the UNDERSIDE of the ledge (the servo tab then covers it), clearance hole up through the ledge.
    var hr5=k==0?18.8:9.3;
-   var np5=hexPrism(context,ps5+"nutTool",vector(hr5,0,47.5+hz),vector(0,0,1),4.2,2.2);
+   var np5=hexPrism(context,ps5+"nutTool",vector(hr5,0,51.8+hz),vector(0,0,1),4.2,2.0);
    turn(context,ps5+"nutTurn",np5,pa);
    subtract(context,ps5+"nutCut",head5,np5);
-   var ch5=cylinderMM(context,ps5+"holeTool",1.1,44.9+hz,47.7+hz);
+   var ch5=cylinderMM(context,ps5+"holeTool",1.1,51.8+hz,56.3+hz);
    opTransform(context,ps5+"holeMove",{"bodies":ch5,"transform":transform(vector(hr5,0,0)*millimeter)});
    turn(context,ps5+"holeTurn",ch5,pa);
    subtract(context,ps5+"holeCut",head5,ch5);
-   // Screwdriver access through the floor above the tab hole.
-   var ac5=cylinderMM(context,ps5+"accTool",3.2,68.4+hz,70.4+hz);
-   opTransform(context,ps5+"accMove",{"bodies":ac5,"transform":transform(vector(hr5,0,0)*millimeter)});
-   turn(context,ps5+"accTurn",ac5,pa);
-   subtract(context,ps5+"accCut",head5,ac5);
+   // V5.6: no screwdriver holes in the floor any more: the servo is pushed up into the cup from below, its tabs against the UNDERSIDE of the ledges, screws from below.
    if(definition.hardware) {
-    var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),51.9+hz),vector(0,0,-1),"M2BH",8,"HW servo flange bolt "~(k+1)~" - M2x8 button head (M2x10 also clears)");
-    var sn5=nutHW(context,ps5+"nutHW",vector(hr5,0,47.6+hz),vector(0,0,1),4.0,1.6,1.0,"HW servo flange nut "~(k+1)~" - M2 hex");
+    var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),49.4+hz),vector(0,0,1),"M2BH",8,"HW servo flange bolt "~(k+1)~" - M2x8 button head, from below, head under the servo tab");
+    var sn5=nutHW(context,ps5+"nutHW",vector(hr5,0,51.95+hz),vector(0,0,1),4.0,1.6,1.0,"HW servo flange nut "~(k+1)~" - M2 hex");
     turn(context,ps5+"nutHWTurn",sn5,pa);
    }
   }
@@ -901,14 +897,6 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
    var rim5=radialBox(context,id+("v5Rim"~k),c5[0]-.8,c5[1]+.8,c5[2]-.8,c5[3]+.8,70.3+hz,2.7,0*degree);
    subtract(context,id+("v5RimCut"~k),rim5,radialBox(context,id+("v5RimTool"~k),c5[0],c5[1],c5[2],c5[3],70.2+hz,3,0*degree));
    opBoolean(context,id+("v5RimJoin"~k),{"tools":qUnion([head5,rim5]),"operationType":BooleanOperationType.UNION});
-  }
-  // The servo-screw access holes also go through the pocket rims (a wall of the Mercury pocket clipped the driver at servo screw 1).
-  for(var k=0;k<2;k+=1) {
-   var pa6=(135+180*k)*degree;var hr6=k==0?18.8:9.3;
-   var ac6=cylinderMM(context,id+("v5AccRim"~k),3.2,68.4+hz,73.8+hz);
-   opTransform(context,id+("v5AccRimMove"~k),{"bodies":ac6,"transform":transform(vector(hr6,0,0)*millimeter)});
-   turn(context,id+("v5AccRimTurn"~k),ac6,pa6);
-   subtract(context,id+("v5AccRimCut"~k),head5,ac6);
   }
   // Vents (static pressure for the Mercury), USB-C window and switch slot: provisional positions, also cut in the tube.
   for(var k=0;k<3;k+=1) radialDrill(context,id+("v5Vent"~k),head5,[0,180,315][k]*degree,75+hz,29.5,33.5,1.5);

@@ -9,7 +9,7 @@ Everything is already oriented for printing (z = 0 is the bed). Nothing here has
 | `R_rotor_x1.stl` | 1 | 52.3 x 52.3 x 51.0 | hub down | yes | catch caps and limiter finger are part of it |
 | `P_fin_x4.stl` | 4 | 61.6 x 34.6 x 12.2 | flat side down | yes (root, tail) | this file is ONE fin, print it four times |
 | `P_fin_plate_4_fins.stl` | 1 plate | 129.2 x 75.2 x 12.2 | same | yes | the same four fins on one plate, use this instead of the single file if you want |
-| `H_head_cup_x1.stl` | 1 | 63.9 x 63.9 x 43.2 | upside down (rim down) | yes (under the floor and the servo ledges) | electronics pockets, vents, USB-C window, switch slot |
+| `H_head_cup_x1.stl` | 1 | 63.9 x 63.9 x 36.4 | upside down (rim down) | yes (under the floor and the servo ledges) | electronics pockets, vents, USB-C window, switch slot |
 | `K_head_lid_x1.stl` | 1 | 59.4 x 59.4 x 10.6 | disc down | almost none | four nut bosses on the underside |
 
 Material and settings (from the FEA, not from a test): the fins are the part that nearly snapped, so print them in PETG or PLA+ with 4 or more walls and as dense an infill as you can (100% if possible);
@@ -18,8 +18,8 @@ the rest can be whatever you used for the friend's print. Layer 0.2 mm or finer.
 ## Hardware to buy (all M3 unless noted)
 * 12 x M3x8 button head bolts and 12 x M3 nuts: the radial bolts (4 head, 4 module, 4 transition)
 * 4 x M3x25 button head bolts and 4 x M3 nuts: fin hinges
-* 2 x M2x8 bolts (M2x10 also clears, nothing longer) and 2 x M2 nuts: servo flange; 1 x the horn screw that came with the servo
-* Longest bolts that clear (shank): head M3x10, module M3x16, transition M3x20+, hinge about M3x27, servo M2x10 (see `docs/V5_assembly_guide.pdf` section 10)
+* 2 x M2x8 bolts (anything up to about M2x15 clears) and 2 x M2 nuts: servo flange; the nuts go in the hex recesses under the ledges, the bolts go in from BELOW; 1 x the horn screw that came with the servo
+* Longest bolts that clear (shank): head M3x10, module M3x16, transition M3x20+, hinge about M3x27 (see `docs/V5_assembly_guide.pdf` section 10)
 * SG90 servo (measure the gear boss and spline if the head does not seat: see the assembly guide, section 9)
 
 ## Order (details in `docs/V5_assembly_guide.pdf`, section 5)

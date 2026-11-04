@@ -148,11 +148,20 @@ def main(which):
                 worst = max(worst, v)
         print(f'  12 radial bolts: 2 mm key along the radial axis from outside, worst overlap with any part: {worst:.2f} mm3')
         for s, (R_, azd) in {'servo bolt 1': (18.8, 135), 'servo bolt 2': (9.3, 315)}.items():
-            ztab = servo.bounds[1][2] - 22.7 + 0 if False else max(m.bounds[1][2] for n, m in dc.items() if n.startswith('HW servo flange bolt')) + 0.5
+            zhead = min(m.bounds[0][2] for n, m in dc.items() if n.startswith('HW servo flange bolt')) - 0.3
             for rr, nm in ((1.6, 'driver'), (2.4, 'head + driver')):
                 drv = trimesh.creation.cylinder(radius=rr, height=45, sections=20)
-                drv.apply_translation([R_ * math.cos(math.radians(azd)), R_ * math.sin(math.radians(azd)), ztab + 22.5])
-                print(f'  {s} {nm} (r {rr}) straight up from the screw head: head cup {vol(drv, H):.2f} mm3 (0 = clear; lid and electronics are fitted AFTER the servo)')
+                drv.apply_translation([R_ * math.cos(math.radians(azd)), R_ * math.sin(math.radians(azd)), zhead - 22.5])
+                print(f'  {s} {nm} (r {rr}) straight down from the screw head (servo assembled to the cup on the bench): head cup {vol(drv, H):.2f} mm3 (0 = clear)')
+        hub_top = R.bounds[1][2]
+        zh = min(m.bounds[0][2] for n, m in dc.items() if n.startswith('HW servo flange bolt'))
+        print(f'  servo screw heads sit {zh - hub_top:.1f} mm above the rotor hub top (head bottom z {zh:.1f}, hub top z {hub_top:.1f})')
+    if which in ('servo', 'all'):
+        print('--- servo (with horn) pushed into the head cup straight up from below: overlap with the cup by distance below the final position')
+        srv = trimesh.util.concatenate([servo, horn]); worst = 0
+        for dz in np.arange(60, -0.01, -1.0):
+            worst = max(worst, vol(moved(srv, Tz(-dz)), H))
+        print(f'  worst overlap along the whole path: {worst:.2f} mm3 (0 = the servo can be installed from below)')
     if which in ('exit', 'all'):
         print('--- module exit routes (module = housing + rotor + 4 fins, fully latched)')
         mod = trimesh.util.concatenate([C, R] + P)
