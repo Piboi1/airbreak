@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" font-family="Arial, Helvetica, sans-serif">
+<rect width="900" height="520" fill="#ffffff"/>
+<text x="450" y="34" font-size="22" font-weight="bold" text-anchor="middle" fill="#111">Arduino Uno R3 to 9g micro servo (SG90 type), 3 wires</text>
+<!-- Uno -->
+<rect x="40" y="70" width="330" height="400" rx="14" fill="#0f6c8a" stroke="#0a4558" stroke-width="3"/>
+<text x="205" y="110" font-size="22" font-weight="bold" fill="#fff" text-anchor="middle">ARDUINO UNO R3</text>
+<text x="205" y="134" font-size="13" fill="#d8f0f7" text-anchor="middle">USB powers the board</text>
+<!-- digital header (right edge) -->
+<rect x="318" y="150" width="46" height="130" rx="4" fill="#222"/>
+<text x="305" y="172" font-size="14" fill="#fff" text-anchor="end">~9 (PWM)</text>
+<text x="305" y="196" font-size="14" fill="#fff" text-anchor="end">8</text>
+<text x="305" y="220" font-size="14" fill="#fff" text-anchor="end">7</text>
+<text x="305" y="244" font-size="14" fill="#fff" text-anchor="end">...</text>
+<circle cx="341" cy="168" r="6" fill="#f5a623" stroke="#fff"/>
+<circle cx="341" cy="192" r="5" fill="#888"/><circle cx="341" cy="216" r="5" fill="#888"/>
+<!-- power header (bottom edge) -->
+<rect x="90" y="410" width="200" height="40" rx="4" fill="#222"/>
+<text x="120" y="402" font-size="14" fill="#fff" text-anchor="middle">5V</text>
+<text x="170" y="402" font-size="14" fill="#fff" text-anchor="middle">GND</text>
+<circle cx="120" cy="430" r="6" fill="#d0021b" stroke="#fff"/>
+<circle cx="170" cy="430" r="6" fill="#8b572a" stroke="#fff"/>
+<text x="230" y="435" font-size="12" fill="#bbb">(POWER header)</text>
+<!-- servo -->
+<rect x="610" y="190" width="220" height="130" rx="8" fill="#2a63c8" stroke="#173b7d" stroke-width="3"/>
+<rect x="590" y="235" width="20" height="40" fill="#2a63c8" stroke="#173b7d" stroke-width="3"/>
+<circle cx="760" cy="255" r="26" fill="#eee" stroke="#555" stroke-width="2"/>
+<rect x="745" y="215" width="30" height="16" fill="#eee" stroke="#555"/>
+<text x="720" y="352" font-size="16" font-weight="bold" fill="#111" text-anchor="middle">9g servo</text>
+<!-- servo connector -->
+<rect x="540" y="215" width="50" height="80" rx="3" fill="#222"/>
+<text x="565" y="208" font-size="12" fill="#333" text-anchor="middle">3-pin plug</text>
+<circle cx="552" cy="230" r="5" fill="#f5a623"/><circle cx="552" cy="255" r="5" fill="#d0021b"/><circle cx="552" cy="280" r="5" fill="#8b572a"/>
+<!-- wires -->
+<path d="M341 168 H470 V230 H552" fill="none" stroke="#f5a623" stroke-width="5"/>
+<path d="M120 430 V490 H500 V255 H552" fill="none" stroke="#d0021b" stroke-width="5"/>
+<path d="M170 430 V478 H515 V280 H552" fill="none" stroke="#8b572a" stroke-width="5"/>
+<!-- labels -->
+<text x="475" y="150" font-size="15" fill="#b57400" font-weight="bold">Orange: signal, to pin 9</text>
+<text x="615" y="395" font-size="15" fill="#c00" font-weight="bold">Red: +5V (to 5V pin)</text>
+<text x="615" y="418" font-size="15" fill="#6b4220" font-weight="bold">Brown: GND (to GND pin)</text>
+<text x="450" y="508" font-size="12" fill="#555" text-anchor="middle">Wire colours: SG90 is orange / red / brown. Some 9g clones use yellow / red / black or white / red / black: signal is the odd colour, red is power, darkest is ground.</text>
+</svg>
