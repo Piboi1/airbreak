@@ -301,3 +301,119 @@ P('var ear=yc(context,sub+("ear"~j),5.2,y0,y1);', 'var ear=yc(context,sub+("ear"
 # V5: the integral catch finger top is flush with the hub top (z 44.6) so the rotor prints hub-down on one flat plane (V4 finger stood 0.2 mm proud)
 P('var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,flip?38.9:40.8,flip?5.9:5.2,0*degree);',
   'var catchFinger=radialBox(context,sub+"catchFinger",23.6,26.0,-3.0,3.0,flip?38.9:40.8,mono?5.7:(flip?5.9:5.2),0*degree);')
+
+# ================================================================== V5.1: stiffer fin root + wide stop (from the FEA of the printed fin)
+P('// Azimuth of the radial tube-retention screw in V2 support s (0..3).', r"""// V5.1: wide tapered root gusset (yHalf = half width), triangle in the radial (x) - height (z) plane, ends at z 22.5 below the cam band.
+function rootGusset(context is Context, id is Id, yHalf is number, zb is number) returns Query
+{
+    var sk = newSketchOnPlane(context, id + "sk", { "sketchPlane" : plane(vector(0, yHalf, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)) });
+    var points = [];
+    for (var p in [vector(25.5, zb), vector(31.5, zb), vector(31.5, 22.5), vector(25.5, zb + 3.2), vector(25.5, zb)])
+        points = append(points, p * millimeter);
+    skPolyline(sk, "p", { "points" : points });
+    skSolve(sk);
+    opExtrude(context, id + "ex", { "entities" : qSketchRegion(id + "sk"), "direction" : vector(0, -1, 0), "endBound" : BoundingType.BLIND, "endDepth" : 2 * yHalf * millimeter });
+    opDeleteBodies(context, id + "del", { "entities" : qCreatedBy(id + "sk", EntityType.BODY) });
+    return solid(id + "ex");
+}
+
+// Azimuth of the radial tube-retention screw in V2 support s (0..3).""")
+P('var brace=arcRootBrace(context,sub+"brace");\n  opBoolean(context,sub+"leafJoin",{"tools":qUnion([panel,barrel,web,pad,brace]),"operationType":BooleanOperationType.UNION});',
+  'var brace=arcRootBrace(context,sub+"brace");\n  var leafParts=[panel,barrel,web,pad,brace];\n  if(mono) leafParts=append(leafParts,rootGusset(context,sub+"braceWide",12,6.0));\n  opBoolean(context,sub+"leafJoin",{"tools":qUnion(leafParts),"operationType":BooleanOperationType.UNION});')
+P('var pad=sector(context,sub+"rootPad",28.8,31.3,22,4,14);', 'var pad=mono?sector(context,sub+"rootPad",27.8,31.3,27,4,16):sector(context,sub+"rootPad",28.8,31.3,22,4,14);')
+P('var landing=radialBox(context,sub+"landing",29,32.4+dr,-6,6,4,4,0*degree);', 'var landing=mono?sector(context,sub+"landing",29,31.5,24,4,4):radialBox(context,sub+"landing",29,32.4+dr,-6,6,4,4,0*degree);')
+P('var outerStop=radialBox(context,sub+"outerCompressionStop",27,mono?31.6:32.8+dr,-6,6,-15,7.6,0*degree);',
+  'var outerStop=mono?sector(context,sub+"outerCompressionStop",27,31.9,24,-15,8.4):radialBox(context,sub+"outerCompressionStop",27,32.8+dr,-6,6,-15,7.6,0*degree);')
+
+# ================================================================== V5.2: under-hinge tail lock (mentor-inspired): tail on the fin, U pocket in the stop blocks, keeper towers + pads
+# A tail below the hinge swings inboard and up as the fin opens; at 90 deg its top face meets keeper pads in the housing, so the stop (outboard, below the pin)
+# and the keeper (inboard, above the tail) form a force couple instead of loading the pin and the web alone.
+P('  if(mono) leafParts=append(leafParts,rootGusset(context,sub+"braceWide",12,6.0));',
+  '  if(mono) leafParts=append(leafParts,rootGusset(context,sub+"braceWide",12,6.0));\n  if(mono) leafParts=append(leafParts,radialBox(context,sub+"lockTail",22.0,26.5,-6,6,-7.6,4.6,0*degree));')
+P('  opBoolean(context,sub+"leafJoin",{"tools":qUnion(leafParts),"operationType":BooleanOperationType.UNION});',
+  '  opBoolean(context,sub+"leafJoin",{"tools":qUnion(leafParts),"operationType":BooleanOperationType.UNION});\n  if(mono) subtract(context,sub+"rootClip",panel,tubeMM(context,sub+"rootClipTool",45,32.21,2,26));')
+P('  opBoolean(context,sub+"carrierJoin",{"tools":qUnion([carrier,bracket]),"operationType":BooleanOperationType.UNION});',
+  '''  opBoolean(context,sub+"carrierJoin",{"tools":qUnion([carrier,bracket]),"operationType":BooleanOperationType.UNION});
+  if(mono) {
+   // U pocket for the tail, open to the outside (the fin goes in radially through the window): through the hard-stop blocks, z -8.3 .. -6.4.
+   var tailPocket=radialBox(context,sub+"tailPocket",21.6,33.5,-6.5,6.5,-8.3,1.9,0*degree);
+   turn(context,sub+"tailPocketTurn",tailPocket,a);
+   subtract(context,sub+"tailPocketCut",carrier,tailPocket);
+  }''')
+P('var v5LimB=radialBox(context,id+"v5LimStop2",10,19,3.4,11,0.4,13.6,125*degree);', 'var v5LimB=radialBox(context,id+"v5LimStop2",10,16.5,3.4,8.0,0.4,13.6,125*degree);')
+P('''  // Hinge bolt access: a 6.6 mm channel along the hinge axis''',
+  '''  // Keeper towers (on the floor, beside the tail path) and pads over the tail at 90 deg: tail top face z +3.0, pad underside z 3.4 (0.4 mm gap).
+  for(var k=0;k<4;k+=1) {
+   var v5ka=k*90*degree;var v5ks=id+("v5Keeper"~k);
+   for(var sy=0;sy<2;sy+=1) {
+    var y0=sy==0?7.8:-11.2;var y1=sy==0?11.2:-7.8;var p0=sy==0?4.6:-7.8;var p1=sy==0?7.8:-4.6;
+    opBoolean(context,v5ks+("tw"~sy),{"tools":qUnion([carrier,radialBox(context,v5ks+("towerBox"~sy),17.5,21.4,y0,y1,-9.0,15.4,v5ka)]),"operationType":BooleanOperationType.UNION});
+    opBoolean(context,v5ks+("pd"~sy),{"tools":qUnion([carrier,radialBox(context,v5ks+("padBox"~sy),17.5,20.0,p0,p1,3.4,3.0,v5ka)]),"operationType":BooleanOperationType.UNION});
+   }
+  }
+  // Hinge bolt access: a 6.6 mm channel along the hinge axis''')
+
+# ================================================================== V5.3: the head must seat fully (photos: it stood about 5 mm proud)
+# Likely cause: a real SG90 has a raised gear boss (about O11.8 x 4.5) round the shaft plus a longer spline (about 4 mm); the model had a plain box and a 3.7 mm stub,
+# so with the shaft down the real boss sat on the rotor hub top. Fix: model the boss and spline, counterbore the hub for the boss, deepen the horn socket,
+# loosen the head outer diameter (R32.2 -> R31.95) and chamfer the lower edges.
+P('crownHub=cylinderMM(context,id+"crownHub",9,flip?33.6:58.6-dzT,flip?44.6:61.6-dzT);', 'crownHub=cylinderMM(context,id+"crownHub",mono?10.5:9,flip?33.6:58.6-dzT,flip?44.6:61.6-dzT);')
+P('''  var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,41.3,45.0);
+  var slot5=radialBox(context,id+"v5HornSlot",0,13,-2.2,2.2,41.3,3.7,0*degree);''',
+'''  var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,35.0,45.0);
+  var slot5=radialBox(context,id+"v5HornSlot",0,13,-2.2,2.2,35.0,10.0,0*degree);
+  // Counterbore for the servo gear boss (about O11.8 x 4.5) with a stepped lead-in.
+  var cbore5=cylinderMM(context,id+"v5Cbore",6.6,38.6,45.0);
+  var cstep5a=cylinderMM(context,id+"v5CboreA",7.1,43.0,45.0);
+  var cstep5b=cylinderMM(context,id+"v5CboreB",7.7,43.9,45.0);''')
+P('qUnion([pocket5,slot5,lead5a,lead5b,lead5c])','qUnion([pocket5,slot5,lead5a,lead5b,lead5c,cbore5,cstep5a,cstep5b])')
+P('''  var hornHub5=cylinderMM(context,id+"v5HornHub",4,41.5,43.3);
+  var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,41.5,1.8,0*degree);''',
+'''  var hornHub5=cylinderMM(context,id+"v5HornHub",3.9,36.9,40.4);
+  var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,36.9,1.8,0*degree);''')
+P('screwHW(context,id+"v5HornScrew",vector(0,0,41.5),vector(0,0,1),"M2BH",6,','screwHW(context,id+"v5HornScrew",vector(0,0,36.9),vector(0,0,1),"M2BH",6,')
+P('''  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,41.5,45.2);
+  try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5]),''',
+'''  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,36.7,45.2);
+  var sBoss5=cylinderMM(context,id+"v5GearBoss",5.9,40.7,45.2);
+  try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5,sBoss5]),''')
+P('label(context,sBody5,"E SG90 servo REFERENCE - shaft down, flange screwed to the two head ledges - measure your servo",[.35,.38,.43]);',
+  'label(context,sBody5,"E SG90 servo REFERENCE - shaft down, gear boss O11.8 x 4.5 and 4 mm spline modelled (typical SG90: MEASURE YOURS), flange screwed to the two head ledges",[.35,.38,.43]);')
+# head sleeve a little smaller, with a lower-edge chamfer; module lower edge chamfer
+P('var head5=tubeMM(context,id+"v5Sleeve",32.2,29.9,59.0,88.3);',
+  '''var head5=tubeMM(context,id+"v5Sleeve",31.95,29.9,59.0,88.3);
+  v5Chamfer(context,id+"v5SleeveCh",head5,31.95,59.0,0.8);''')
+P('''  subtract(context,id+"v5BaseTrim",carrier,cylinderMM(context,id+"v5BaseTrimTool",40,-20,-10));''',
+  '''  subtract(context,id+"v5BaseTrim",carrier,cylinderMM(context,id+"v5BaseTrimTool",40,-20,-10));
+  v5Chamfer(context,id+"v5BaseCh",carrier,32.2,-10.0,0.8);''')
+P('// V5.1: wide tapered root gusset', r"""// V5.3: 45 deg lead-in chamfer on an outer bottom edge (radius r, height z, size c): cut a revolved triangle.
+function v5Chamfer(context is Context, id is Id, target is Query, r is number, z is number, c is number)
+{
+    var sk = newSketchOnPlane(context, id + "sk", { "sketchPlane" : plane(vector(0, 0, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)) });
+    var pts = [];
+    for (var p in [vector(r + 0.3, z - 0.3), vector(r - c, z - 0.3), vector(r - c, z), vector(r, z + c), vector(r + 0.3, z + c), vector(r + 0.3, z - 0.3)])
+        pts = append(pts, p * millimeter);
+    skPolyline(sk, "p", { "points" : pts });
+    skSolve(sk);
+    opRevolve(context, id + "rev", { "entities" : qSketchRegion(id + "sk"), "axis" : line(vector(0, 0, 0) * millimeter, vector(0, 0, 1)), "angleForward" : 2 * PI * radian });
+    opDeleteBodies(context, id + "del", { "entities" : qCreatedBy(id + "sk", EntityType.BODY) });
+    subtract(context, id + "cut", target, solid(id + "rev"));
+}
+
+// V5.1: wide tapered root gusset""")
+
+# ================================================================== V5.4: ribs on the inner face of the fin (spine + two edge ribs), clear of the cam band (z 22.5..28, R<28.6) and the catch cap (R<26)
+P('  if(mono) subtract(context,sub+"rootClip",panel,tubeMM(context,sub+"rootClipTool",45,32.21,2,26));',
+  '''  if(mono) subtract(context,sub+"rootClip",panel,tubeMM(context,sub+"rootClipTool",45,32.21,2,26));
+  if(mono) {
+   // spine: z 4..20.5 and 28.5..47 (the follower fills z 20..29 between them); edge ribs: z 4..20 and 30..54 at +-27.5 deg, 2.2 deep from the shell
+   var ribs=[radialBox(context,sub+"ribSpineA",26.8,30.0,-0.9,0.9,4,16.5,0*degree),radialBox(context,sub+"ribSpineB",27.5,30.0,-0.9,0.9,28.5,18.5,0*degree)];
+   for(var rs=0;rs<2;rs+=1) for(var rz=0;rz<2;rz+=1) {
+    var er=sector(context,sub+("ribEdge"~rs~rz),27.8,30.0,3.0,rz==0?4:30,rz==0?16:24);
+    turn(context,sub+("ribEdgeTurn"~rs~rz),er,(rs==0?27.5:-27.5)*degree);
+    ribs=append(ribs,er);
+   }
+   var ribAll=[panel];
+   for(var rb in ribs) ribAll=append(ribAll,rb);
+   opBoolean(context,sub+"ribJoin",{"tools":qUnion(ribAll),"operationType":BooleanOperationType.UNION});
+  }''')

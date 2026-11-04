@@ -195,6 +195,34 @@ function radialBoltHW(context is Context, id is Id, az is ValueWithUnits, z is n
     nutHW(context, id + "nutHW", vector(0, 0, z) + (nutIn + 0.1) * d, d, 5.5, 2.4, 1.5, "HW " ~ name ~ " nut - M3 hex");
 }
 
+// V5.3: 45 deg lead-in chamfer on an outer bottom edge (radius r, height z, size c): cut a revolved triangle.
+function v5Chamfer(context is Context, id is Id, target is Query, r is number, z is number, c is number)
+{
+    var sk = newSketchOnPlane(context, id + "sk", { "sketchPlane" : plane(vector(0, 0, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)) });
+    var pts = [];
+    for (var p in [vector(r + 0.3, z - 0.3), vector(r - c, z - 0.3), vector(r - c, z), vector(r, z + c), vector(r + 0.3, z + c), vector(r + 0.3, z - 0.3)])
+        pts = append(pts, p * millimeter);
+    skPolyline(sk, "p", { "points" : pts });
+    skSolve(sk);
+    opRevolve(context, id + "rev", { "entities" : qSketchRegion(id + "sk"), "axis" : line(vector(0, 0, 0) * millimeter, vector(0, 0, 1)), "angleForward" : 2 * PI * radian });
+    opDeleteBodies(context, id + "del", { "entities" : qCreatedBy(id + "sk", EntityType.BODY) });
+    subtract(context, id + "cut", target, solid(id + "rev"));
+}
+
+// V5.1: wide tapered root gusset (yHalf = half width), triangle in the radial (x) - height (z) plane, ends at z 22.5 below the cam band.
+function rootGusset(context is Context, id is Id, yHalf is number, zb is number) returns Query
+{
+    var sk = newSketchOnPlane(context, id + "sk", { "sketchPlane" : plane(vector(0, yHalf, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)) });
+    var points = [];
+    for (var p in [vector(25.5, zb), vector(31.5, zb), vector(31.5, 22.5), vector(25.5, zb + 3.2), vector(25.5, zb)])
+        points = append(points, p * millimeter);
+    skPolyline(sk, "p", { "points" : points });
+    skSolve(sk);
+    opExtrude(context, id + "ex", { "entities" : qSketchRegion(id + "sk"), "direction" : vector(0, -1, 0), "endBound" : BoundingType.BLIND, "endDepth" : 2 * yHalf * millimeter });
+    opDeleteBodies(context, id + "del", { "entities" : qCreatedBy(id + "sk", EntityType.BODY) });
+    return solid(id + "ex");
+}
+
 // Azimuth of the radial tube-retention screw in V2 support s (0..3). Always centred on the strip: an offset hole
 // would leave only ~1.3 mm of 0.5 mm tube web beside the window. On the two seam strips the thread bites across the
 // clamped seam.
@@ -264,7 +292,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   points=append(points,vector(r*cos(theta*degree),r*sin(theta*degree)));
  }
  var cam=polygonMM(context,id+"camProfile",points,flip?22.5:22,flip?5.5:3);
- var crownHub=cylinderMM(context,id+"crownHub",9,flip?33.6:58.6-dzT,flip?44.6:61.6-dzT);
+ var crownHub=cylinderMM(context,id+"crownHub",mono?10.5:9,flip?33.6:58.6-dzT,flip?44.6:61.6-dzT);
  var lowThrust=cylinderMM(context,id+"lowThrust",7,flip?3.9:(definition.direct?2.7:-5.5),flip?5.9:(definition.direct?4.7:-3.5));
  var rotorParts=[ring,cam,crownHub,lowThrust];
  if(flip) {
@@ -373,18 +401,40 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   opBoolean(context,sub+"bracketJoin",{"tools":qUnion(append(ears,stop)),"operationType":BooleanOperationType.UNION});
   var stopPad=radialBox(context,sub+"wideStop",26,28.8,-7,7,-15,8.5,0*degree);
   opBoolean(context,sub+"wideStopJoin",{"tools":qUnion([ears[0],stopPad]),"operationType":BooleanOperationType.UNION});
-  var outerStop=radialBox(context,sub+"outerCompressionStop",27,mono?31.6:32.8+dr,-6,6,-15,7.6,0*degree);
+  var outerStop=mono?sector(context,sub+"outerCompressionStop",27,31.9,24,-15,8.4):radialBox(context,sub+"outerCompressionStop",27,32.8+dr,-6,6,-15,7.6,0*degree);
   opBoolean(context,sub+"outerStopJoin",{"tools":qUnion([ears[0],outerStop]),"operationType":BooleanOperationType.UNION});
   var bracket=ears[0];turn(context,sub+"bracketTurn",bracket,a);
   opBoolean(context,sub+"carrierJoin",{"tools":qUnion([carrier,bracket]),"operationType":BooleanOperationType.UNION});
+  if(mono) {
+   // U pocket for the tail, open to the outside (the fin goes in radially through the window): through the hard-stop blocks, z -8.3 .. -6.4.
+   var tailPocket=radialBox(context,sub+"tailPocket",21.6,33.5,-6.5,6.5,-8.3,1.9,0*degree);
+   turn(context,sub+"tailPocketTurn",tailPocket,a);
+   subtract(context,sub+"tailPocketCut",carrier,tailPocket);
+  }
   var panel=sector(context,sub+"shell",30.62+dr,rOut,32.5,4,50);
   var barrel=yc(context,sub+"barrel",4.8, -7.4,7.4);
   var web=radialBox(context,sub+"web",24,31.5,-7.4,7.4,0,10,0*degree);
-  var pad=sector(context,sub+"rootPad",28.8,31.3,22,4,14);
+  var pad=mono?sector(context,sub+"rootPad",27.8,31.3,27,4,16):sector(context,sub+"rootPad",28.8,31.3,22,4,14);
   var brace=arcRootBrace(context,sub+"brace");
-  opBoolean(context,sub+"leafJoin",{"tools":qUnion([panel,barrel,web,pad,brace]),"operationType":BooleanOperationType.UNION});
+  var leafParts=[panel,barrel,web,pad,brace];
+  if(mono) leafParts=append(leafParts,rootGusset(context,sub+"braceWide",12,6.0));
+  if(mono) leafParts=append(leafParts,radialBox(context,sub+"lockTail",22.0,26.5,-6,6,-7.6,4.6,0*degree));
+  opBoolean(context,sub+"leafJoin",{"tools":qUnion(leafParts),"operationType":BooleanOperationType.UNION});
+  if(mono) subtract(context,sub+"rootClip",panel,tubeMM(context,sub+"rootClipTool",45,32.21,2,26));
+  if(mono) {
+   // spine: z 4..20.5 and 28.5..47 (the follower fills z 20..29 between them); edge ribs: z 4..20 and 30..54 at +-27.5 deg, 2.2 deep from the shell
+   var ribs=[radialBox(context,sub+"ribSpineA",26.8,30.0,-0.9,0.9,4,16.5,0*degree),radialBox(context,sub+"ribSpineB",27.5,30.0,-0.9,0.9,28.5,18.5,0*degree)];
+   for(var rs=0;rs<2;rs+=1) for(var rz=0;rz<2;rz+=1) {
+    var er=sector(context,sub+("ribEdge"~rs~rz),27.8,30.0,3.0,rz==0?4:30,rz==0?16:24);
+    turn(context,sub+("ribEdgeTurn"~rs~rz),er,(rs==0?27.5:-27.5)*degree);
+    ribs=append(ribs,er);
+   }
+   var ribAll=[panel];
+   for(var rb in ribs) ribAll=append(ribAll,rb);
+   opBoolean(context,sub+"ribJoin",{"tools":qUnion(ribAll),"operationType":BooleanOperationType.UNION});
+  }
   // A recessed flat root landing transfers 90-degree load to the broad outer stop.
-  var landing=radialBox(context,sub+"landing",29,32.4+dr,-6,6,4,4,0*degree);
+  var landing=mono?sector(context,sub+"landing",29,31.5,24,4,4):radialBox(context,sub+"landing",29,32.4+dr,-6,6,4,4,0*degree);
   opBoolean(context,sub+"landingJoin",{"tools":qUnion([panel,landing]),"operationType":BooleanOperationType.UNION});
   subtract(context,sub+"landingFlat",panel,radialBox(context,sub+"landingTool",32.4+dr,35,-6,6,4,4,0*degree));
   subtract(context,sub+"leafBore",panel,yc(context,sub+"leafTool",mono?M3_CLR:M4_CLR,-7.5,7.5));
@@ -534,9 +584,10 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([carrier,cylinderMM(context,id+"v5Floor",30.5,-10.5,-8)]),"operationType":BooleanOperationType.UNION});
   subtract(context,id+"v5FloorHole",carrier,cylinderMM(context,id+"v5FloorHoleTool",4,-11,-7.9));
   subtract(context,id+"v5BaseTrim",carrier,cylinderMM(context,id+"v5BaseTrimTool",40,-20,-10));
+  v5Chamfer(context,id+"v5BaseCh",carrier,32.2,-10.0,0.8);
   // Rotation limiter stops stand on the bearing spokes, ABOVE the ring (V4 had them below). Same faces as V4.
   var v5LimA=radialBox(context,id+"v5LimStop1",10,12.8,-11,-3.4,0.4,13.6,60*degree);
-  var v5LimB=radialBox(context,id+"v5LimStop2",10,19,3.4,11,0.4,13.6,125*degree);
+  var v5LimB=radialBox(context,id+"v5LimStop2",10,16.5,3.4,8.0,0.4,13.6,125*degree);
   opBoolean(context,id+"v5LimStopsJoin",{"tools":qUnion([carrier,v5LimA,v5LimB]),"operationType":BooleanOperationType.UNION});
   // Set 2: four radial M3 bolts (from outside, through the tube) into nuts in the housing wall. The nut sits in a hexagon pocket
   // open to the inside (nuts are loaded before the rotor is dropped in). Boss R27.6..30.2, bolt axis z=12.
@@ -546,6 +597,15 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    radialNutPocket(context,v5s+"np",carrier,v5az,12,27.0,3.2,5.7);
    radialDrill(context,v5s+"clr",carrier,v5az,12,29.5,33.5,M3_CLR);
    if(definition.hardware) radialBoltHW(context,v5s+"hw",v5az,12,27.6,"module "~(k+1));
+  }
+  // Keeper towers (on the floor, beside the tail path) and pads over the tail at 90 deg: tail top face z +3.0, pad underside z 3.4 (0.4 mm gap).
+  for(var k=0;k<4;k+=1) {
+   var v5ka=k*90*degree;var v5ks=id+("v5Keeper"~k);
+   for(var sy=0;sy<2;sy+=1) {
+    var y0=sy==0?7.8:-11.2;var y1=sy==0?11.2:-7.8;var p0=sy==0?4.6:-7.8;var p1=sy==0?7.8:-4.6;
+    opBoolean(context,v5ks+("tw"~sy),{"tools":qUnion([carrier,radialBox(context,v5ks+("towerBox"~sy),17.5,21.4,y0,y1,-9.0,15.4,v5ka)]),"operationType":BooleanOperationType.UNION});
+    opBoolean(context,v5ks+("pd"~sy),{"tools":qUnion([carrier,radialBox(context,v5ks+("padBox"~sy),17.5,20.0,p0,p1,3.4,3.0,v5ka)]),"operationType":BooleanOperationType.UNION});
+   }
   }
   // Hinge bolt access: a 6.6 mm channel along the hinge axis through the housing wall on the head side of each hinge (bench use, module out of the tube).
   for(var k=0;k<4;k+=1) {
@@ -770,34 +830,40 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   stage="v5 rotor top";
   var es5=vector(cos(135*degree),sin(135*degree),0);
   // Horn pocket + arm slot open at the top of the hub, with a three-step tapered lead-in (slot +-2.2 widening to +-4.3 mm) so the horn finds the slot and turns the free rotor into line (about +-10 deg).
-  var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,41.3,45.0);
-  var slot5=radialBox(context,id+"v5HornSlot",0,13,-2.2,2.2,41.3,3.7,0*degree);
+  var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,35.0,45.0);
+  var slot5=radialBox(context,id+"v5HornSlot",0,13,-2.2,2.2,35.0,10.0,0*degree);
+  // Counterbore for the servo gear boss (about O11.8 x 4.5) with a stepped lead-in.
+  var cbore5=cylinderMM(context,id+"v5Cbore",6.6,38.6,45.0);
+  var cstep5a=cylinderMM(context,id+"v5CboreA",7.1,43.0,45.0);
+  var cstep5b=cylinderMM(context,id+"v5CboreB",7.7,43.9,45.0);
   var lead5a=radialBox(context,id+"v5LeadA",0,13,-2.9,2.9,42.9,2.1,0*degree);
   var lead5b=radialBox(context,id+"v5LeadB",0,13,-3.6,3.6,43.6,1.4,0*degree);
   var lead5c=radialBox(context,id+"v5LeadC",0,13,-4.3,4.3,44.3,0.7,0*degree);
-  try { opBoolean(context,id+"v5PocketJoin",{"tools":qUnion([pocket5,slot5,lead5a,lead5b,lead5c]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v5PocketJoin"); }
+  try { opBoolean(context,id+"v5PocketJoin",{"tools":qUnion([pocket5,slot5,lead5a,lead5b,lead5c,cbore5,cstep5a,cstep5b]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v5PocketJoin"); }
   turn(context,id+"v5PocketTurn",pocket5,(45+definition.release)*degree);
   subtract(context,id+"v5HornPocketCut",rotor,pocket5);
-  var hornHub5=cylinderMM(context,id+"v5HornHub",4,41.5,43.3);
-  var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,41.5,1.8,0*degree);
+  var hornHub5=cylinderMM(context,id+"v5HornHub",3.9,36.9,40.4);
+  var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,36.9,1.8,0*degree);
   try { opBoolean(context,id+"v5HornJoin",{"tools":qUnion([hornHub5,hornArm5]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v5HornJoin"); }
   turn(context,id+"v5HornTurn",hornHub5,(45+definition.release)*degree);
   label(context,hornHub5,"EH SG90 horn REFERENCE - fit the socket to your actual horn",[.8,.69,.25]);
   if(definition.hardware)
-   screwHW(context,id+"v5HornScrew",vector(0,0,41.5),vector(0,0,1),"M2BH",6,"HW horn screw - M2x6 (the one supplied with the servo), fitted from below while the head is out");
+   screwHW(context,id+"v5HornScrew",vector(0,0,36.9),vector(0,0,1),"M2BH",6,"HW horn screw - M2x6 (the one supplied with the servo), fitted from below while the head is out");
   stage="v5 servo";
   var sBody5=radialBox(context,id+"v5ServoBody",-6.5,16.0,-6.1,6.1,45.2,22.7,135*degree);
   var sTab5=radialBox(context,id+"v5ServoTab",-11.5,21.0,-5.9,5.9,49.4,2.5,135*degree);
-  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,41.5,45.2);
-  try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v5ServoJoin"); }
+  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,36.7,45.2);
+  var sBoss5=cylinderMM(context,id+"v5GearBoss",5.9,40.7,45.2);
+  try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5,sBoss5]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v5ServoJoin"); }
   for(var k=0;k<2;k+=1) {
    var hs5=k==0?18.8:-9.3;
    drill(context,id+("v5TabHole"~k),sBody5,vector(hs5*es5[0],hs5*es5[1],49.0),vector(0,0,1),0,3.6,1.1);
   }
-  label(context,sBody5,"E SG90 servo REFERENCE - shaft down, flange screwed to the two head ledges - measure your servo",[.35,.38,.43]);
+  label(context,sBody5,"E SG90 servo REFERENCE - shaft down, gear boss O11.8 x 4.5 and 4 mm spline modelled (typical SG90: MEASURE YOURS), flange screwed to the two head ledges",[.35,.38,.43]);
   stage="v5 head";
   // ---- HEAD cup: sleeve R29.9..32.2, floor under the electronics, two servo ledge posts hanging into the housing top at 135 / 315 deg.
-  var head5=tubeMM(context,id+"v5Sleeve",32.2,29.9,59.0,88.3);
+  var head5=tubeMM(context,id+"v5Sleeve",31.95,29.9,59.0,88.3);
+  v5Chamfer(context,id+"v5SleeveCh",head5,31.95,59.0,0.8);
   opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([head5,cylinderMM(context,id+"v5HeadFloor",30.1,68.5,70.3)]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<2;k+=1) {
    var pa=(135+180*k)*degree;var ps5=id+("v5Post"~k);

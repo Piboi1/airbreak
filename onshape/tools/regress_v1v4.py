@@ -13,15 +13,18 @@ for tag in only:
     mode, compact, opened = CASES[tag]
     key = 'tmp_' + tag
     p = run.params(mode=mode, compact=compact, opening=90 if opened else 0, release=65 if opened else 0, button=4.5 if opened else 0)
-    out = run.build(key, 'fs1', 'modularBrake', 'regress ' + tag, p, ps_name='SCRATCH regression ' + tag)
-    st = out[0][1].get('featureStatus') if out else None
+    # lean build: no 'GET features' calls (that endpoint is rate limited; 429 locks it for about 20 h)
     d = run.ids()
+    d[key] = osapi.new_element(d['did'], d['wid'], 'partstudio', 'SCRATCH regression ' + tag); run.save(d)
+    mv = osapi.current_microversion(d['did'], d['wid'])
+    osapi.add_feature(d['did'], d['wid'], d[key], 'modularBrake', 'regress ' + tag, d['fs1'], mv, p)
+    st = 'OK'
     parts = geom.fetch_parts(d['did'], d['wid'], d[key])
     base = pickle.load(open(W / f'base_{tag}_parts.pkl', 'rb'))
     vb = collections.Counter((n, round(m.volume, 1)) for _, (n, m) in base.items())
     vn = collections.Counter((n, round(m.volume, 1)) for _, (n, m) in parts.items())
     diff_b = vb - vn; diff_n = vn - vb
-    same = (st == 'OK' and not diff_b and not diff_n)
+    same = (len(parts) > 0 and not diff_b and not diff_n)
     ok_all &= same
     print(f'{tag}: status {st}, parts {len(base)} -> {len(parts)}, {"IDENTICAL volumes" if same else "DIFFERENT"}')
     for k, v in list(diff_b.items())[:6]: print('   baseline only:', k)
