@@ -24,7 +24,7 @@ V2 has the latch stack dropped 22 mm into the fin height: printed housing 91.8 m
 ## Onshape elements
 * `00 - Baseline source (as supplied)` and `01 - Baseline modularBrake mode 0 (locked)`: your model reproduced bit-for-bit in size (Z -93.5..85, 36 parts).
 * `01 - V1 screwed + V2 compact (source)`: Feature Studio.
-* **V5:** `V5-A` closed (module + head + transition + tube, hardware), `V5-B` open (fins 90 deg, rotor 65 deg), `ASM-V5` assembly (17 features, recreated after the post-print rebuild). There are also elements from another session that are NOT part of this build and were left untouched: `V5 isolated modular source - preserves V1 to V4`, `V5 - removable module and reusable head`, `V5 modular assembly` (+ BOM).
+* **V5:** `V5-A` closed (module + head + transition + tube, hardware), `V5-B` open (fins 90 deg, rotor 65 deg), `ASM-V5` assembly (32 features: 4 hinges, rotor and horn revolutes, and 3 service slides for head, module and transition). There are also elements from another session that are NOT part of this build and were left untouched: `V5 isolated modular source - preserves V1 to V4`, `V5 - removable module and reusable head`, `V5 modular assembly` (+ BOM).
 * `V1-A` closed, `V1-B` fully open, `V2-A` closed, `V2-B` fully open, `V3-A` closed, `V3-B` fully open, `V4-A` closed, `V4-B` fully open, `SAMPLES` unloaded spirals and return leaf.
 * `ASM-V1`, `ASM-V2`, `ASM-V3`, `ASM-V4`: assemblies. Mates are cloned from your Assembly 23 (stationary and rotor mate groups, four hinge revolutes 0-90 deg, rotor revolute 0-65 deg, trigger slider 0-4.5 mm, servo-pusher revolute).
 

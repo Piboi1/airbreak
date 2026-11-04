@@ -185,33 +185,82 @@ def build_v4(aid):
     return bad
 
 
+def clear_assembly_features(aid):
+    """Delete every feature of an assembly (keeps the instances), newest first. Uses the assembly features endpoint (not the rate-limited part studio one)."""
+    d = run.ids(); did, wid = d['did'], d['wid']
+    f = osapi.get(f"/assemblies/d/{did}/w/{wid}/e/{aid}/features")['features']
+    for x in reversed(f):
+        from urllib.parse import quote
+        osapi.delete(f"/assemblies/d/{did}/w/{wid}/e/{aid}/features/featureid/{quote(x['featureId'], safe='')}")
+    return len(f)
+
+
+def slider_mate(T, name, cids, zmin_mm, zmax_mm):
+    f = strip_ids(copy.deepcopy(T['Lower trigger - lift UP 4.5 mm']))
+    f['name'] = name
+    for p in f['parameters']:
+        if p['parameterId'] == 'mateConnectorsQuery':
+            p['queries'] = [{"btType": "BTMFeatureQueryWithOccurrence-157", "path": [], "featureId": c, "queryData": ""} for c in cids]
+        if p['parameterId'] == 'limitZMin':
+            p['expression'] = f'{zmin_mm} mm'; p['value'] = zmin_mm / 1000.0
+        if p['parameterId'] == 'limitZMax':
+            p['expression'] = f'{zmax_mm} mm'; p['value'] = zmax_mm / 1000.0
+    return f
+
+
 def build_v5(aid):
-    """V5: one stationary group (housing, head cup, lid, transition, tube, electronics, hardware), one rotor group (rotor, horn, horn screw),
-    four free fins, four hinge revolutes and the rotor revolute (the SG90 in the head is the driver)."""
+    """V5 with service slides. Groups: tube + radial bolts (fixed), head (cup, lid, SG90, electronics, head nuts, servo bolts and nuts), horn (+ screw),
+    module (housing, module nuts, hinge bolts and nuts), transition (+ nuts); rotor and the four fins are single parts.
+    Mates: three sliders on the tube z axis (head up, transition down, module down or up), rotor revolute 0..65 on the housing, horn revolute 0..65 on the servo
+    (set it to the same angle as the rotor), four fin hinges 0..90."""
+    import re
     d = run.ids(); did, wid = d['did'], d['wid']
     inst, asm = instances(did, wid, aid)
     T = template_features()
+    names = {i['id']: i['name'] for i in asm['rootAssembly']['instances']}
 
     def ids_where(pred):
-        return [i['id'] for i in asm['rootAssembly']['instances'] if pred(i['name'])]
+        return [i for i, n in names.items() if pred(n)]
 
-    is_rotor = lambda n: n.split(' ')[0] in ('R', 'EH') or n.startswith('HW horn')
-    is_fin = lambda n: n.split(' ')[0] in ('P1', 'P2', 'P3', 'P4')
-    rotor = ids_where(is_rotor)
-    stationary = ids_where(lambda n: not is_rotor(n) and not is_fin(n))
-    print('stationary', len(stationary), 'rotor', len(rotor))
-    mate_group(did, wid, aid, 'Stationary: module housing, head cup and lid, transition (BT80 side), BT80 tube, SG90, electronics, bolts and nuts', stationary)
-    mate_group(did, wid, aid, 'Rotor with integral catch caps, SG90 horn and horn screw (driven by the SG90)', rotor)
-    c1 = inst['C']
+    first = lambda n: n.split(' ')[0]
+    is_fixed = lambda n: n.startswith('REF') or re.match(r'HW (head|module|transition) \d bolt', n)
+    is_head = lambda n: first(n) in ('H', 'K', 'E', 'E2', 'E3', 'E4') or re.match(r'HW head \d nut', n) or n.startswith('HW servo flange')
+    is_horn = lambda n: first(n) == 'EH' or n.startswith('HW horn')
+    is_module = lambda n: first(n) == 'C' or re.match(r'HW module \d nut', n) or re.match(r'HW H\d ', n)
+    is_trans = lambda n: first(n) == 'T' or re.match(r'HW transition \d nut', n)
+    groups = [('Tube (fixed) with the 12 radial bolts', is_fixed), ('Head: cup, lid, SG90, electronics, head nuts, servo bolts and nuts', is_head),
+              ('SG90 horn and horn screw', is_horn), ('Module housing with its nuts and the hinge bolts and nuts', is_module), ('Transition (BT80 side) with its nuts', is_trans)]
+    covered = set()
+    for gname, pred in groups:
+        ids = ids_where(pred)
+        covered |= set(ids)
+        print(gname[:40], len(ids))
+        mate_group(did, wid, aid, gname, ids)
+    rest = [names[i].split(' ')[0] for i in names if i not in covered]
+    print('ungrouped (rotor + fins expected):', sorted(rest))
+    tube = [i for i, n in names.items() if n.startswith('REF')][0]
+    c1, hh, tt, rr = inst['C'], inst['H'], inst['T'], inst['R']
+
+    def pair(fixed_inst, moving_inst, fixed_tmpl, moving_tmpl, fname, mname):
+        a = post_feature(did, wid, aid, clone_connector(T[fixed_tmpl], fixed_inst, fname))
+        b = post_feature(did, wid, aid, clone_connector(T[moving_tmpl], moving_inst, mname))
+        return a, b
+
+    for nm, mv, lo, hi in (('Head removal upward (take the 4 head bolts out first)', hh, 0, 140),
+                           ('Transition removal downward (take the 4 transition bolts out first)', tt, -120, 0),
+                           ('Module service slide: down with the transition off, or up with the head off (take the 4 module bolts out first)', c1, -130, 140)):
+        a, b = pair(tube, mv, 'Fixed cam shaft axis', 'Fixed cam shaft axis', 'Tube axis for ' + nm[:30], 'Slide axis for ' + nm[:30])
+        post_feature(did, wid, aid, slider_mate(T, nm, [b, a], lo, hi))
     for i in range(1, 5):
         a = clone_connector(T[f'Fixed hinge axis {i}'], c1, f'Fixed hinge axis {i}')
         b = clone_connector(T[f'Panel hinge axis {i}'], inst[f'P{i}'], f'Panel hinge axis {i}')
         ca, cb = post_feature(did, wid, aid, a), post_feature(did, wid, aid, b)
         mname = [n for n in T if n.startswith(f'Panel {i} - hinge')][0]
         post_feature(did, wid, aid, clone_mate(T[mname], f'Panel {i} - hinge - 0 to 90 deg (hard stop)', [cb, ca]))
-    a = post_feature(did, wid, aid, clone_connector(T['Fixed cam shaft axis'], c1, 'Fixed cam shaft axis'))
-    b = post_feature(did, wid, aid, clone_connector(T['Rotating cam shaft axis'], inst['R'], 'Rotating cam shaft axis'))
-    post_feature(did, wid, aid, clone_mate(T['Top knob - 0 LOCKED to 65 deg KICK'], 'Servo horn / rotor - 0 LOCKED to 65 deg KICK', [b, a]))
+    a, b = pair(c1, rr, 'Fixed cam shaft axis', 'Rotating cam shaft axis', 'Fixed cam shaft axis', 'Rotating cam shaft axis')
+    post_feature(did, wid, aid, clone_mate(T['Top knob - 0 LOCKED to 65 deg KICK'], 'Rotor - 0 LOCKED to 65 deg KICK (on the housing)', [b, a]))
+    a, b = pair(inst['E'], inst['EH'], 'Fixed cam shaft axis', 'Rotating cam shaft axis', 'SG90 shaft axis', 'Horn axis')
+    post_feature(did, wid, aid, clone_mate(T['Top knob - 0 LOCKED to 65 deg KICK'], 'SG90 horn - 0 to 65 deg (set it to the same angle as the rotor)', [b, a]))
     bad, f = states(did, wid, aid)
     print('feature count', len(f['features']), 'non-OK:', bad)
     return bad
