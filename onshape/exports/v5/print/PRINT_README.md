@@ -18,7 +18,8 @@ the rest can be whatever you used for the friend's print. Layer 0.2 mm or finer.
 ## Hardware to buy (all M3 unless noted)
 * 12 x M3x8 button head bolts and 12 x M3 nuts: the radial bolts (4 head, 4 module, 4 transition)
 * 4 x M3x25 button head bolts and 4 x M3 nuts: fin hinges
-* 2 x M2x6 bolts and 2 x M2 nuts: servo flange; 1 x the horn screw that came with the servo
+* 2 x M2x8 bolts (M2x10 also clears, nothing longer) and 2 x M2 nuts: servo flange; 1 x the horn screw that came with the servo
+* Longest bolts that clear (shank): head M3x10, module M3x16, transition M3x20+, hinge about M3x27, servo M2x10 (see `docs/V5_assembly_guide.pdf` section 10)
 * SG90 servo (measure the gear boss and spline if the head does not seat: see the assembly guide, section 9)
 
 ## Order (details in `docs/V5_assembly_guide.pdf`, section 5)
@@ -30,8 +31,8 @@ hinge bolts through the 6.6 mm channels in the housing wall (module out of the t
 Say if you want a 1:1 paper template for that.
 
 ## Two P1S plates (Bambu Lab P1S, 256 x 256 x 256 mm), almost even filament
-* `../P1S_plate1.3mf`: housing, head cup, fins 1 to 3 (82 g solid PLA, tallest 69 mm)
+* `../P1S_plate1.3mf`: housing, head cup, fins 1 to 3 (84 g solid PLA, tallest 69 mm)
 * `../P1S_plate2.3mf`: rotor, head lid, fin 4 and 4 SPARE fins (79 g solid PLA, tallest 51 mm)
-All 8 fins are identical, so any 4 are the set and the other 4 are spares. Each plate is about 100 g with supports (the support part is a rough allowance, not measured).
+All 8 fins are identical, so any 4 are the set and the other 4 are spares. Each plate is about 100 g each with supports (the support part is a rough allowance, not measured).
 Objects are 6 mm apart and 6 mm from the bed edge. Open in Bambu Studio (objects keep their positions); `../P1S_plate1_layout.png` and `../P1S_plate2_layout.png` show the layouts.
 Script: `tools/p1s_two_plates.py`.

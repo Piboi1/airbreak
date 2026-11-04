@@ -161,6 +161,7 @@ P('"flip":definition.mode==4,"hardware":definition.hardware,"tubes":definition.t
 
 V5MODE = r""" if(definition.mode==5) {
   stage="v5 rotor top";
+  var hz=3.2;   // V5.5: servo ledges and everything above them are raised by hz so the servo screws (up to M2x10) clear the rotor hub
   var es5=vector(cos(135*degree),sin(135*degree),0);
   // Horn pocket + arm slot open at the top of the hub, with a three-step tapered lead-in (slot +-2.2 widening to +-4.3 mm) so the horn finds the slot and turns the free rotor into line (about +-10 deg).
   var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,41.3,45.0);
@@ -179,79 +180,87 @@ V5MODE = r""" if(definition.mode==5) {
   if(definition.hardware)
    screwHW(context,id+"v5HornScrew",vector(0,0,41.5),vector(0,0,1),"M2BH",6,"HW horn screw - M2x6 (the one supplied with the servo), fitted from below while the head is out");
   stage="v5 servo";
-  var sBody5=radialBox(context,id+"v5ServoBody",-6.5,16.0,-6.1,6.1,45.2,22.7,135*degree);
-  var sTab5=radialBox(context,id+"v5ServoTab",-11.5,21.0,-5.9,5.9,49.4,2.5,135*degree);
+  var sBody5=radialBox(context,id+"v5ServoBody",-6.5,16.0,-6.1,6.1,45.2+hz,22.7,135*degree);
+  var sTab5=radialBox(context,id+"v5ServoTab",-11.5,21.0,-5.9,5.9,49.4+hz,2.5,135*degree);
   var sSpl5=cylinderMM(context,id+"v5Spline",2.4,41.5,45.2);
   try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5]),"operationType":BooleanOperationType.UNION}); } catch { throw regenError("Boolean failed at " ~ id+"v5ServoJoin"); }
   for(var k=0;k<2;k+=1) {
    var hs5=k==0?18.8:-9.3;
-   drill(context,id+("v5TabHole"~k),sBody5,vector(hs5*es5[0],hs5*es5[1],49.0),vector(0,0,1),0,3.6,1.1);
+   drill(context,id+("v5TabHole"~k),sBody5,vector(hs5*es5[0],hs5*es5[1],49.0+hz),vector(0,0,1),0,3.6,1.1);
   }
   label(context,sBody5,"E SG90 servo REFERENCE - shaft down, flange screwed to the two head ledges - measure your servo",[.35,.38,.43]);
   stage="v5 head";
   // ---- HEAD cup: sleeve R29.9..32.2, floor under the electronics, two servo ledge posts hanging into the housing top at 135 / 315 deg.
   var head5=tubeMM(context,id+"v5Sleeve",32.2,29.9,59.0,88.3);
-  opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([head5,cylinderMM(context,id+"v5HeadFloor",30.1,68.5,70.3)]),"operationType":BooleanOperationType.UNION});
+  opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([head5,cylinderMM(context,id+"v5HeadFloor",30.1,68.5+hz,70.3+hz)]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<2;k+=1) {
    var pa=(135+180*k)*degree;var ps5=id+("v5Post"~k);
-   var postLow=radialBox(context,ps5+"low",25.5,28.9,-3.5,3.5,45.1,14.4,pa);
-   var postUp=radialBox(context,ps5+"up",25.5,30.1,-3.5,3.5,59.0,11.0,pa);
-   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.9,-3.5,3.5,45.1,4.3,pa);
+   var postLow=radialBox(context,ps5+"low",25.5,28.9,-3.5,3.5,45.1+hz,14.4-hz,pa);
+   var postUp=radialBox(context,ps5+"up",25.5,30.1,-3.5,3.5,59.0,11.0+hz,pa);
+   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.9,-3.5,3.5,45.1+hz,4.3,pa);
    opBoolean(context,ps5+"join",{"tools":qUnion([head5,postLow,postUp,ledge5]),"operationType":BooleanOperationType.UNION});
    // M2 nut pocket in the ledge top face (the servo tab covers it), clearance hole down through the ledge.
    var hr5=k==0?18.8:9.3;
-   var np5=hexPrism(context,ps5+"nutTool",vector(hr5,0,47.5),vector(0,0,1),4.2,2.2);
+   var np5=hexPrism(context,ps5+"nutTool",vector(hr5,0,47.5+hz),vector(0,0,1),4.2,2.2);
    turn(context,ps5+"nutTurn",np5,pa);
    subtract(context,ps5+"nutCut",head5,np5);
-   var ch5=cylinderMM(context,ps5+"holeTool",1.1,44.9,47.7);
+   var ch5=cylinderMM(context,ps5+"holeTool",1.1,44.9+hz,47.7+hz);
    opTransform(context,ps5+"holeMove",{"bodies":ch5,"transform":transform(vector(hr5,0,0)*millimeter)});
    turn(context,ps5+"holeTurn",ch5,pa);
    subtract(context,ps5+"holeCut",head5,ch5);
    // Screwdriver access through the floor above the tab hole.
-   var ac5=cylinderMM(context,ps5+"accTool",3.2,68.4,70.4);
+   var ac5=cylinderMM(context,ps5+"accTool",3.2,68.4+hz,70.4+hz);
    opTransform(context,ps5+"accMove",{"bodies":ac5,"transform":transform(vector(hr5,0,0)*millimeter)});
    turn(context,ps5+"accTurn",ac5,pa);
    subtract(context,ps5+"accCut",head5,ac5);
    if(definition.hardware) {
-    var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),51.9),vector(0,0,-1),"M2BH",6,"HW servo flange bolt "~(k+1)~" - M2x6 button head");
-    var sn5=nutHW(context,ps5+"nutHW",vector(hr5,0,47.6),vector(0,0,1),4.0,1.6,1.0,"HW servo flange nut "~(k+1)~" - M2 hex");
+    var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),51.9+hz),vector(0,0,-1),"M2BH",8,"HW servo flange bolt "~(k+1)~" - M2x8 button head (M2x10 also clears)");
+    var sn5=nutHW(context,ps5+"nutHW",vector(hr5,0,47.6+hz),vector(0,0,1),4.0,1.6,1.0,"HW servo flange nut "~(k+1)~" - M2 hex");
     turn(context,ps5+"nutHWTurn",sn5,pa);
    }
   }
   // Servo cable slot through the floor (provisional position).
-  subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",2,10,-1.75,1.75,68.4,2,135*degree));
+  subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",2,10,-1.75,1.75,68.4+hz,2,135*degree));
   // Component pockets (rims) on the floor: battery, Mercury V1, regulator on its edge. All inside R29.0 (checked in the script).
   var v5Comp=[[-21.4,21.4,-20.4,-1.0,12.4],[-15.4,15.4,0.0,17.3,11.2],[-12.9,12.9,18.1,26.5,15.4]];
   for(var k=0;k<3;k+=1) {
    var c5=v5Comp[k];
-   var rim5=radialBox(context,id+("v5Rim"~k),c5[0]-.8,c5[1]+.8,c5[2]-.8,c5[3]+.8,70.3,2.7,0*degree);
-   subtract(context,id+("v5RimCut"~k),rim5,radialBox(context,id+("v5RimTool"~k),c5[0],c5[1],c5[2],c5[3],70.2,3,0*degree));
+   var rim5=radialBox(context,id+("v5Rim"~k),c5[0]-.8,c5[1]+.8,c5[2]-.8,c5[3]+.8,70.3+hz,2.7,0*degree);
+   subtract(context,id+("v5RimCut"~k),rim5,radialBox(context,id+("v5RimTool"~k),c5[0],c5[1],c5[2],c5[3],70.2+hz,3,0*degree));
    opBoolean(context,id+("v5RimJoin"~k),{"tools":qUnion([head5,rim5]),"operationType":BooleanOperationType.UNION});
   }
+  // The servo-screw access holes also go through the pocket rims (a wall of the Mercury pocket clipped the driver at servo screw 1).
+  for(var k=0;k<2;k+=1) {
+   var pa6=(135+180*k)*degree;var hr6=k==0?18.8:9.3;
+   var ac6=cylinderMM(context,id+("v5AccRim"~k),3.2,68.4+hz,73.8+hz);
+   opTransform(context,id+("v5AccRimMove"~k),{"bodies":ac6,"transform":transform(vector(hr6,0,0)*millimeter)});
+   turn(context,id+("v5AccRimTurn"~k),ac6,pa6);
+   subtract(context,id+("v5AccRimCut"~k),head5,ac6);
+  }
   // Vents (static pressure for the Mercury), USB-C window and switch slot: provisional positions, also cut in the tube.
-  for(var k=0;k<3;k+=1) radialDrill(context,id+("v5Vent"~k),head5,[0,180,315][k]*degree,75,29.5,33.5,1.5);
-  subtract(context,id+"v5Usb",head5,radialBox(context,id+"v5UsbTool",29.5,33.5,-4.6,4.6,74.3,3.4,90*degree));
-  subtract(context,id+"v5Switch",head5,radialBox(context,id+"v5SwitchTool",29.5,33.5,-6,6,75,6,270*degree));
+  for(var k=0;k<3;k+=1) radialDrill(context,id+("v5Vent"~k),head5,[0,180,315][k]*degree,75+hz,29.5,33.5,1.5);
+  subtract(context,id+"v5Usb",head5,radialBox(context,id+"v5UsbTool",29.5,33.5,-4.6,4.6,74.3+hz,3.4,90*degree));
+  subtract(context,id+"v5Switch",head5,radialBox(context,id+"v5SwitchTool",29.5,33.5,-6,6,75+hz,6,270*degree));
   // Set 1: four radial M3 bolts through the tube and the sleeve wall into nuts in the LID bosses.
   var v5HeadAz=[45,135,250,290];
-  for(var k=0;k<4;k+=1) radialDrill(context,id+("v5HeadClr"~k),head5,v5HeadAz[k]*degree,82,29.0,33.5,M3_CLR);
+  for(var k=0;k<4;k+=1) radialDrill(context,id+("v5HeadClr"~k),head5,v5HeadAz[k]*degree,82+hz,29.0,33.5,M3_CLR);
   label(context,head5,"H V5 head cup - sleeve, floor, servo ledges, electronics pockets (reusable)",[.2,.45,.75]);
   // ---- LID: disc under the top of the sleeve, four bosses with hexagon nut pockets open to the inside. The set-1 bolts clamp sleeve and lid.
-  var lid5=cylinderMM(context,id+"v5Lid",29.7,86.3,88.3);
+  var lid5=cylinderMM(context,id+"v5Lid",29.7,86.3+hz,88.3+hz);
   for(var k=0;k<4;k+=1) {
    var la=v5HeadAz[k]*degree;var ls=id+("v5LidBoss"~k);
-   opBoolean(context,ls+"join",{"tools":qUnion([lid5,radialBox(context,ls+"box",24.4,29.6,-3.8,3.8,77.7,8.7,la)]),"operationType":BooleanOperationType.UNION});
-   radialNutPocket(context,ls+"np",lid5,la,82,23.9,3.1,5.7);
-   radialDrill(context,ls+"clr",lid5,la,82,26.5,33.5,M3_CLR);
-   if(definition.hardware) radialBoltHW(context,ls+"hw",la,82,24.4,"head "~(k+1));
+   opBoolean(context,ls+"join",{"tools":qUnion([lid5,radialBox(context,ls+"box",24.4,29.6,-3.8,3.8,77.7+hz,8.7,la)]),"operationType":BooleanOperationType.UNION});
+   radialNutPocket(context,ls+"np",lid5,la,82+hz,23.9,3.1,5.7);
+   radialDrill(context,ls+"clr",lid5,la,82+hz,26.5,33.5,M3_CLR);
+   if(definition.hardware) radialBoltHW(context,ls+"hw",la,82+hz,24.4,"head "~(k+1));
   }
   label(context,lid5,"K V5 head lid - four nut bosses, held by the set-1 bolts",[.2,.45,.75]);
   // Electronics (references): Mercury V1 30 x 16.9 x 10.8, regulator 25 x 15 x 8 stood on its edge, Spektrum 300 mAh 2S 42 x 19 x 12.
-  var batt5=radialBox(context,id+"v5Battery",-21,21,-20.2,-1.2,70.6,12,0*degree);
+  var batt5=radialBox(context,id+"v5Battery",-21,21,-20.2,-1.2,70.6+hz,12,0*degree);
   label(context,batt5,"E4 Servo battery Spektrum 300 mAh 2S LiPo REFERENCE (42 x 19 x 12, as listed - measure yours)",[.95,.83,.36]);
-  var merc5=radialBox(context,id+"v5Mercury",-15,15,0.2,17.1,70.6,10.8,0*degree);
+  var merc5=radialBox(context,id+"v5Mercury",-15,15,0.2,17.1,70.6+hz,10.8,0*degree);
   label(context,merc5,"E2 Mercury V1 altimeter REFERENCE (30 x 16.9 x 10.8)",[.55,.35,.75]);
-  var reg5=radialBox(context,id+"v5Regulator",-12.5,12.5,18.3,26.3,70.6,15,0*degree);
+  var reg5=radialBox(context,id+"v5Regulator",-12.5,12.5,18.3,26.3,70.6+hz,15,0*degree);
   label(context,reg5,"E3 5 V 3 A regulator REFERENCE (placeholder 25 x 15 x 8, stood on its 8 mm edge)",[.94,.54,.63]);
   stage="v5 transition";
   // ---- TRANSITION, BT80 side only: plug (module seat), shoulder inside the tube, set-3 nut pockets. Cone is a placeholder; the BT70 side is not designed here.
@@ -280,11 +289,11 @@ V5MODE = r""" if(definition.mode==5) {
     subtract(context,id+("v5WinCut"~k),tube5,tw5);
     radialDrill(context,id+("v5TubeMod"~k),tube5,(45+90*k)*degree,12,32.0,33.5,M3_CLR);
     radialDrill(context,id+("v5TubeTr"~k),tube5,(45+90*k)*degree,-28,32.0,33.5,M3_CLR);
-    radialDrill(context,id+("v5TubeHead"~k),tube5,v5HeadAz[k]*degree,82,32.0,33.5,M3_CLR);
+    radialDrill(context,id+("v5TubeHead"~k),tube5,v5HeadAz[k]*degree,82+hz,32.0,33.5,M3_CLR);
    }
-   for(var k=0;k<3;k+=1) radialDrill(context,id+("v5TubeVent"~k),tube5,[0,180,315][k]*degree,75,32.0,33.5,1.5);
-   subtract(context,id+"v5TubeUsb",tube5,radialBox(context,id+"v5TubeUsbTool",32.0,33.5,-4.6,4.6,74.3,3.4,90*degree));
-   subtract(context,id+"v5TubeSwitch",tube5,radialBox(context,id+"v5TubeSwitchTool",32.0,33.5,-6,6,75,6,270*degree));
+   for(var k=0;k<3;k+=1) radialDrill(context,id+("v5TubeVent"~k),tube5,[0,180,315][k]*degree,75+hz,32.0,33.5,1.5);
+   subtract(context,id+"v5TubeUsb",tube5,radialBox(context,id+"v5TubeUsbTool",32.0,33.5,-4.6,4.6,74.3+hz,3.4,90*degree));
+   subtract(context,id+"v5TubeSwitch",tube5,radialBox(context,id+"v5TubeSwitchTool",32.0,33.5,-6,6,75+hz,6,270*degree));
    label(context,tube5,"REF BT80 tube - one piece: 4 windows, 12 M3 clearance holes (4 head z 82, 4 module z 12, 4 transition z -28), 3 vents, USB-C window and switch slot (provisional) - cut once from the real tube",TUBE_TAN);
   }
   return;
@@ -369,19 +378,19 @@ P('''  var pocket5=cylinderMM(context,id+"v5HornPocket",4.5,41.3,45.0);
 P('qUnion([pocket5,slot5,lead5a,lead5b,lead5c])','qUnion([pocket5,slot5,lead5a,lead5b,lead5c,cbore5,cstep5a,cstep5b])')
 P('''  var hornHub5=cylinderMM(context,id+"v5HornHub",4,41.5,43.3);
   var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,41.5,1.8,0*degree);''',
-'''  var hornHub5=cylinderMM(context,id+"v5HornHub",3.9,36.9,40.4);
-  var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,36.9,1.8,0*degree);''')
-P('screwHW(context,id+"v5HornScrew",vector(0,0,41.5),vector(0,0,1),"M2BH",6,','screwHW(context,id+"v5HornScrew",vector(0,0,36.9),vector(0,0,1),"M2BH",6,')
+'''  var hornHub5=cylinderMM(context,id+"v5HornHub",3.9,36.9+hz,40.4+hz);
+  var hornArm5=radialBox(context,id+"v5HornArm",0,11,-1.7,1.7,36.9+hz,1.8,0*degree);''')
+P('screwHW(context,id+"v5HornScrew",vector(0,0,41.5),vector(0,0,1),"M2BH",6,','screwHW(context,id+"v5HornScrew",vector(0,0,36.9+hz),vector(0,0,1),"M2BH",6,')
 P('''  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,41.5,45.2);
   try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5]),''',
-'''  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,36.7,45.2);
-  var sBoss5=cylinderMM(context,id+"v5GearBoss",5.9,40.7,45.2);
+'''  var sSpl5=cylinderMM(context,id+"v5Spline",2.4,36.7+hz,45.2+hz);
+  var sBoss5=cylinderMM(context,id+"v5GearBoss",5.9,40.7+hz,45.2+hz);
   try { opBoolean(context,id+"v5ServoJoin",{"tools":qUnion([sBody5,sTab5,sSpl5,sBoss5]),''')
 P('label(context,sBody5,"E SG90 servo REFERENCE - shaft down, flange screwed to the two head ledges - measure your servo",[.35,.38,.43]);',
   'label(context,sBody5,"E SG90 servo REFERENCE - shaft down, gear boss O11.8 x 4.5 and 4 mm spline modelled (typical SG90: MEASURE YOURS), flange screwed to the two head ledges",[.35,.38,.43]);')
 # head sleeve a little smaller, with a lower-edge chamfer; module lower edge chamfer
 P('var head5=tubeMM(context,id+"v5Sleeve",32.2,29.9,59.0,88.3);',
-  '''var head5=tubeMM(context,id+"v5Sleeve",31.95,29.9,59.0,88.3);
+  '''var head5=tubeMM(context,id+"v5Sleeve",31.95,29.9,59.0,88.3+hz);
   v5Chamfer(context,id+"v5SleeveCh",head5,31.95,59.0,0.8);''')
 P('''  subtract(context,id+"v5BaseTrim",carrier,cylinderMM(context,id+"v5BaseTrimTool",40,-20,-10));''',
   '''  subtract(context,id+"v5BaseTrim",carrier,cylinderMM(context,id+"v5BaseTrimTool",40,-20,-10));

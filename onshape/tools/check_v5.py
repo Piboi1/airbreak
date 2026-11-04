@@ -148,9 +148,11 @@ def main(which):
                 worst = max(worst, v)
         print(f'  12 radial bolts: 2 mm key along the radial axis from outside, worst overlap with any part: {worst:.2f} mm3')
         for s, (R_, azd) in {'servo bolt 1': (18.8, 135), 'servo bolt 2': (9.3, 315)}.items():
-            drv = trimesh.creation.cylinder(radius=1.5, height=60, sections=16)
-            drv.apply_translation([R_ * math.cos(math.radians(azd)), R_ * math.sin(math.radians(azd)), 52 + 30 + 0.3 + 20])
-            print(f'  {s}: screwdriver down from above vs head cup {vol(drv, H):.2f}, lid {vol(drv, K):.2f} mm3 (lid and electronics fitted AFTER the servo)')
+            ztab = servo.bounds[1][2] - 22.7 + 0 if False else max(m.bounds[1][2] for n, m in dc.items() if n.startswith('HW servo flange bolt')) + 0.5
+            for rr, nm in ((1.6, 'driver'), (2.4, 'head + driver')):
+                drv = trimesh.creation.cylinder(radius=rr, height=45, sections=20)
+                drv.apply_translation([R_ * math.cos(math.radians(azd)), R_ * math.sin(math.radians(azd)), ztab + 22.5])
+                print(f'  {s} {nm} (r {rr}) straight up from the screw head: head cup {vol(drv, H):.2f} mm3 (0 = clear; lid and electronics are fitted AFTER the servo)')
     if which in ('exit', 'all'):
         print('--- module exit routes (module = housing + rotor + 4 fins, fully latched)')
         mod = trimesh.util.concatenate([C, R] + P)

@@ -24,8 +24,8 @@ def story():
     s += [P('1  What was built', H2),
           table([['Item', 'Value (from the CAD model)'],
                  ['Module', 'housing z -10 .. 58.8 (68.8 mm), OD 64.4 (R32.2) in the 65.02 bore; one piece, no seam; 4 free fins; rotor with integral catch caps; about 91 g solid PLA'],
-                 ['Head', 'cup + lid z 59.0 .. 88.3 (29.3 mm above the module), OD 64.4; about 31 g solid PLA plus electronics'],
-                 ['Overall', 'module bottom to head top 98.3 mm; with the transition shoulder 122.3 mm (the cone and BT70 side are placeholders)'],
+                 ['Head', 'cup + lid z 59.0 .. 91.5 (32.5 mm above the module), OD 63.9; about 33 g solid PLA plus electronics'],
+                 ['Overall', 'module bottom to head top 101.5 mm; with the transition shoulder 125.5 mm (the cone and BT70 side are placeholders)'],
                  ['Tube', 'BT80 R32.51 / R33.02, one piece: 4 windows 67 deg x 63.8 mm (z -9.2 .. 54.6), 12 bolt holes, 3 vents, USB-C window, switch slot'],
                  ['Fasteners', '19 bolts in all: 12 radial M3x8 (sets 1, 2, 3) + 4 hinge M3x25 + 2 servo flange M2x6 + 1 horn screw M2x6. 18 nuts (16 M3, 2 M2). No heat-set inserts, no self-tapping, no snap hooks, no bands.']],
                 [30, 150]),
@@ -44,7 +44,7 @@ def story():
                  ['C_module_housing_x1', 1, 'one-piece housing, floor plate, 4 nut bosses, limiter stops above the bearing ring', '30 g', 'upright, supports (about 1600 mm2 overhang)'],
                  ['R_rotor_x1', 1, 'rotor: shaft, 4 cams, 4 integral catch caps, limiter finger, horn socket with taper', '22 g', 'hub down (205 mm2 on the bed), supports (about 2200 mm2)'],
                  ['P_fin_x4', 4, 'fin (identical, M3 hinge bore, ribs, hinge tail)', '9.8 g each', 'on its flat side, supports; print in PETG or PLA+ with 4+ walls and 100% infill if you can'],
-                 ['H_head_cup_x1', 1, 'sleeve, floor, servo ledges, 3 electronics pockets, vents, USB-C window, switch slot', '23 g', 'upside down, supports under the floor and ledges (about 3000 mm2)'],
+                 ['H_head_cup_x1', 1, 'sleeve, floor, servo ledges, 3 electronics pockets, vents, USB-C window, switch slot', '25 g', 'upside down, supports under the floor and ledges (about 3000 mm2)'],
                  ['K_head_lid_x1', 1, 'lid disc with 4 nut bosses', '8.1 g', 'disc on the bed, almost no supports'],
                  ['T_transition_BT80_side_PLACEHOLDER_cone_x1', 1, 'plug + shoulder + 4 nut pockets (BT80 side); the cone is a placeholder', '41 g', 'cone is not final; do not print before the BT70 side is known']],
                 [52, 9, 63, 18, 38], font=7.6),
@@ -52,8 +52,8 @@ def story():
           table([['Hardware', 'Qty', 'Where'],
                  ['M3x8 button head bolt + M3 nut', '12 + 12', 'sets 1, 2, 3 (4 each)'],
                  ['M3x25 button head bolt + M3 nut', '4 + 4', 'fin hinges; the nut sits in the +Y ear slot'],
-                 ['M2x6 button head bolt + M2 nut', '2 + 2', 'SG90 flange to the head ledges; nut in a pocket in the ledge top (the tab covers it)'],
-                 ['M2x6 screw (supplied with the servo)', '1', 'horn screw']],
+                 ['M2x8 button head bolt + M2 nut (M2x10 also clears)', '2 + 2', 'SG90 flange to the head ledges; nut in a pocket in the ledge top (the tab covers it)'],
+                 ['M2x6 screw (the one supplied with the servo)', '1', 'horn screw']],
                 [70, 20, 90]),
           P('V4 used 27 screws (4 seam, 4 cap, 4 hinge M4, 4 boss, 8 tube support, 3 M2). V5 uses 19 fasteners, all bolts with nuts; the seam, cap, boss and support screws are gone.', md.B)]
     s += [PageBreak(), P('4  Sections from the model', H2),
@@ -142,6 +142,30 @@ def story():
                 'If the head still stands proud after reprinting, the cause is something else: tell me how far it stands proud and whether it rocks, and measure whether the head sleeve or the housing is the tight fit in the tube (a 0.3 mm print swell would do it; the sleeve now has 0.56 mm).'),
           P('Problem 3: the mentor lock', H3),
           P('Used for problem 1 (the tail and U pocket above). The mentor picture was a bottom view of a cross hub; my reading of it is stated above and should be confirmed.', md.B)]
+    s += [PageBreak(), P('10  Screw clearance audit, and the servo mount redesign', H2),
+          P('You found there was not enough clearance for the screws that attach the servo. I checked every fastener in the model by growing each bolt longer past its tip until it touched a printed part or a reference part '
+            '(<font face="Courier">tools/check_screws.py</font>). Lengths below are the shank length you can buy; the head is extra.', md.B),
+          table([['Fastener', 'Modelled', 'Longest that clears', 'First thing it would hit'],
+                 ['Servo flange bolts (2), BEFORE this change', 'M2x6', 'about M2x7 (7.3 mm)', 'the rotor hub: the second hole is only 9.3 mm from the axis, so the tip pokes out under the ledge onto the hub'],
+                 ['Servo flange bolts (2), NOW', 'M2x8', 'M2x10 (10.3 mm)', 'the rotor (the ledges and the whole head are 3.2 mm higher)'],
+                 ['Head bolts (4)', 'M3x8', 'M3x10 (10.5 mm)', 'the Mercury corner'],
+                 ['Module bolts (4)', 'M3x8', 'M3x16 (16 mm)', 'the limiter stop on the neighbouring spoke'],
+                 ['Transition bolts (4)', 'M3x8', 'more than M3x20', 'nothing within 14 mm (open bore)'],
+                 ['Fin hinge bolts (4)', 'M3x25', 'about M3x27 (27.7 mm)', 'the housing wall past the ear'],
+                 ['Horn screw (1)', 'M2x6', 'blind: it screws into the spline', 'not applicable']],
+                [52, 20, 38, 70], font=7.6),
+          P('<b>What changed:</b> the servo ledges, the servo and everything above them moved up 3.2 mm (the cup sleeve still sits on the housing top; the two posts are 3.2 mm shorter), '
+            'so the servo body is 3.8 mm above the rotor hub instead of 0.6, and the gear boss and horn sit well inside the socket. The head is now 32.5 mm tall (was 29.3), 101.5 mm overall. '
+            'The two access holes in the cup floor are cut through the pocket walls too (a wall of the Mercury pocket clipped a 4.8 mm wide driver column at the first servo screw). '
+            'Servo bolts are now modelled as M2x8 so the nut pocket, the tab and the tip clearance match a normal screw; the screws that came with your servo are probably self-tapping and have no nut: use M2 bolts and nuts instead, as the rules say.', md.B),
+          P('Other places I checked for screw, nut and tool room (all clear in the model): 2.0 mm hex key straight in to all 12 radial bolts from outside; a 2.4 mm radius column (head plus driver) straight up from both servo screws; '
+            'the hinge bolt head and key along the hinge axis through the wall channel; hinge nuts loading from the window; the head bolt heads against the switch slot, vents and USB-C window (at least 2.6 mm of wall between head edge and opening); '
+            'the module bolt heads against the window edges (about 3.7 mm).', md.B),
+          WARN_('<b>Not checked:</b> the real SG90 screws and horn (measure them), screwdriver handle swing (only the straight column is checked), and anything about a real print. '
+                'If you use M3x12 or longer for the head bolts, the tip hits the Mercury corner.'),
+          P('Fin area', H3),
+          P('One fin: 1,894 mm2 planform seen by the airflow when open (1,592 mm2 of it beyond the tube), 5,631 mm2 of surface in total. Script: <font face="Courier">tools/fin_area.py</font> (works from any fin STL; no Onshape needed). '
+            'In Onshape there is no projected-area button: sketch the outline on the Top plane in V5-B, extrude it 0.1 mm as a new part and Measure its face.', md.B)]
     return s
 
 
