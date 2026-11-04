@@ -23,8 +23,8 @@ def story():
                 'holes are standard numbers. Nothing here has been printed.')]
     s += [P('1  What was built', H2),
           table([['Item', 'Value (from the CAD model)'],
-                 ['Module', 'housing z -10 .. 58.8 (68.8 mm), OD 64.4 (R32.2) in the 65.02 bore; one piece, no seam; 4 free fins; rotor with integral catch caps; about 85 g solid PLA'],
-                 ['Head', 'cup + lid z 59.0 .. 88.3 (29.3 mm above the module), OD 64.4; about 33 g solid PLA plus electronics'],
+                 ['Module', 'housing z -10 .. 58.8 (68.8 mm), OD 64.4 (R32.2) in the 65.02 bore; one piece, no seam; 4 free fins; rotor with integral catch caps; about 91 g solid PLA'],
+                 ['Head', 'cup + lid z 59.0 .. 88.3 (29.3 mm above the module), OD 64.4; about 31 g solid PLA plus electronics'],
                  ['Overall', 'module bottom to head top 98.3 mm; with the transition shoulder 122.3 mm (the cone and BT70 side are placeholders)'],
                  ['Tube', 'BT80 R32.51 / R33.02, one piece: 4 windows 67 deg x 63.8 mm (z -9.2 .. 54.6), 12 bolt holes, 3 vents, USB-C window, switch slot'],
                  ['Fasteners', '19 bolts in all: 12 radial M3x8 (sets 1, 2, 3) + 4 hinge M3x25 + 2 servo flange M2x6 + 1 horn screw M2x6. 18 nuts (16 M3, 2 M2). No heat-set inserts, no self-tapping, no snap hooks, no bands.']],
@@ -41,10 +41,10 @@ def story():
             'The nut pockets are hexagons (5.7 mm across flats, 2.6 mm deep) so nobody has to hold a nut.', md.B)]
     s += [PageBreak(), P('3  Parts, print files and hardware', H2),
           table([['File (exports/v5/print)', 'Qty', 'Part', 'Solid PLA', 'Print note'],
-                 ['C_module_housing_x1', 1, 'one-piece housing, floor plate, 4 nut bosses, limiter stops above the bearing ring', '29 g', 'upright, supports (about 1500 mm2 overhang)'],
-                 ['R_rotor_x1', 1, 'rotor: shaft, 4 cams, 4 integral catch caps, limiter finger, horn socket with taper', '22 g', 'hub down (205 mm2 on the bed), supports (about 2100 mm2)'],
-                 ['P_fin_x4', 4, 'fin (identical, M3 hinge bore)', '8.3 g each', 'on its flat side, supports'],
-                 ['H_head_cup_x1', 1, 'sleeve, floor, servo ledges, 3 electronics pockets, vents, USB-C window, switch slot', '25 g', 'upside down, supports under the floor and ledges (about 3000 mm2)'],
+                 ['C_module_housing_x1', 1, 'one-piece housing, floor plate, 4 nut bosses, limiter stops above the bearing ring', '30 g', 'upright, supports (about 1600 mm2 overhang)'],
+                 ['R_rotor_x1', 1, 'rotor: shaft, 4 cams, 4 integral catch caps, limiter finger, horn socket with taper', '22 g', 'hub down (205 mm2 on the bed), supports (about 2200 mm2)'],
+                 ['P_fin_x4', 4, 'fin (identical, M3 hinge bore, ribs, hinge tail)', '9.8 g each', 'on its flat side, supports; print in PETG or PLA+ with 4+ walls and 100% infill if you can'],
+                 ['H_head_cup_x1', 1, 'sleeve, floor, servo ledges, 3 electronics pockets, vents, USB-C window, switch slot', '23 g', 'upside down, supports under the floor and ledges (about 3000 mm2)'],
                  ['K_head_lid_x1', 1, 'lid disc with 4 nut bosses', '8.1 g', 'disc on the bed, almost no supports'],
                  ['T_transition_BT80_side_PLACEHOLDER_cone_x1', 1, 'plug + shoulder + 4 nut pockets (BT80 side); the cone is a placeholder', '41 g', 'cone is not final; do not print before the BT70 side is known']],
                 [52, 9, 63, 18, 38], font=7.6),
@@ -91,6 +91,9 @@ def story():
                  ['Head lowered onto the module with the horn aligned within +-3 deg', 'clear; beyond that the tapered socket must turn the free rotor (not measurable offline)'],
                  ['Module out of the bottom and the top, transition and head out of the tube', 'clear (0.00 mm3 against the tube)'],
                  ['2.0 mm hex key from outside to all 12 radial bolts', 'clear'],
+                 ['Fin with tail, ribs, wide gusset: opening 0..90 deg, all four fins, vs housing', 'clear; the keeper meets the tail at about 91 deg, the stop at about 90 deg'],
+                 ['Rotor sweep, latch and cam timing after the fin changes', 'unchanged (holds from 1.5 deg, frees at about 14 deg, cam from about 25.5 deg); rotor clear of the ribs'],
+                 ['Servo with gear boss and spline: clearance to the rotor', '0.6 mm or more everywhere; the head cup lands on the housing first (0.2 mm)'],
                  ['V1 to V4 volumes after adding mode 5', 'identical in all 8 states (closed and open of V1, V2, V3, V4), rebuilt in scratch studios']],
                 [75, 105], font=7.8),
           P('<b>Not checked:</b> anything physical (print, fit, flight); strength (ground-impact FEA is still not done); the electronics layout against the real parts; mate motion in ASM-V5 (drag a fin and the rotor to try it; mates cannot be driven through the API); '
@@ -101,6 +104,44 @@ def story():
               'Hinge ears were trimmed from R5.2 to R4.9 and the hard-stop block corner from R32.6 to R32.1 so that the housing stays inside R32.2 (V4 touched the tube there).',
               'The catch fingers are flush with the hub top (V4 stood 0.2 mm proud) so the rotor prints hub-down on one plane.',
               'The regulator stands on its 8 mm edge so that battery, Mercury and regulator fit one layer inside the R29.9 sleeve.'])
+    s += [PageBreak(), P('9  After the first print: what the photos showed and what changed', H2),
+          P('Your friend printed the other V5 (same base as this one) and you sent photos. Three problems were reported; this section is what I did about each. '
+            '<b>All of it is CAD and calculation only: nothing here has been printed, and the FEA numbers are an estimate, not a test.</b>', md.B),
+          P('Problem 1: the fins are flimsy and nearly snap when pushed past 90 deg', H3),
+          P('Why it matters: in flight the airflow pushes an open fin into its 90 deg stop, so "past 90" is a real load case, not only a hand push. '
+            'I built a finite-element model of the open fin (<font face="Courier">tools/fea_fin.py</font>: voxel hex mesh, PLA E 3 GPa, pin and stop as rigid supports, '
+            '12 N airflow, 30 N airflow, 15 N at the tip). It showed (a) the peak stress sat where the narrow root gusset ends, a 14 mm wide root feeding a 34 mm wide shell; '
+            'with the fin printed flat that gusset is loaded across the layers, which is the weak direction; (b) with the fin open, the stop contact is almost directly under the pin, '
+            'so a tip push is multiplied several times at the pin.', md.B),
+          P('What changed on the fin (V5 mode only; V1 to V4 untouched): a wide tapered root gusset (14 to 24 mm wide, up to z 22.5, clear of the cam), a thicker and wider root pad, '
+            'an arc-shaped landing and stop block spreading the 90 deg contact over about 27 mm instead of 12, a spine rib and two edge ribs on the inner face (broken only where the follower already fills the cam band), '
+            'and a root clipped to the housing radius.', md.B),
+          P('The lock (adapted from the mentor picture): I read the mentor CAD as a cross-shaped hub with a deep U-shaped pocket under each hinge and a wide tab from the flap sitting in it. '
+            'Here there is only 3.5 mm under the hinge, so it is a <b>tail</b> on each fin (4.5 x 12 x 4.6 mm) that sits in a U pocket cut into the stop blocks, plus two small <b>keeper pads</b> carried by towers beside the tail path. '
+            'As the fin opens the tail swings inboard and up; at about 91 deg its top face meets the pads. The stop (outboard, below the pin) and the keeper (inboard, above the tail) then form a force couple, '
+            'so the pin stops carrying the push. It is rigid: no snap hook, no band, nothing flexes. If I misread the mentor picture, tell me what the lock in it actually does.', md.B),
+          fig('v5_lock.png', 170, 'The lock, section through the tail and a keeper pad (y = 5.4 mm). Left: closed, tail in its U pocket. Right: 90 deg, tail swung inboard under the pad, web resting on the stop.', 90),
+          fig('v5_fea.png', 170, 'FEA of the open fin pushed into its stop. Left: peak stress, first V5 against this version (about half). Right: load on the hinge pin with and without the keeper (about ten times lower with it).', 85),
+          table([['Load case', 'Peak stress before', 'after', 'Pin load, stop only', 'with keeper'],
+                 ['12 N airflow (about 100 m/s)', '8.0 MPa', '4.0 MPa', '10 N', '1 N'],
+                 ['30 N airflow', '20.1 MPa', '9.9 MPa', '25 N', '3 N'],
+                 ['15 N at the tip (by hand)', '15.8 MPa', '9.6 MPa', '22 N', '1 N']], [52, 32, 22, 38, 26]),
+          WARN_('<b>How to read these numbers.</b> Printed PLA fails between layers at roughly 15 to 20 MPa, so the first V5 sat at about its limit at 15 N, which fits "almost snaps"; this version has about 1.5 to 2 times margin at the same loads, '
+                'not a large one. The model uses isotropic PLA, rigid supports and 0.8 mm voxels, whose stair-steps over-state corner stress; compare the two columns, do not trust the absolute values. '
+                'The remaining peak is at the notch where the ear clearance cuts the gusset (airflow case) and at the long shell edge in the gap where the cam band prevents an edge rib (tip case). '
+                'The hinge ears, the bolt and the housing were not in the model (my hand estimate says they are loaded in compression along the arm, a few MPa). '
+                'Print the fins in PETG or PLA+ if you can, with 4 or more walls, and test by hand before flying.'),
+          P('Problem 2: the part that houses the servo does not go far enough into the hole', H3),
+          P('My best explanation (I could not see inside your print): a real SG90 has a raised gear boss, about O11.8 x 4.5 mm, around the output shaft and a spline about 4 mm long, '
+            'while my servo was a plain box with a 3.7 mm stub and only 0.2 to 0.6 mm of slack. With the shaft pointing down the real boss lands on the rotor hub top and holds the head up by about the 4 to 5 mm visible in your photos. '
+            'Changes: the servo model now has the boss and the longer spline; the hub is counterbored for the boss (O13.2, stepped lead-in) and the horn socket is 10 mm deep (floor at z 35.0); the hub grew to R10.5 to keep wall around the counterbore; '
+            'the head sleeve is R31.95 (0.56 mm to the tube, was 0.31) with a 0.8 mm lead-in chamfer, and the module has the same chamfer. '
+            'The stack is now ordered so that the head cup lands on the housing top (0.2 mm gap) before anything in the servo and rotor stack can touch (0.6 mm or more).', md.B),
+          fig('v5_socket.png', 170, 'Left: servo boss, spline and horn in the counterbored hub socket. Right: the head cup resting on the housing top.', 100),
+          WARN_('<b>Please measure your servo</b> (boss diameter and height above the case, spline length, tab hole spacing and the distance from the tab to the shaft end). '
+                'If the head still stands proud after reprinting, the cause is something else: tell me how far it stands proud and whether it rocks, and measure whether the head sleeve or the housing is the tight fit in the tube (a 0.3 mm print swell would do it; the sleeve now has 0.56 mm).'),
+          P('Problem 3: the mentor lock', H3),
+          P('Used for problem 1 (the tail and U pocket above). The mentor picture was a bottom view of a cross hub; my reading of it is stated above and should be confirmed.', md.B)]
     return s
 
 

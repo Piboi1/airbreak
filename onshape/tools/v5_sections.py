@@ -39,10 +39,10 @@ def plan(d, z, ax, title, lim=38):
     ax.grid(alpha=.15)
 
 
-def axial(d, az, ax, title, xlim, zlim, skip=()):
+def axial(d, az, ax, title, xlim, zlim, skip=(), off=0.0):
     a = math.radians(az)
     M = np.array([[math.cos(a), math.sin(a), 0, 0], [0, 0, 1, 0], [-math.sin(a), math.cos(a), 0, 0], [0, 0, 0, 1]])
-    slice_parts(d, [0, 0, 0], [-math.sin(a), math.cos(a), 0], M, ax, skip)
+    slice_parts(d, [-off * math.sin(a), off * math.cos(a), 0], [-math.sin(a), math.cos(a), 0], M, ax, skip)
     ax.set_xlim(*xlim); ax.set_ylim(*zlim); ax.set_aspect('equal'); ax.set_title(title, fontsize=7); ax.tick_params(labelsize=5); ax.grid(alpha=.15)
 
 

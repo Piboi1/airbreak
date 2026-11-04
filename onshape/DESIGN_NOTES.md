@@ -67,7 +67,8 @@ Numbers are from the CAD model (V4 frame: rotor axis z, module bottom z = -10, h
 * Head: cup (sleeve R29.9..32.2, floor z 68.5..70.3, two ledge posts at 135/315 deg hanging to z 45.1, 3 electronics pockets, vents, USB-C window, switch slot, servo cable slot) + lid (disc z 86.3..88.3, 4 nut bosses). z 59.0..88.3. The set-1 bolts (z 82, azimuth 45/135/250/290) clamp cup and lid together.
 * Transition (BT80 side): shoulder R26.0..32.2 z -34..-22, plug R26.0..29.6 z -22..-10.2 (module seat, 0.2 mm gap), 4 nut pockets at z -28; cone to R28.15 over 35 mm is a placeholder.
 * Tube: R32.51/R33.02, z -34..100; windows 67 deg x 63.8 mm (z -9.2..54.6); holes at z 12 (module), -28 (transition), 82 (head); vents O3, USB-C and switch at z 74..75 (provisional).
-* Solid PLA: housing 29.4 g, rotor 22.4 g, fins 4 x 8.3 g (module 85 g); head cup 25.0 g + lid 8.1 g; transition 41.3 g (with the placeholder cone).
+* Solid PLA (current, after the post-print changes): housing 30.0 g, rotor 22.3 g, fins 4 x 9.8 g (module 91 g); head cup 23.1 g + lid 8.1 g; transition 41.3 g (with the placeholder cone).
+* Post-print changes: fin root gusset wide and tapered, root pad, arc stop block, spine and edge ribs, tail lock (tail z -7.6..-3 in a U pocket, keeper pads at z 3.4..6.4, meets at about 91 deg); hub R10.5 with O13.2 counterbore, horn socket floor z 35.0, head sleeve R31.95, 0.8 mm lead-in chamfers. FEA peak stress 4.0 / 9.9 / 9.6 MPa (was 8.0 / 20.1 / 15.8) at 12 N / 30 N airflow / 15 N tip.
 * Timing is the V4 timing: latch holds from about 1.5 deg of fin opening, frees at about 14 deg of rotor travel, cam first touches at about 25.5 deg, limiter stops at about -2 and +66.5 deg.
 
 ## Correction made while building V3
