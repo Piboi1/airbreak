@@ -29,6 +29,9 @@ hinge bolts through the 6.6 mm channels in the housing wall (module out of the t
 4 windows 67 deg x 63.8 mm (z -9.2 .. 54.6 from the module bottom at z -10), and 12 M3 clearance holes: 4 head at z 82, 4 module at z 12, 4 transition at z -28 (module bottom is z -10).
 Say if you want a 1:1 paper template for that.
 
-## One-plate version for a Bambu Lab P1S (256 x 256 x 256 mm)
-`../P1S_one_plate_full_set.3mf` has everything on one plate: housing, rotor, 4 fins, head cup, head lid and 4 SPARE fins (12 objects, 6 mm apart, nothing taller than 69 mm).
-Open it in Bambu Studio (objects stay at their positions). To drop the spare fins, delete the four objects at the top of the plate. `../P1S_one_plate_full_set.stl` is the same layout as one STL (use "split to objects").
+## Two P1S plates (Bambu Lab P1S, 256 x 256 x 256 mm), almost even filament
+* `../P1S_plate1.3mf`: housing, head cup, fins 1 to 3 (82 g solid PLA, tallest 69 mm)
+* `../P1S_plate2.3mf`: rotor, head lid, fin 4 and 4 SPARE fins (79 g solid PLA, tallest 51 mm)
+All 8 fins are identical, so any 4 are the set and the other 4 are spares. Each plate is about 100 g with supports (the support part is a rough allowance, not measured).
+Objects are 6 mm apart and 6 mm from the bed edge. Open in Bambu Studio (objects keep their positions); `../P1S_plate1_layout.png` and `../P1S_plate2_layout.png` show the layouts.
+Script: `tools/p1s_two_plates.py`.
