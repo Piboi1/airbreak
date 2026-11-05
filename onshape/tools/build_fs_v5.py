@@ -213,8 +213,8 @@ V5MODE = r""" if(definition.mode==5) {
     var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),49.4+hz),vector(0,0,1),"M2BH",8,"HW servo flange bolt "~(k+1)~" - M2x8 button head, from below, head under the servo tab");
    }
   }
-  // Servo cable slot through the floor. V5.10: moved from R2..10 (directly over the servo body, which blocked it) to R17.5..24.5, just past the servo end (body ends R16 at 135 deg).
-  subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",17.5,24.5,-1.75,1.75,68.4+hz,2,135*degree));
+  // Servo cable slot through the floor. V5.10: moved from R2..10 (directly over the servo body) to x -20.8..-17.3, y 3.5..11.5 (CAD frame): beside the servo corner, over neither the servo body nor a ledge, clear of the pocket rims.
+  subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",-20.8,-17.3,3.5,11.5,68.4+hz,2,0*degree));
   // Component pockets (rims) on the floor: battery, Mercury V1, regulator on its edge. All inside R29.0 (checked in the script).
   var v5Comp=[[-21.4,21.4,-20.4,-1.0,12.4],[-15.4,15.4,0.0,17.3,11.2],[-12.9,12.9,18.1,26.5,15.4]];
   for(var k=0;k<3;k+=1) {
