@@ -89,6 +89,13 @@ Problems reported by the user: (1) fins very flimsy, nearly snap when pushed pas
 * **Reprint list for a user who printed the set before this change: the head cup only** (rotor, housing, fins, lid unchanged).
 * Open: the SG90 boss/spline/horn numbers are typical values, not measured; screwdriver handle swing not checked; nothing printed from this CAD yet after the redesign.
 
+### 0.11 Head cup servo arms strengthened (one arm broke where it meets the round cup)
+
+* Cause (from the geometry): each arm was a 7 mm wide, 3.4-4.6 mm thick post that touched the sleeve wall by only 0.2 mm and hung 18 mm from the floor; printed with the floor at print z 18 and the arm growing upward, a bending load puts the layer lines in tension at the root.
+* Change (patch in `tools/build_fs_v5.py`, the `postLow` / `postUp` / `ledge5` lines): each arm is now a curved web, R25.5..28.9 (below the cup) and R25.5..31.0 (z 59..70, buried 1.1 mm into the 2.3 mm sleeve wall), +-11 deg wide (about 10 mm), fused to the sleeve over its full height. The ledge is 1 mm wider (+-4.5). Servo position, ledge heights, nut recess, screw holes and the outer envelope are unchanged. Checked on the meshes: no overlap with housing, rotor, fins, servo or hardware; the nearest closed fin is 1.18 mm away (was 2.96); the housing gap is unchanged (0.2 mm, the seat). Head cup volume 18,459 -> 19,173 mm3 (about +0.9 g).
+* **The exported STL was made by adding these webs to the existing STL** (`exports/v5/print/H_head_cup_x1.stl`, frame: print = (x, -y, 88.3 - z_CAD)), because the Onshape API quota ran out (HTTP 402). The FeatureScript patch is therefore NOT built or verified in Onshape: rebuild with `tools/lean_v5.py` when the quota is back, run `check_v5.py all`, and check the head cup volume is about 19,170 mm3. `P1S_plate1.3mf` and `V5_print_set.zip` still hold the OLD head cup.
+* Figure: `docs/headcup_arms_before_after.png`.
+
 ### 0.6 Superseded concept documents (kept in `docs/` for the history)
 
 `V5_sketch4_how_it_fits.pdf`, `V5_sketch3_*`, `V5_sketch2_*`, `V5_final_plan.pdf`, `V5_insert_*`, `V5_modular_concept.pdf`, `V5_choice*`, `V5_skin_cutting_template_1to1.pdf`, `V5_sketch_transition.pdf`: concept sheets from before the build (see the old list in the git history of this file). `V5_complete_concept.pdf` is the one-document summary of the idea and decisions; `V5_assembly_guide.pdf` is current.
