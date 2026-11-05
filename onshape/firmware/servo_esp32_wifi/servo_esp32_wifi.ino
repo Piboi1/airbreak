@@ -2,7 +2,7 @@
 // Phone: join WiFi "AIRBRAKE" (password below), open http://192.168.4.1 and tap OPEN / CLOSE.
 //
 // Wiring (ESP32 DevKit, powered from a USB power bank):
-//   servo orange (signal) -> GPIO 18
+//   servo orange (signal) -> GPIO 18   (XIAO ESP32C3: pin D1 = GPIO 3)
 //   servo red    (+5V)    -> 5V / VIN pin   (this pin is the USB 5V line)
 //   servo brown  (GND)    -> GND
 //   100-470 uF capacitor across the servo's red/brown wires, close to the servo (stops brownouts)
@@ -16,7 +16,13 @@
 const char* AP_SSID = "AIRBRAKE";
 const char* AP_PASS = "airbrake123";   // at least 8 characters
 
+// Servo signal pin. GPIO 18 on a classic ESP32 DevKit; on the ESP32-C3 (Seeed XIAO ESP32C3)
+// GPIO 18/19 are the USB pins, so use GPIO 3 (silkscreen D1) there.
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+const int SERVO_PIN  = 3;
+#else
 const int SERVO_PIN  = 18;
+#endif
 const int CLOSED_DEG = 0;      // fins retracted (same meaning as the Uno sketch)
 const int OPEN_DEG   = 66;     // fins fully out
 const bool REVERSED  = true;   // mirror every angle, same as the Uno sketch
