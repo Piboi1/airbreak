@@ -200,7 +200,7 @@ V5MODE = r""" if(definition.mode==5) {
    turn(context,ps5+"lowT",postLow,pa);
    var postUp=sector(context,ps5+"up",25.5,31.0,11,59.0,11.0+hz);
    turn(context,ps5+"upT",postUp,pa);
-   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,4.3,pa);
+   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,3.1,pa);   // V5.8: ledge top lowered 1.2 mm (z 55.0) so the screw passes through; 1.2 mm roof left over the 2.0 mm nut recess
    opBoolean(context,ps5+"join",{"tools":qUnion([head5,postLow,postUp,ledge5]),"operationType":BooleanOperationType.UNION});
    // M2 nut recess in the UNDERSIDE of the ledge (the servo tab then covers it), clearance hole up through the ledge.
    var hr5=k==0?18.8:9.3;

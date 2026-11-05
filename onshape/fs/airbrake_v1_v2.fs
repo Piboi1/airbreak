@@ -868,12 +868,12 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([head5,cylinderMM(context,id+"v5HeadFloor",30.1,68.5+hz,70.3+hz)]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<2;k+=1) {
    var pa=(135+180*k)*degree;var ps5=id+("v5Post"~k);
-   // V5.7 (arm broke at the cup): each arm is now a wide curved web (+-13 deg, about 13 mm across) that follows the sleeve and is buried 1.1 mm into the sleeve wall for its whole 18 mm height, instead of a 7 mm post touching the wall by 0.2 mm.
-   var postLow=sector(context,ps5+"low",25.5,29.0,13,51.9+hz,7.6-hz);
+   // V5.7 (arm broke at the cup): each arm is now a wide curved web (+-11 deg, about 10 mm across) that follows the sleeve and is buried 1.1 mm into the sleeve wall for its whole 18 mm height, instead of a 7 mm post touching the wall by 0.2 mm.
+   var postLow=sector(context,ps5+"low",25.5,28.9,11,51.9+hz,7.6-hz);
    turn(context,ps5+"lowT",postLow,pa);
-   var postUp=sector(context,ps5+"up",25.5,31.0,13,59.0,11.0+hz);
+   var postUp=sector(context,ps5+"up",25.5,31.0,11,59.0,11.0+hz);
    turn(context,ps5+"upT",postUp,pa);
-   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,4.3,pa);
+   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,3.1,pa);   // V5.8: ledge top lowered 1.2 mm (z 55.0) so the screw passes through; 1.2 mm roof left over the 2.0 mm nut recess
    opBoolean(context,ps5+"join",{"tools":qUnion([head5,postLow,postUp,ledge5]),"operationType":BooleanOperationType.UNION});
    // M2 nut recess in the UNDERSIDE of the ledge (the servo tab then covers it), clearance hole up through the ledge.
    var hr5=k==0?18.8:9.3;
