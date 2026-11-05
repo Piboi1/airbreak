@@ -202,20 +202,15 @@ V5MODE = r""" if(definition.mode==5) {
    turn(context,ps5+"upT",postUp,pa);
    var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,3.1,pa);   // V5.8: ledge top lowered 1.2 mm (z 55.0) so the screw passes through; 1.2 mm roof left over the 2.0 mm nut recess
    opBoolean(context,ps5+"join",{"tools":qUnion([head5,postLow,postUp,ledge5]),"operationType":BooleanOperationType.UNION});
-   // M2 nut recess in the UNDERSIDE of the ledge (the servo tab then covers it), clearance hole up through the ledge.
+   // V5.9: no nut recess (the screw goes straight into the servo tab), plain O2.4 clearance hole through the ledge.
    var hr5=k==0?18.8:9.3;
-   var np5=hexPrism(context,ps5+"nutTool",vector(hr5,0,51.8+hz),vector(0,0,1),4.2,2.0);
-   turn(context,ps5+"nutTurn",np5,pa);
-   subtract(context,ps5+"nutCut",head5,np5);
-   var ch5=cylinderMM(context,ps5+"holeTool",1.1,51.8+hz,56.3+hz);
+   var ch5=cylinderMM(context,ps5+"holeTool",1.2,51.8+hz,56.3+hz);
    opTransform(context,ps5+"holeMove",{"bodies":ch5,"transform":transform(vector(hr5,0,0)*millimeter)});
    turn(context,ps5+"holeTurn",ch5,pa);
    subtract(context,ps5+"holeCut",head5,ch5);
    // V5.6: no screwdriver holes in the floor any more: the servo is pushed up into the cup from below, its tabs against the UNDERSIDE of the ledges, screws from below.
    if(definition.hardware) {
     var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),49.4+hz),vector(0,0,1),"M2BH",8,"HW servo flange bolt "~(k+1)~" - M2x8 button head, from below, head under the servo tab");
-    var sn5=nutHW(context,ps5+"nutHW",vector(hr5,0,51.95+hz),vector(0,0,1),4.0,1.6,1.0,"HW servo flange nut "~(k+1)~" - M2 hex");
-    turn(context,ps5+"nutHWTurn",sn5,pa);
    }
   }
   // Servo cable slot through the floor (provisional position).
