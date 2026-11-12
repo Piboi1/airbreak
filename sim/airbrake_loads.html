@@ -1,0 +1,719 @@
+<title>Air Brake Load Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: instrument bench. Sticky control rail on the left, readouts and plots on the right; one column on phones. */
+:root{
+  --bg:#eef1f3; --panel:#ffffff; --ink:#15202a; --muted:#5a6976; --line:#d3dbe1; --soft:#e5eaee;
+  --accent:#1f58b5; --limit:#c9620e; --good:#1c7f49; --bad:#c2352b; --warn:#9a6a10;
+  --l1:#1f58b5; --l2:#c9620e; --l3:#22895c; --l4:#8248bf;
+  --f-head:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1419; --panel:#151d24; --ink:#e3eaef; --muted:#93a3b0; --line:#2a3642; --soft:#1c2630;
+  --accent:#6ea0ff; --limit:#f0a04a; --good:#4cc38a; --bad:#ff6f62; --warn:#e2b24e;
+  --l1:#6ea0ff; --l2:#f0a04a; --l3:#4cc38a; --l4:#c39bff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1419; --panel:#151d24; --ink:#e3eaef; --muted:#93a3b0; --line:#2a3642; --soft:#1c2630;
+  --accent:#6ea0ff; --limit:#f0a04a; --good:#4cc38a; --bad:#ff6f62; --warn:#e2b24e;
+  --l1:#6ea0ff; --l2:#f0a04a; --l3:#4cc38a; --l4:#c39bff; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-head);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:2rem;letter-spacing:.01em}
+h2{font-size:1.25rem}
+h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:var(--f-body);font-weight:600}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted);margin-top:6px}
+.key{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.key div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.key b{display:block;font-family:var(--f-head);font-size:1.02rem;margin-bottom:2px}
+.key p{color:var(--muted);font-size:.9rem}
+.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;margin-top:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+@media (max-width:900px){.rail{position:static;max-height:none}}
+fieldset{border:0;margin:0;padding:0 0 14px;display:grid;gap:8px}
+fieldset+fieldset{border-top:1px solid var(--line);padding-top:12px}
+legend{padding:0;margin-bottom:6px}
+.row{display:grid;grid-template-columns:1fr 84px;gap:2px 8px;align-items:center}
+.row label{font-size:.86rem}
+.row label small{color:var(--muted);font-family:var(--f-mono);font-size:.74rem;margin-left:4px}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:0}
+input[type=number],select{font:inherit;font-family:var(--f-mono);font-size:.84rem;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:3px 6px;width:100%}
+select{font-family:var(--f-body)}
+.sel{display:grid;gap:3px}
+.sel label{font-size:.86rem}
+.chk{display:flex;gap:8px;align-items:center;font-size:.86rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.main{display:grid;gap:18px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.card>h2{margin-bottom:4px}
+.card>.sub{color:var(--muted);font-size:.88rem;margin-bottom:12px;max-width:80ch}
+.verdict{display:flex;flex-wrap:wrap;gap:14px;align-items:stretch}
+.pill{font-family:var(--f-mono);font-size:.78rem;font-weight:500;padding:3px 9px;border-radius:99px;border:1px solid currentColor;display:inline-block}
+.pill.ok{color:var(--good)} .pill.no{color:var(--bad)} .pill.warn{color:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.stat{border-left:3px solid var(--line);padding:2px 10px}
+.stat .v{font-family:var(--f-mono);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.stat .l{font-size:.78rem;color:var(--muted)}
+.stat.ok{border-color:var(--good)} .stat.no{border-color:var(--bad)} .stat.lim{border-color:var(--limit)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px}
+@media (max-width:700px){.two{grid-template-columns:minmax(0,1fr)}}
+canvas{display:block;width:100%}
+.cv-sq{aspect-ratio:1/1;max-width:340px;margin:0 auto}
+.cv-wide{height:260px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.05em}
+td.mono{font-family:var(--f-mono)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:16px;height:0;border-top:2px solid;margin-right:5px;vertical-align:3px}
+.legend i.d{border-top-style:dashed}
+.note{font-size:.85rem;color:var(--muted);margin-top:10px;max-width:80ch}
+.warnbox{border:1px solid var(--warn);color:var(--ink);background:var(--soft);border-radius:6px;padding:10px 12px;font-size:.88rem;margin-top:12px}
+.warnbox[hidden]{display:none}
+.notes{columns:2 340px;column-gap:28px;font-size:.88rem;color:var(--muted)}
+.notes p{break-inside:avoid;margin-bottom:10px}
+.notes b{color:var(--ink)}
+code{font-family:var(--f-mono);font-size:.85em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Air Brake Load Lab</h1>
+    <p class="lede">How hard does the servo have to work to push the air brake out, and when does it lose? Change the rocket, the leaves, the servo and the flight condition on the left. Everything recomputes as you type.</p>
+    <div class="key">
+      <div><b>Tilt is not the enemy in flight</b><p>After burnout the rocket and the leaves fall together, so gravity pulls no leaf in or out. A rocket 30° off vertical loads its leaves the same as a vertical one at the same airspeed.</p></div>
+      <div><b>Airspeed is</b><p>Load grows with airspeed squared. Twice the speed means four times the torque. The deploy moment right after burnout is the hardest point of the flight.</p></div>
+      <div><b>Angle of attack is a small extra</b><p>Angle of attack is the angle between the rocket and the air it flies through (gusts). A stable rocket keeps it to a few degrees. It shifts load between leaves; it does not depend on tilt.</p></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="rail" id="rail" aria-label="Inputs"></aside>
+
+    <main class="main">
+      <section class="card">
+        <h2>Can the servo deploy at this condition?</h2>
+        <p class="sub" id="condText"></p>
+        <div class="verdict"><span class="pill" id="verdict"></span></div>
+        <div class="stats" id="stats"></div>
+        <div class="warnbox" id="powerWarn" hidden></div>
+      </section>
+
+      <section class="card">
+        <h2>Leaf loads</h2>
+        <p class="sub">Looking down the rocket from the nose, at the deployment where the servo works hardest. The arrow is the side the crossflow comes from in flight, or the side facing the ground on the bench.</p>
+        <div class="two">
+          <canvas id="cvSection" class="cv-sq" width="340" height="340" aria-label="Cross-section of the airframe with the leaves"></canvas>
+          <div class="tbl"><table id="leafTable"></table><p class="note" id="leafNote"></p></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Servo torque through the stroke</h2>
+        <p class="sub" id="strokeSub">Torque the servo must supply at each point of the stroke, total and per leaf, against what it can give.</p>
+        <canvas id="cvStroke" class="cv-wide" aria-label="Torque against deployment"></canvas>
+        <div class="legend" id="lgStroke"></div>
+      </section>
+
+      <section class="card">
+        <h2>Does tilt matter? Torque against tilt angle</h2>
+        <p class="sub">Peak servo torque as the rocket leans further from vertical. In flight the line stays flat. On the bench, with the rocket held still and no airflow, gravity is the only load, and it is tiny.</p>
+        <canvas id="cvTilt" class="cv-wide" aria-label="Peak torque against tilt"></canvas>
+        <div class="legend" id="lgTilt"></div>
+        <p class="note" id="tiltNote"></p>
+      </section>
+
+      <section class="card">
+        <h2>Fastest airspeed the brake can still open at</h2>
+        <p class="sub">For each angle of attack, the airspeed at which peak servo torque equals what the servo can supply. Deploy below this line and the leaves go out; above it the servo stalls.</p>
+        <canvas id="cvEnv" class="cv-wide" aria-label="Maximum deployable airspeed against angle of attack"></canvas>
+        <div class="legend" id="lgEnv"></div>
+      </section>
+
+      <section class="card">
+        <h2>Coast flight</h2>
+        <p class="sub">A 2D coast from burnout to apogee using the rocket inputs. The servo is commanded open at the deploy time; if the load gets close to its limit it slows down, and at the limit it stalls. Angle of attack comes from the gust speed (atan of gust over airspeed).</p>
+        <div class="stats" id="coastStats"></div>
+        <canvas id="cvAlt" class="cv-wide" aria-label="Altitude against time" style="margin-top:12px"></canvas>
+        <div class="legend" id="lgAlt"></div>
+        <canvas id="cvDep" class="cv-wide" aria-label="Deployment and servo load against time" style="margin-top:14px"></canvas>
+        <div class="legend" id="lgDep"></div>
+      </section>
+
+      <section class="card">
+        <h2>Two leaves on one side?</h2>
+        <p class="sub" id="asymSub"></p>
+        <div class="stats" id="asymStats"></div>
+        <p class="note">Set <em>Leaf layout</em> to "2 on one side" to see what putting both leaves toward the tilted side does. The rocket rolls in flight, so "the tilted side" is not a fixed side of the airframe anyway.</p>
+      </section>
+
+      <section class="card">
+        <h2>What the model includes</h2>
+        <div class="notes">
+          <p><b>Frame of reference.</b> Loads are worked out in the rocket's own frame. In flight the only felt acceleration is from aerodynamic forces (drag pushes everything toward the nose, normal force pushes sideways). Gravity cancels because the rocket is in free fall. On the bench the rocket is held, so gravity is felt in full and split by the tilt angle.</p>
+          <p><b>Sliding leaves</b> (the design in this repo). Each exposed leaf face makes drag = Cd × q × width × extension, with q = ½ρV². That force is across the sliding direction, so it only resists the servo through friction (μ). With <em>drawer binding</em> on, the drag acting on the overhanging part cocks the leaf in its tray, like a heavy drawer, and adds friction that grows with extension. Crossflow pressure on the leaf tip edge pushes the windward leaf in and pulls the leeward one out, using measured-shape cylinder pressures. Servo torque comes from the offset slider-crank solved the same way as <code>airbrake_stl.py</code>: torque = force × (leaf travel per radian of crank). At full extension the linkage is at dead centre, so the torque goes to zero there.</p>
+          <p><b>Hinged flaps.</b> Flat-plate normal force with a low-aspect-ratio fit, Cn = (π·AR/2)·sin i·cos i + 1.17·sin² i, centre of pressure moving from 25% to 50% chord. Hinge at the front: the air pushes the flap shut, the servo must push it open. Hinge at the back: the flap scoops air and is blown open, so the servo must hold it back. Angle of attack changes each flap's incidence by α·cos(angle to the windward side).</p>
+          <p><b>Servo and power.</b> Available torque = stall torque × min(1, boost converter current ÷ servo stall current). A servo pulling more current than the converter can give sags the voltage instead of making torque. Under load the servo slows along a straight torque-speed line.</p>
+          <p><b>Left out.</b> Leaf bending, tray deflection, vibration, Mach effects (fine below about 0.3 Mach, 100 m/s), the boundary layer shielding part of the leaf (which makes the real drag a bit lower), and roll. Defaults are guesses for a 2.6 in rocket aiming at 800 ft; replace them with your numbers, especially μ, leaf mass and the servo figures. The best check is a measured tunnel or car-window test logged in <code>testing/airbrake_tunnel_log.xlsx</code>.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const D2R = Math.PI / 180, G = 9.80665, KGCM = 0.0980665;
+
+/* ---------------- inputs ---------------- */
+const SERVOS = {
+  custom: null,
+  sg90:   { name: "SG90 micro (plastic gears)", tq: 1.8, i: 0.7, spd: 0.10 },
+  mg90s:  { name: "MG90S micro (metal gears)",  tq: 2.2, i: 0.8, spd: 0.08 },
+  mg996r: { name: "MG996R standard",            tq: 11,  i: 2.5, spd: 0.14 },
+  ds3218: { name: "DS3218 20 kg",               tq: 20,  i: 2.5, spd: 0.16 },
+};
+const LAYOUTS = {
+  "4": { name: "4 evenly spaced", az: [0, 90, 180, 270] },
+  "3": { name: "3 evenly spaced", az: [0, 120, 240] },
+  "2o": { name: "2 opposite", az: [0, 180] },
+  "2s": { name: "2 on one side (90° apart)", az: [315, 45] },
+};
+const SPEC = [
+  { g: "Design", sel: "mech", label: "Mechanism", opts: [["slide", "Sliding leaves (this repo)"], ["hingeF", "Hinged flaps, hinge at front"], ["hingeA", "Hinged flaps, hinge at back"]], v: "slide" },
+  { g: "Design", sel: "layout", label: "Leaf layout", opts: Object.entries(LAYOUTS).map(([k, o]) => [k, o.name]), v: "4" },
+  { g: "Design", id: "od", label: "Body tube OD", u: "mm", min: 30, max: 160, step: 1, v: 66 },
+  { g: "Design", id: "w", label: "Leaf width", u: "mm", min: 5, max: 120, step: 1, v: 32 },
+  { g: "Design", id: "travel", label: "Leaf travel (extension)", u: "mm", min: 3, max: 80, step: 1, v: 20, only: "slide" },
+  { g: "Design", id: "chord", label: "Flap length (hinge to tip)", u: "mm", min: 5, max: 150, step: 1, v: 40, only: "hinge" },
+  { g: "Design", id: "dmax", label: "Flap max angle", u: "°", min: 5, max: 90, step: 1, v: 60, only: "hinge" },
+  { g: "Design", id: "t", label: "Leaf thickness", u: "mm", min: 0.5, max: 8, step: 0.1, v: 2 },
+  { g: "Design", id: "m", label: "Mass of one leaf", u: "g", min: 0.5, max: 100, step: 0.5, v: 3 },
+  { g: "Design", id: "cd", label: "Leaf drag coefficient", u: "", min: 0.6, max: 2, step: 0.05, v: 1.2, only: "slide" },
+  { g: "Design", id: "mu", label: "Friction, leaf on tray (μ)", u: "", min: 0.02, max: 1, step: 0.01, v: 0.35, only: "slide" },
+  { g: "Design", chk: "bind", label: "Drawer binding (leaf cocks in tray)", v: true, only: "slide" },
+  { g: "Design", id: "sweep", label: "Servo sweep", u: "°", min: 45, max: 180, step: 5, v: 90, only: "slide" },
+  { g: "Design", id: "ratio", label: "Linkage ratio (flap moment per servo torque)", u: "×", min: 0.2, max: 5, step: 0.1, v: 1, only: "hinge" },
+
+  { g: "Servo and power", sel: "preset", label: "Servo", opts: Object.entries(SERVOS).map(([k, o]) => [k, o ? o.name : "Custom"]), v: "mg90s" },
+  { g: "Servo and power", id: "tq", label: "Stall torque", u: "kg·cm", min: 0.5, max: 40, step: 0.1, v: 2.2 },
+  { g: "Servo and power", id: "istall", label: "Stall current", u: "A", min: 0.2, max: 6, step: 0.1, v: 0.8 },
+  { g: "Servo and power", id: "spd", label: "No-load speed", u: "s/60°", min: 0.04, max: 0.4, step: 0.01, v: 0.08 },
+  { g: "Servo and power", id: "iboost", label: "Boost converter max output", u: "A", min: 0.2, max: 6, step: 0.1, v: 1.5 },
+
+  { g: "Condition", sel: "mode", label: "Where", opts: [["flight", "In flight (coasting)"], ["bench", "On the bench (held still)"]], v: "flight" },
+  { g: "Condition", id: "v", label: "Airspeed", u: "m/s", min: 0, max: 250, step: 1, v: 70 },
+  { g: "Condition", id: "alt", label: "Altitude (air density)", u: "m", min: 0, max: 3000, step: 10, v: 150 },
+  { g: "Condition", id: "tilt", label: "Tilt from vertical", u: "°", min: 0, max: 90, step: 1, v: 30 },
+  { g: "Condition", id: "aoa", label: "Angle of attack", u: "°", min: 0, max: 25, step: 0.5, v: 3 },
+  { g: "Condition", id: "dir", label: "Side facing wind / ground", u: "°", min: 0, max: 359, step: 5, v: 0 },
+
+  { g: "Rocket", id: "M", label: "Rocket mass at burnout", u: "g", min: 100, max: 5000, step: 10, v: 620 },
+  { g: "Rocket", id: "cdb", label: "Rocket drag coefficient", u: "", min: 0.2, max: 1.2, step: 0.01, v: 0.45 },
+  { g: "Rocket", id: "cna", label: "Normal force slope CNα", u: "/rad", min: 2, max: 25, step: 0.5, v: 10 },
+  { g: "Rocket", id: "sm", label: "Static margin", u: "cal", min: 0.5, max: 4, step: 0.1, v: 1.5 },
+  { g: "Rocket", id: "v0", label: "Burnout speed", u: "m/s", min: 10, max: 250, step: 1, v: 70 },
+  { g: "Rocket", id: "h0", label: "Burnout altitude", u: "m", min: 0, max: 1000, step: 5, v: 60 },
+  { g: "Rocket", id: "th0", label: "Burnout tilt from vertical", u: "°", min: 0, max: 45, step: 1, v: 5 },
+  { g: "Rocket", id: "tdep", label: "Deploy at (after burnout)", u: "s", min: 0, max: 8, step: 0.1, v: 0.5 },
+  { g: "Rocket", id: "cmd", label: "Deploy command", u: "% travel", min: 0, max: 100, step: 5, v: 100 },
+  { g: "Rocket", id: "gust", label: "Crosswind gust", u: "m/s", min: 0, max: 15, step: 0.5, v: 3 },
+];
+
+const rail = document.getElementById("rail");
+const groups = {};
+const rows = {};
+for (const s of SPEC) {
+  if (!groups[s.g]) {
+    const fs = document.createElement("fieldset");
+    const lg = document.createElement("legend");
+    lg.innerHTML = `<h3>${s.g}</h3>`;
+    fs.appendChild(lg); rail.appendChild(fs); groups[s.g] = fs;
+  }
+  const fs = groups[s.g];
+  let el;
+  if (s.sel) {
+    el = document.createElement("div"); el.className = "sel";
+    el.innerHTML = `<label for="${s.sel}">${s.label}</label><select id="${s.sel}">${s.opts.map(([k, n]) => `<option value="${k}"${k === s.v ? " selected" : ""}>${n}</option>`).join("")}</select>`;
+  } else if (s.chk) {
+    el = document.createElement("label"); el.className = "chk";
+    el.innerHTML = `<input type="checkbox" id="${s.chk}"${s.v ? " checked" : ""}> ${s.label}`;
+  } else {
+    el = document.createElement("div"); el.className = "row";
+    el.innerHTML = `<label for="${s.id}">${s.label}${s.u ? `<small>${s.u}</small>` : ""}</label>
+      <input type="number" id="${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.v}">
+      <input type="range" id="${s.id}_r" aria-label="${s.label}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.v}">`;
+    const num = el.querySelector("input[type=number]"), rng = el.querySelector("input[type=range]");
+    rng.addEventListener("input", () => { num.value = rng.value; schedule(); });
+    num.addEventListener("input", () => { if (num.value !== "") rng.value = num.value; schedule(); });
+  }
+  if (s.only) el.dataset.only = s.only;
+  fs.appendChild(el);
+  rows[s.id || s.sel || s.chk] = el;
+}
+rail.addEventListener("change", e => {
+  if (e.target.id === "preset") applyPreset();
+  else if (["tq", "istall", "spd"].includes(e.target.id)) document.getElementById("preset").value = "custom";
+  schedule();
+});
+rail.addEventListener("input", e => { if (["tq", "istall", "spd"].includes(e.target.id)) document.getElementById("preset").value = "custom"; });
+function setVal(id, v) { document.getElementById(id).value = v; const r = document.getElementById(id + "_r"); if (r) r.value = v; }
+function applyPreset() {
+  const p = SERVOS[document.getElementById("preset").value];
+  if (!p) return;
+  setVal("tq", p.tq); setVal("istall", p.i); setVal("spd", p.spd);
+}
+const num = id => { const v = parseFloat(document.getElementById(id).value); return isFinite(v) ? v : 0; };
+
+function readP() {
+  const mech = document.getElementById("mech").value;
+  const isHinge = mech !== "slide";
+  for (const k in rows) {
+    const o = rows[k].dataset.only;
+    rows[k].hidden = !!o && ((o === "slide") === isHinge);
+  }
+  const P = {
+    mech, isHinge, fwd: mech === "hingeF",
+    layout: document.getElementById("layout").value,
+    R: num("od") / 2000, w: num("w") / 1000, T: Math.max(num("travel"), 0.1) / 1000,
+    c: Math.max(num("chord"), 0.1) / 1000, dmax: Math.max(num("dmax"), 1) * D2R,
+    t: num("t") / 1000, m: num("m") / 1000, cd: num("cd"), mu: num("mu"),
+    bind: document.getElementById("bind").checked,
+    sweep: Math.max(num("sweep"), 10) * D2R, k: Math.max(num("ratio"), 0.05),
+    tqStall: num("tq") * KGCM, iStall: Math.max(num("istall"), 0.01), spd: Math.max(num("spd"), 0.01),
+    iBoost: num("iboost"),
+    M: Math.max(num("M"), 1) / 1000, cdb: num("cdb"), cna: num("cna"), sm: num("sm"),
+    v0: num("v0"), h0: num("h0"), th0: num("th0") * D2R, tdep: num("tdep"), cmd: num("cmd") / 100, gust: num("gust"),
+  };
+  P.az = LAYOUTS[P.layout].az;
+  P.S = Math.PI * P.R * P.R;
+  P.powerFrac = Math.min(1, P.iBoost / P.iStall);
+  P.Tav = P.tqStall * P.powerFrac;
+  P.omega = 60 * D2R / P.spd;
+  P.link = P.isHinge ? null : solveLinkage(P.T, P.sweep);
+  const C = {
+    mode: document.getElementById("mode").value,
+    V: num("v"), alt: num("alt"), rho: rhoISA(num("alt")),
+    tilt: num("tilt") * D2R, aoa: num("aoa") * D2R, dir: num("dir"),
+  };
+  return [P, C];
+}
+
+/* ---------------- physics ---------------- */
+function rhoISA(h) { const T = 288.15 - 0.0065 * Math.min(h, 11000); return 1.225 * Math.pow(T / 288.15, 4.2559); }
+
+// Offset slider-crank, solved like airbrake_stl.py: pin offset and retracted pin position scale with travel
+// (repo ratios 0.40/2.25 and 0.33/2.25), dead centre at full extension.
+function solveLinkage(T, sweep) {
+  const e = 0.178 * T, sRet = 0.147 * T, sExt = sRet + T;
+  const slider = (rc, l, phi) => { const dx = rc * Math.cos(phi) - e; return rc * Math.sin(phi) + Math.sqrt(Math.max(l * l - dx * dx, 0)); };
+  const geo = rc => { const pe = Math.acos(Math.min(1, e / rc)); return [pe, sExt - rc * Math.sin(pe)]; };
+  const err = rc => { const [pe, l] = geo(rc); return slider(rc, l, pe - sweep) - sRet; };
+  let a = e * 1.0001, fa = err(a), br = null;
+  for (let i = 1; i <= 800; i++) {
+    const b = e * 1.0001 + (8 * T) * i / 800, fb = err(b);
+    if (fa * fb <= 0) { br = [a, b]; break; }
+    a = b; fa = fb;
+  }
+  if (!br) return { ok: false, sRet, f: phi => ({ ext: 0, dsdb: T / sweep }), phiR: 0 };
+  let [lo, hi] = br;
+  for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (err(lo) * err(mid) <= 0) hi = mid; else lo = mid; }
+  const rc = (lo + hi) / 2, [phiE, l] = geo(rc);
+  return { ok: true, e, sRet, rc, l, phiR: phiE - sweep, phiE };
+}
+function slideKin(P, u) {
+  const L = P.link;
+  if (!L.ok) return { ext: u * P.T, dsdb: P.T / P.sweep };
+  const sl = phi => { const dx = L.rc * Math.cos(phi) - L.e; return L.rc * Math.sin(phi) + Math.sqrt(Math.max(L.l * L.l - dx * dx, 0)); };
+  const phi = L.phiR + u * P.sweep, h = 1e-4;
+  const ext = Math.min(P.T, Math.max(0, sl(phi) - L.sRet));
+  const dsdb = (sl(Math.min(phi + h, L.phiE)) - sl(phi - h)) / (Math.min(phi + h, L.phiE) - (phi - h));
+  return { ext, dsdb: Math.max(dsdb, 0) };
+}
+// Pressure coefficient around a cylinder in crossflow (subcritical, separated past ~75°).
+function cylCp(psiDeg) {
+  let p = Math.abs(psiDeg) % 360; if (p > 180) p = 360 - p;
+  if (p <= 70) { const s = Math.sin(p * D2R) / Math.sin(70 * D2R); return 1 - 2.2 * s * s; }
+  return -1.1;
+}
+function plateCn(i, AR) {
+  const a = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, i));
+  const s = Math.abs(Math.sin(a)), c = Math.cos(a);
+  return Math.sign(a) * ((Math.PI * Math.min(AR, 4) / 2) * s * c + 1.17 * s * s);
+}
+const angDiff = (a, b) => { let d = ((a - b) % 360 + 540) % 360 - 180; return d; };
+
+// Loads at servo position u (0..1 of travel). Returns per-leaf results and the total servo torque (N·m, + = servo must push open).
+function evalLoads(P, C, u, V, alpha, modeOverride) {
+  const mode = modeOverride || C.mode;
+  const q = 0.5 * C.rho * V * V, qa = q * Math.cos(alpha) ** 2, qc = q * Math.sin(alpha) ** 2;
+  const kin = P.isHinge ? null : slideKin(P, u);
+  const delta = P.isHinge ? u * P.dmax : 0;
+  const leaves = P.az.map(phi => {
+    const psi = angDiff(phi, C.dir), cps = Math.cos(psi * D2R), sps = Math.sin(psi * D2R);
+    const L = { phi, psi, cps, sps };
+    if (!P.isHinge) {
+      L.ext = kin.ext;
+      L.drag = P.cd * qa * P.w * kin.ext;
+      L.edgeOut = -cylCp(psi) * qc * P.t * P.w;           // + pulls leaf outward
+      L.tanAero = 1.2 * qc * P.t * kin.ext * sps;
+      L.rArm = P.R + kin.ext / 2;
+    } else {
+      const al = alpha * cps;
+      const i = P.fwd ? delta + al : delta - al;
+      const A = P.w * P.c, Cn = plateCn(i, P.w / P.c);
+      const xcp = 0.25 + 0.25 * Math.min(Math.abs(i), Math.PI / 2) / (Math.PI / 2);
+      const arm = P.fwd ? P.c * xcp : P.c * (1 - xcp);
+      L.i = i; L.Fn = q * A * Cn;
+      L.mAeroClose = P.fwd ? L.Fn * arm : -L.Fn * arm;
+      L.drag = Math.abs(L.Fn) * Math.sin(delta);
+      L.rArm = P.R + P.c / 2 * Math.sin(delta);
+    }
+    return L;
+  });
+  const Dsum = leaves.reduce((s, L) => s + L.drag, 0);
+  let ax, aLat;
+  if (mode === "flight") { ax = (q * P.S * P.cdb + Dsum) / P.M; aLat = q * P.S * P.cna * alpha / P.M; }
+  else { ax = -G * Math.cos(C.tilt); aLat = G * Math.sin(C.tilt); }
+  let torque = 0;
+  for (const L of leaves) {
+    const ar = aLat * L.cps, at = aLat * L.sps;
+    if (!P.isHinge) {
+      const B = P.bind ? L.ext / Math.max(P.R - L.ext, 0.25 * P.R) : 0;   // extra normal load from cocking, as a multiple of drag
+      const nAx = Math.abs(P.m * ax - L.drag);
+      const nTan = Math.abs(P.m * at + L.tanAero);
+      L.fric = P.mu * (nAx + L.drag * B + nTan);
+      L.out = P.m * ar + L.edgeOut;
+      L.resist = L.fric - L.out;                          // N along the slide, + resists opening
+      L.tq = L.resist * kin.dsdb;
+    } else {
+      const qOpen = P.m * (P.c / 2) * (P.fwd ? (ax * Math.sin(delta) + ar * Math.cos(delta)) : (-ax * Math.sin(delta) + ar * Math.cos(delta)));
+      L.resist = L.mAeroClose - qOpen;                    // N·m at the hinge, + resists opening
+      L.tq = L.resist / P.k;
+    }
+    torque += L.tq;
+  }
+  return { leaves, torque, Dsum, q, kin, delta, frac: P.isHinge ? u : kin.ext / P.T };
+}
+function stroke(P, C, V, alpha, mode, n = 41) {
+  const pts = [];
+  let peak = 0, peakU = 0;
+  for (let j = 0; j < n; j++) {
+    const u = j / (n - 1), r = evalLoads(P, C, u, V, alpha, mode);
+    pts.push({ u, frac: r.frac, r });
+    if (Math.abs(r.torque) > Math.abs(peak)) { peak = r.torque; peakU = u; }
+  }
+  return { pts, peak, peakU };
+}
+function maxSpeed(P, C, alpha) {
+  const ok = V => Math.abs(stroke(P, C, V, alpha, "flight", 25).peak) <= P.Tav;
+  if (!ok(1)) return 0;
+  if (ok(400)) return 400;
+  let lo = 1, hi = 400;
+  for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (ok(mid)) lo = mid; else hi = mid; }
+  return lo;
+}
+function coast(P, C, kind) {
+  const dt = 0.004;
+  let t = 0, x = 0, h = P.h0, vx = P.v0 * Math.sin(P.th0), vh = P.v0 * Math.cos(P.th0), u = 0;
+  const rec = []; let slammed = false, stalled = false, maxLoad = 0, peakQdep = 0, reachT = null;
+  const rate = P.isHinge ? P.omega / (P.k * P.dmax) : P.omega / P.sweep;
+  const Cf = Object.assign({}, C);
+  let k = 0;
+  while (vh > 0 && t < 60) {
+    const V = Math.hypot(vx, vh), alpha = Math.min(Math.atan2(P.gust, Math.max(V, 0.1)), 30 * D2R);
+    Cf.rho = rhoISA(h);
+    let r = evalLoads(P, Cf, u, V, alpha, "flight");
+    if (kind !== "none" && t >= P.tdep && u < P.cmd - 1e-9) {
+      if (kind === "ideal") u = P.cmd;
+      else {
+        const ratio = r.torque / P.Tav;
+        const f = ratio <= 0 ? 1 : Math.max(0, 1 - ratio);
+        if (f === 0) stalled = true;
+        if (ratio < -1) slammed = true;
+        u = Math.min(P.cmd, u + rate * f * dt);
+      }
+      peakQdep = Math.max(peakQdep, r.q);
+      r = evalLoads(P, Cf, u, V, alpha, "flight");
+      if (u >= P.cmd - 1e-9 && reachT === null) reachT = t;
+    }
+    if (kind === "servo" && t >= P.tdep) maxLoad = Math.max(maxLoad, Math.abs(r.torque) / P.Tav);
+    const D = r.q * P.S * P.cdb + r.Dsum;
+    const axx = -D / P.M * vx / Math.max(V, 1e-6), ahh = -G - D / P.M * vh / Math.max(V, 1e-6);
+    vx += axx * dt; vh += ahh * dt; x += vx * dt; h += vh * dt; t += dt;
+    if (k++ % 10 === 0) rec.push({ t, h, V, frac: r.frac, load: kind === "servo" && t >= P.tdep ? Math.abs(r.torque) / P.Tav : null });
+  }
+  rec.push({ t, h, V: Math.hypot(vx, vh), frac: rec.length ? rec[rec.length - 1].frac : 0, load: null });
+  return { apogee: h, t, rec, slammed, stalled, finalFrac: rec[rec.length - 2] ? rec[rec.length - 2].frac : 0, maxLoad, peakQdep, reachT };
+}
+
+/* ---------------- drawing ---------------- */
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const LEAFC = ["--l1", "--l2", "--l3", "--l4"];
+const leafName = i => "ABCD"[i];
+function setupCanvas(cv) {
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const W = Math.max(200, r.width), H = Math.max(160, r.height || r.width);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  return [g, W, H];
+}
+function nice(range) {
+  const raw = range / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+  return (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * p;
+}
+function fmtTick(v, step) { const d = Math.max(0, -Math.floor(Math.log10(step))); return v.toFixed(Math.min(d, 4)); }
+function chart(cv, o) {
+  const [g, W, H] = setupCanvas(cv);
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line");
+  const m = { l: 54, r: o.rightAxis ? 50 : 14, t: 12, b: 38 };
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  let ymin = o.yMin ?? 0, ymax = o.yMax;
+  if (ymax == null) {
+    ymax = -Infinity; ymin = o.yMin ?? Infinity;
+    for (const s of o.series) for (const [, y] of s.data) if (isFinite(y)) { ymax = Math.max(ymax, y); if (o.yMin == null) ymin = Math.min(ymin, y); }
+    for (const hl of (o.hLines || [])) { ymax = Math.max(ymax, hl.y); if (o.yMin == null) ymin = Math.min(ymin, hl.y); }
+    if (o.yMin == null) ymin = Math.min(ymin, 0);
+    if (!isFinite(ymax) || ymax <= ymin) ymax = ymin + 1;
+    ymax += (ymax - ymin) * 0.08;
+  }
+  const xs = v => m.l + (v - o.xMin) / (o.xMax - o.xMin) * pw;
+  const ys = v => m.t + ph - (v - ymin) / (ymax - ymin) * ph;
+  g.font = `11px ${css("--f-mono")}`; g.lineWidth = 1;
+  const ystep = nice(ymax - ymin);
+  g.textAlign = "right"; g.textBaseline = "middle";
+  for (let v = Math.ceil(ymin / ystep) * ystep; v <= ymax + 1e-12; v += ystep) {
+    g.strokeStyle = line; g.beginPath(); g.moveTo(m.l, ys(v)); g.lineTo(m.l + pw, ys(v)); g.stroke();
+    g.fillStyle = muted; g.fillText(fmtTick(v, ystep), m.l - 6, ys(v));
+  }
+  const xstep = o.xStep || nice(o.xMax - o.xMin);
+  g.textAlign = "center"; g.textBaseline = "top";
+  for (let v = Math.ceil(o.xMin / xstep) * xstep; v <= o.xMax + 1e-9; v += xstep) {
+    g.strokeStyle = line; g.beginPath(); g.moveTo(xs(v), m.t + ph); g.lineTo(xs(v), m.t + ph + 4); g.stroke();
+    g.fillStyle = muted; g.fillText(fmtTick(v, xstep), xs(v), m.t + ph + 6);
+  }
+  g.strokeStyle = muted; g.beginPath(); g.moveTo(m.l, m.t); g.lineTo(m.l, m.t + ph); g.lineTo(m.l + pw, m.t + ph); g.stroke();
+  g.fillStyle = muted; g.font = `12px ${css("--f-body")}`;
+  g.fillText(o.xLabel, m.l + pw / 2, H - 16);
+  g.save(); g.translate(13, m.t + ph / 2); g.rotate(-Math.PI / 2); g.textBaseline = "middle"; g.fillText(o.yLabel, 0, 0); g.restore();
+  if (o.rightAxis) {
+    const ra = o.rightAxis; g.textAlign = "left"; g.textBaseline = "middle"; g.font = `11px ${css("--f-mono")}`;
+    const rstep = nice(ra.max - ra.min);
+    for (let v = ra.min; v <= ra.max + 1e-9; v += rstep) {
+      const y = m.t + ph - (v - ra.min) / (ra.max - ra.min) * ph;
+      g.fillStyle = muted; g.fillText(fmtTick(v, rstep), m.l + pw + 6, y);
+    }
+    g.save(); g.translate(W - 8, m.t + ph / 2); g.rotate(Math.PI / 2); g.textAlign = "center"; g.font = `12px ${css("--f-body")}`; g.fillText(ra.label, 0, 0); g.restore();
+  }
+  g.save(); g.beginPath(); g.rect(m.l, m.t - 2, pw, ph + 4); g.clip();
+  if (o.bands) for (const b of o.bands) {
+    g.fillStyle = css(b.color); g.globalAlpha = 0.12;
+    g.fillRect(xs(b.x0), m.t, xs(b.x1) - xs(b.x0), ph); g.globalAlpha = 1;
+  }
+  for (const hl of (o.hLines || [])) {
+    g.strokeStyle = css(hl.color); g.lineWidth = 2; g.setLineDash([6, 4]);
+    g.beginPath(); g.moveTo(m.l, ys(hl.y)); g.lineTo(m.l + pw, ys(hl.y)); g.stroke(); g.setLineDash([]);
+  }
+  for (const s of o.series) {
+    g.strokeStyle = css(s.color); g.lineWidth = s.width || 2; g.setLineDash(s.dash ? [5, 4] : []);
+    const mapY = s.right ? (v => m.t + ph - (v - o.rightAxis.min) / (o.rightAxis.max - o.rightAxis.min) * ph) : ys;
+    g.beginPath(); let started = false;
+    for (const [x, y] of s.data) {
+      if (y == null || !isFinite(y)) { started = false; continue; }
+      if (!started) { g.moveTo(xs(x), mapY(y)); started = true; } else g.lineTo(xs(x), mapY(y));
+    }
+    g.stroke(); g.setLineDash([]);
+    if (s.dot) { g.fillStyle = css(s.color); g.beginPath(); g.arc(xs(s.dot[0]), mapY(s.dot[1]), 4, 0, 7); g.fill(); }
+  }
+  g.restore();
+}
+function legend(id, items) {
+  document.getElementById(id).innerHTML = items.map(it =>
+    `<span><i class="${it.dash ? "d" : ""}" style="border-color:var(${it.color})"></i>${it.label}</span>`).join("");
+}
+function drawSection(cv, P, C, r) {
+  const [g, W, H] = setupCanvas(cv);
+  const ink = css("--ink"), muted = css("--muted"), line = css("--line"), soft = css("--soft");
+  const cx = W / 2, cy = H / 2;
+  const reach = P.isHinge ? P.c : P.T;
+  const sc = (Math.min(W, H) / 2 - 48) / (P.R + reach);
+  const R = P.R * sc;
+  g.fillStyle = soft; g.strokeStyle = muted; g.lineWidth = 2;
+  g.beginPath(); g.arc(cx, cy, R, 0, 7); g.fill(); g.stroke();
+  const maxAbs = Math.max(1e-9, ...r.leaves.map(L => Math.abs(L.tq)));
+  r.leaves.forEach((L, i) => {
+    // screen angle: 0° = up, clockwise
+    const a = (L.phi - 90) * D2R;
+    const out = P.isHinge ? P.c * Math.sin(r.delta) * sc : L.ext * sc;
+    const hw = P.w / 2 * sc;
+    g.save(); g.translate(cx, cy); g.rotate(a);
+    const inner = P.isHinge ? R - 1 : Math.sqrt(Math.max(R * R - hw * hw, 0));
+    g.fillStyle = css(LEAFC[i % 4]); g.globalAlpha = 0.25 + 0.6 * Math.abs(L.tq) / maxAbs;
+    g.fillRect(inner, -hw, R - inner + out, 2 * hw);
+    g.globalAlpha = 1; g.strokeStyle = css(LEAFC[i % 4]); g.lineWidth = 1.5;
+    g.strokeRect(inner, -hw, R - inner + out, 2 * hw);
+    g.restore();
+    const lx = cx + Math.cos(a) * (R + out + 16), ly = cy + Math.sin(a) * (R + out + 16);
+    g.fillStyle = ink; g.font = `600 13px ${css("--f-body")}`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(leafName(i), lx, ly);
+  });
+  // direction arrow (from outside toward body)
+  const da = (C.dir - 90) * D2R, r0 = Math.min(W, H) / 2 - 6, r1 = R + 6;
+  const col = css("--limit");
+  g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 2.5;
+  const ax0 = cx + Math.cos(da) * r0, ay0 = cy + Math.sin(da) * r0;
+  const ax1 = cx + Math.cos(da) * (r1 + 2), ay1 = cy + Math.sin(da) * (r1 + 2);
+  const flight = C.mode === "flight";
+  const [sx, sy, ex, ey] = flight ? [ax0, ay0, ax1, ay1] : [cx + Math.cos(da) * (R * 0.2), cy + Math.sin(da) * (R * 0.2), cx + Math.cos(da) * (R * 0.85), cy + Math.sin(da) * (R * 0.85)];
+  const showArrow = flight ? C.aoa > 0 : C.tilt > 0;
+  if (showArrow) {
+    g.beginPath(); g.moveTo(sx, sy); g.lineTo(ex, ey); g.stroke();
+    const ang = Math.atan2(ey - sy, ex - sx);
+    g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex - 9 * Math.cos(ang - 0.4), ey - 9 * Math.sin(ang - 0.4)); g.lineTo(ex - 9 * Math.cos(ang + 0.4), ey - 9 * Math.sin(ang + 0.4)); g.closePath(); g.fill();
+  }
+  g.fillStyle = muted; g.font = `11px ${css("--f-body")}`; g.textAlign = "left"; g.textBaseline = "top";
+  g.fillText(flight ? (C.aoa > 0 ? "orange arrow: crossflow" : "no crossflow (α = 0)") : (C.tilt > 0 ? "orange arrow: downhill side" : "upright, no lean"), 6, 6);
+}
+
+/* ---------------- render ---------------- */
+const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
+const kgcm = Nm => Nm / KGCM;
+function tqStr(Nm) { const k = kgcm(Nm); return (Math.abs(k) < 0.1 ? k.toFixed(3) : Math.abs(k) < 10 ? k.toFixed(2) : k.toFixed(1)) + " kg·cm"; }
+function stat(v, l, cls = "") { return `<div class="stat ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
+
+function render() {
+  const [P, C] = readP();
+  const alpha = C.mode === "flight" ? C.aoa : C.aoa;
+  const st = stroke(P, C, C.V, alpha);
+  const peakR = evalLoads(P, C, st.peakU, C.V, alpha);
+  const ok = Math.abs(st.peak) <= P.Tav;
+  const margin = P.Tav / Math.max(Math.abs(st.peak), 1e-12);
+  const q = 0.5 * C.rho * C.V * C.V;
+
+  document.getElementById("condText").textContent = C.mode === "flight"
+    ? `Coasting at ${C.V} m/s (q = ${Math.round(q)} Pa), ${num("tilt")}° off vertical, ${num("aoa")}° angle of attack. Tilt is shown but has no effect here; see the tilt chart.`
+    : `Held still on the bench, leaning ${num("tilt")}° from vertical${C.V > 0 ? `, with ${C.V} m/s of air blown at it` : ", no airflow"}.`;
+  const vEl = document.getElementById("verdict");
+  const assist = st.peak < 0;
+  vEl.className = "pill " + (ok ? (margin < 1.5 ? "warn" : "ok") : "no");
+  vEl.textContent = ok
+    ? (margin < 1.5 ? `Opens, but with only ${f2(margin)}× margin` : `Opens with ${margin >= 100 ? Math.round(margin) : f1(margin)}× torque margin`)
+    : (assist ? "Air forces the flaps open faster than the servo can hold them" : "Servo stalls before the brake is fully open");
+  document.getElementById("stats").innerHTML =
+    stat(tqStr(Math.abs(st.peak)), assist ? "Peak torque to hold the flaps back" : "Peak torque needed", ok ? "ok" : "no") +
+    stat(tqStr(P.Tav), P.powerFrac < 1 ? `Servo can give (limited by boost to ${Math.round(P.powerFrac * 100)}%)` : "Servo can give", "lim") +
+    stat(Math.round(st.peakU * 100) + "%", "Worst point in the stroke (servo travel)") +
+    stat(f1(peakR.Dsum + 0) + " N", "Brake drag at that point") +
+    stat(Math.round(maxSpeed(P, C, C.aoa)) + " m/s", `Fastest it can open at ${num("aoa")}° AoA`);
+
+  const pw = document.getElementById("powerWarn");
+  if (P.powerFrac < 1) {
+    pw.hidden = false;
+    pw.innerHTML = `<b>Power limit.</b> The servo can draw about ${f1(P.iStall)} A at stall but the boost converter is set to ${f1(P.iBoost)} A, so you only get about ${Math.round(P.powerFrac * 100)}% of the rated torque. When a boost converter is overloaded its output voltage drops, and if the ESP32 runs off the same rail it can brown out and reset mid-flight. A 470–1000 µF capacitor across the servo leads and a separate 3.3 V supply for the ESP32 help.`;
+  } else pw.hidden = true;
+
+  // leaf table
+  const unitF = P.isHinge ? "N·mm at hinge" : "N along slide";
+  const rowsH = peakR.leaves.map((L, i) => {
+    const side = Math.abs(L.psi) < 45 ? (C.mode === "flight" ? "windward" : "downhill") : Math.abs(L.psi) > 135 ? (C.mode === "flight" ? "leeward" : "uphill") : "side";
+    const share = Math.abs(peakR.torque) > 1e-12 ? L.tq / peakR.torque * 100 : 0;
+    const resist = P.isHinge ? L.resist * 1000 : L.resist;
+    return `<tr><td><span class="sw" style="background:var(${LEAFC[i % 4]})"></span>${leafName(i)} <small style="color:var(--muted)">${L.phi}°, ${side}</small></td>
+      <td class="mono">${f2(L.drag)}</td><td class="mono">${(Math.abs(resist) < 0.01 ? resist.toFixed(4) : resist.toFixed(2))}</td><td class="mono">${Math.round(share)}%</td></tr>`;
+  }).join("");
+  document.getElementById("leafTable").innerHTML = `<thead><tr><th>Leaf</th><th>Drag (N)</th><th>Push needed (${unitF})</th><th>Share</th></tr></thead><tbody>${rowsH}</tbody>`;
+  document.getElementById("leafNote").textContent = P.isHinge
+    ? (P.fwd ? "Front-hinged flaps: the air pushes them shut, so the servo pushes against the full aerodynamic moment. The windward flap sees the most." : "Back-hinged flaps: the air blows them open. A negative number means the servo is holding the flap back.")
+    : "Drag on a sliding leaf points backward, across its direction of travel. The servo only feels it as friction in the tray, which is why sliding leaves need far less torque than hinged flaps of the same area.";
+  drawSection(document.getElementById("cvSection"), P, C, peakR);
+
+  // stroke chart
+  const xs = st.pts.map(p => p.u * 100);
+  const series = [{ data: st.pts.map(p => [p.u * 100, kgcm(p.r.torque)]), color: "--ink", width: 2.5, dot: [st.peakU * 100, kgcm(st.peak)] }];
+  P.az.forEach((_, i) => series.push({ data: st.pts.map(p => [p.u * 100, kgcm(p.r.leaves[i].tq)]), color: LEAFC[i % 4], width: 1.5 }));
+  const hl = [{ y: kgcm(P.Tav), color: "--limit" }];
+  if (st.peak < 0) hl.push({ y: -kgcm(P.Tav), color: "--limit" });
+  chart(document.getElementById("cvStroke"), { xMin: 0, xMax: 100, xStep: 10, xLabel: "Servo travel (%)", yLabel: "Torque (kg·cm)", series, hLines: hl, yMin: Math.min(0, ...series.flatMap(s => s.data.map(d => d[1])), st.peak < 0 ? -kgcm(P.Tav) : 0) });
+  legend("lgStroke", [{ label: "Total servo torque", color: "--ink" }, ...P.az.map((_, i) => ({ label: "Leaf " + leafName(i), color: LEAFC[i % 4] })), { label: "Servo limit", color: "--limit", dash: 1 }]);
+  document.getElementById("strokeSub").textContent = P.isHinge
+    ? "Torque the servo must supply at each point of the flap swing, total and per flap. Hinged flaps get harder the further they open."
+    : "Torque the servo must supply at each point of the stroke, total and per leaf. It drops to zero at the end because the crank and link line up (dead centre).";
+
+  // tilt chart
+  const tiltDeg = [], fl = [], bn = [];
+  for (let d = 0; d <= 90; d += 2) {
+    const Ct = Object.assign({}, C, { tilt: d * D2R });
+    tiltDeg.push(d);
+    fl.push([d, kgcm(Math.abs(stroke(P, Ct, C.V, C.aoa, "flight", 21).peak))]);
+    bn.push([d, kgcm(Math.abs(stroke(P, Ct, 0, 0, "bench", 21).peak))]);
+  }
+  chart(document.getElementById("cvTilt"), { xMin: 0, xMax: 90, xStep: 10, xLabel: "Tilt from vertical (°)", yLabel: "Peak torque (kg·cm)", series: [{ data: fl, color: "--accent", width: 2.5 }, { data: bn, color: "--l3", width: 2.5, dash: 1 }], hLines: [{ y: kgcm(P.Tav), color: "--limit" }] });
+  legend("lgTilt", [{ label: `In flight at ${C.V} m/s, ${num("aoa")}° AoA`, color: "--accent" }, { label: "On the bench, still air (gravity only)", color: "--l3", dash: 1 }, { label: "Servo limit", color: "--limit", dash: 1 }]);
+  const b30 = bn[15][1];
+  document.getElementById("tiltNote").textContent = `At 30° on the bench gravity needs ${b30.toFixed(3)} kg·cm, about ${(b30 / kgcm(P.Tav) * 100).toFixed(1)}% of what the servo can give. In flight the leaves weigh nothing relative to the rocket, so the flight line does not change with tilt at all.`;
+
+  // envelope
+  const env = [];
+  for (let a = 0; a <= 20; a += 1) env.push([a, maxSpeed(P, C, a * D2R)]);
+  chart(document.getElementById("cvEnv"), { xMin: 0, xMax: 20, xStep: 2, xLabel: "Angle of attack (°)", yLabel: "Max airspeed to open (m/s)", series: [{ data: env, color: "--accent", width: 2.5 }], hLines: [{ y: P.v0, color: "--limit" }] });
+  legend("lgEnv", [{ label: "Fastest deployable airspeed", color: "--accent" }, { label: "Burnout speed (from Rocket inputs)", color: "--limit", dash: 1 }]);
+
+  // coast
+  const cN = coast(P, C, "none"), cS = coast(P, C, "servo"), cI = coast(P, C, "ideal");
+  const ft = m => Math.round(m * 3.28084);
+  const tEnd = Math.max(cN.t, cS.t, cI.t);
+  document.getElementById("coastStats").innerHTML =
+    stat(ft(cN.apogee) + " ft", "Apogee, brakes closed") +
+    stat(ft(cS.apogee) + " ft", "Apogee with your servo", cS.stalled ? "no" : "ok") +
+    stat(ft(cI.apogee) + " ft", "Apogee if the brake opened instantly") +
+    (cS.slammed ? stat("Blown open", "Air overpowered the servo; it cannot control the flaps", "no") :
+    stat(cS.stalled ? `Stalled at ${Math.round(cS.finalFrac * 100)}%` : (cS.reachT != null ? `Open at ${f2(cS.reachT)} s` : "Not opened"), cS.stalled ? "Servo could not finish" : "Brake reached the command", cS.stalled ? "no" : "ok")) +
+    stat(Math.round(cS.maxLoad * 100) + "%", "Highest servo load after deploy", cS.maxLoad > 1 ? "no" : cS.maxLoad > 0.66 ? "lim" : "ok");
+  chart(document.getElementById("cvAlt"), { xMin: 0, xMax: Math.ceil(tEnd), xLabel: "Time after burnout (s)", yLabel: "Altitude (ft)",
+    series: [{ data: cN.rec.map(r => [r.t, r.h * 3.28084]), color: "--muted", width: 2, dash: 1 }, { data: cI.rec.map(r => [r.t, r.h * 3.28084]), color: "--l3", width: 2 }, { data: cS.rec.map(r => [r.t, r.h * 3.28084]), color: "--accent", width: 2.5 }] });
+  legend("lgAlt", [{ label: "Brakes closed", color: "--muted", dash: 1 }, { label: "Instant ideal opening", color: "--l3" }, { label: "Your servo", color: "--accent" }]);
+  const loadMax = Math.max(100, ...cS.rec.map(r => r.load == null ? 0 : r.load * 100));
+  chart(document.getElementById("cvDep"), { xMin: 0, xMax: Math.ceil(tEnd), xLabel: "Time after burnout (s)", yLabel: "Percent", yMin: 0, yMax: Math.ceil(loadMax / 10) * 10 + 5,
+    series: [{ data: cS.rec.map(r => [r.t, r.frac * 100]), color: "--accent", width: 2.5 }, { data: cS.rec.map(r => [r.t, r.load == null ? null : r.load * 100]), color: "--l2", width: 2 }],
+    hLines: [{ y: 100, color: "--limit" }] });
+  legend("lgDep", [{ label: P.isHinge ? "Flap opening (% of max angle)" : "Leaf extension (% of travel)", color: "--accent" }, { label: "Servo load (% of what it can give)", color: "--l2" }, { label: "100% line", color: "--limit", dash: 1 }]);
+
+  // asymmetry
+  const vA = C.V >= 1 ? C.V : P.v0;
+  const full = evalLoads(P, Object.assign({}, C, { mode: "flight" }), 1, vA, 0, "flight");
+  let mx = 0, my = 0;
+  full.leaves.forEach(L => { mx += L.drag * L.rArm * Math.cos(L.phi * D2R); my += L.drag * L.rArm * Math.sin(L.phi * D2R); });
+  const Masym = Math.hypot(mx, my), qf = full.q;
+  const restoring = qf * P.S * P.cna * P.sm * 2 * P.R;
+  const trim = restoring > 0 ? Masym / restoring / D2R : 0;
+  const totalArea = (P.isHinge ? P.w * P.c * Math.sin(P.dmax) : P.w * P.T) * P.az.length * 1e4;
+  document.getElementById("asymSub").textContent = `With the "${LAYOUTS[P.layout].name}" layout fully open, the brake drag ${Masym < 1e-9 ? "is balanced around the axis, so it does not try to turn the rocket." : "is off-centre and acts like a small steering fin pushing the nose over."}`;
+  document.getElementById("asymStats").innerHTML =
+    stat(f2(totalArea) + " cm²", "Total brake area facing the air") +
+    stat(f2(full.Dsum) + " N", `Brake drag at ${vA} m/s`) +
+    stat(f1(Masym * 1000) + " N·mm", "Off-centre turning moment", Masym > 1e-9 ? "no" : "ok") +
+    stat(f2(trim) + "°", "Angle of attack it holds the rocket at", trim > 0.05 ? "no" : "ok");
+}
+
+let pending = 0;
+function schedule() { if (!pending) pending = requestAnimationFrame(() => { pending = 0; render(); }); }
+window.addEventListener("resize", schedule);
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", schedule); } catch (e) {}
+new MutationObserver(schedule).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+render();
+})();
+</script>
