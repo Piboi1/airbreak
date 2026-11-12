@@ -248,6 +248,8 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   definition.flip is boolean;
   annotation { "Name" : "V5 one-piece module (no seam, limiter above the ring, M3 bolts)", "Default" : false }
   definition.mono is boolean;
+  annotation { "Name" : "V6 weight reduction (with V5 only)", "Default" : false }
+  definition.v6 is boolean;
   annotation { "Name" : "Show fastener hardware", "Default" : true }
   definition.hardware is boolean;
   annotation { "Name" : "Show BT80 tube references and cut-out pieces", "Default" : true }
@@ -258,6 +260,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  var compact=definition.compact;
  var flip=definition.flip;
  var mono=definition.mono;
+ var v6=mono && definition.v6;
  // V2: the outer skin group (housing wall, fins, hook, stops) moves in 0.72 mm so the fin outer face is 64.6 mm OD
  // and the glued 0.52 mm BT80 cut-out brings it back to 66.04 mm.
  var dr=mono?-0.82:(compact?-0.72:0);
@@ -433,6 +436,16 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    for(var rb in ribs) ribAll=append(ribAll,rb);
    opBoolean(context,sub+"ribJoin",{"tools":qUnion(ribAll),"operationType":BooleanOperationType.UNION});
   }
+  if(v6) {
+   // F1: two pockets y +-3.8..10.5, z 21.8..50.8, floor R30.7 (1.5 mm skin). F2: two pockets y +-2.0..10.5, z 11.3..18.8, floor R30.2 (2.0 mm skin).
+   var v6P=[[3.8,10.5,21.8,29.0,30.7],[-10.5,-3.8,21.8,29.0,30.7],[2.0,10.5,11.3,7.5,30.2],[-10.5,-2.0,11.3,7.5,30.2]];
+   for(var pk=0;pk<4;pk+=1) {
+    var pp=v6P[pk];
+    var ptool=radialBox(context,sub+("v6FinPocket"~pk),15,33,pp[0],pp[1],pp[2],pp[3],0*degree);
+    subtract(context,sub+("v6FinPocketFloor"~pk),ptool,tubeMM(context,sub+("v6FinPocketFloorTool"~pk),45,pp[4],0,60));
+    subtract(context,sub+("v6FinPocketCut"~pk),panel,ptool);
+   }
+  }
   // A recessed flat root landing transfers 90-degree load to the broad outer stop.
   var landing=mono?sector(context,sub+"landing",29,31.5,24,4,4):radialBox(context,sub+"landing",29,32.4+dr,-6,6,4,4,0*degree);
   opBoolean(context,sub+"landingJoin",{"tools":qUnion([panel,landing]),"operationType":BooleanOperationType.UNION});
@@ -583,6 +596,11 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   // Floor plate with a centre hole, cut flush at z=-10 (the module seat is the transition plug top).
   opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([carrier,cylinderMM(context,id+"v5Floor",30.5,-10.5,-8)]),"operationType":BooleanOperationType.UNION});
   subtract(context,id+"v5FloorHole",carrier,cylinderMM(context,id+"v5FloorHoleTool",4,-11,-7.9));
+  if(v6) for(var wk=0;wk<4;wk+=1) {
+   var win=sector(context,id+("v6FloorWin"~wk),6.5,15.0,30,-10.6,2.7);
+   turn(context,id+("v6FloorWinTurn"~wk),win,(90*wk)*degree);
+   subtract(context,id+("v6FloorWinCut"~wk),carrier,win);
+  }
   subtract(context,id+"v5BaseTrim",carrier,cylinderMM(context,id+"v5BaseTrimTool",40,-20,-10));
   v5Chamfer(context,id+"v5BaseCh",carrier,32.2,-10.0,0.8);
   // Rotation limiter stops stand on the bearing spokes, ABOVE the ring (V4 had them below). Same faces as V4.
@@ -769,6 +787,7 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   annotation {"Name":"V2 compact head (fins inside upper BT80 tube)","Default":false} definition.compact is boolean;
   annotation {"Name":"Show fastener hardware","Default":true} definition.hardware is boolean;
   annotation {"Name":"Show BT80 tube references and cut-out pieces","Default":true} definition.tubes is boolean;
+  annotation {"Name":"V6 weight reduction (mode 5 only)","Default":false} definition.v6 is boolean;
  }
  {
  var stage="initial";var rpAz=[90,200,340];try {
@@ -784,7 +803,7 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
  }
  stage="base feature";
  camKickBrake(context,id+"brake",{"opening":definition.opening,"release":definition.release,"cords":false,
-  "compact":definition.compact,"direct":definition.mode==3,"flip":definition.mode>=4,"mono":definition.mode==5,"hardware":definition.hardware,"tubes":definition.tubes && definition.mode!=5});
+  "compact":definition.compact,"direct":definition.mode==3,"flip":definition.mode>=4,"mono":definition.mode==5,"v6":definition.mode==5 && definition.v6,"hardware":definition.hardware,"tubes":definition.tubes && definition.mode!=5});
  stage="base query";
  var baseBodies=qUnion(evaluateQuery(context,qBodyType(qEverything(EntityType.BODY),BodyType.SOLID)));
  var rotor=solid(id+"brake"+"rotorShaft");
@@ -888,6 +907,15 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   }
   // Servo cable slot through the floor. V5.10: moved from R2..10 (directly over the servo body) to x -20.8..-17.3, y 3.5..11.5 (CAD frame): beside the servo corner, over neither the servo body nor a ledge, clear of the pocket rims.
   subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",-20.8,-17.3,3.5,11.5,68.4+hz,2,0*degree));
+  if(definition.v6) {
+   // U1: two O14 holes through the head floor, inside the Mercury and battery pockets, clear of the rims, the servo ledges and the cable slot.
+   var u1=[[8,9],[-10,-12]];
+   for(var uk=0;uk<2;uk+=1) {
+    var uh=cylinderMM(context,id+("v6FloorHole"~uk),7.0,68.0+hz,70.8+hz);
+    opTransform(context,id+("v6FloorHoleMove"~uk),{"bodies":uh,"transform":transform(vector(u1[uk][0],u1[uk][1],0)*millimeter)});
+    subtract(context,id+("v6FloorHoleCut"~uk),head5,uh);
+   }
+  }
   // Component pockets (rims) on the floor: battery, Mercury V1, regulator on its edge. All inside R29.0 (checked in the script).
   var v5Comp=[[-21.4,21.4,-20.4,-1.0,12.4],[-15.4,15.4,0.0,17.3,11.2],[-12.9,12.9,18.1,26.5,15.4]];
   for(var k=0;k<3;k+=1) {
@@ -903,6 +931,16 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   // Set 1: four radial M3 bolts through the tube and the sleeve wall into nuts in the LID bosses.
   var v5HeadAz=[45,135,250,290];
   for(var k=0;k<4;k+=1) radialDrill(context,id+("v5HeadClr"~k),head5,v5HeadAz[k]*degree,82+hz,29.0,33.5,M3_CLR);
+  if(definition.v6) {
+   // U2: sleeve wall 0.5 mm thinner from the inside (R29.9 -> R30.4) between z 73.1 (above the rims) and 86.0 (below the lid disc, which locates in the full wall),
+   // except +-16 deg about the four head bolt axes (45, 135, 250, 290).
+   var u2=[[90,29],[192.5,41.5],[270,4],[347.5,41.5]];
+   for(var uk=0;uk<4;uk+=1) {
+    var ws=sector(context,id+("v6WallRelief"~uk),29.0,30.4,u2[uk][1],73.1+hz,12.9);
+    turn(context,id+("v6WallReliefTurn"~uk),ws,u2[uk][0]*degree);
+    subtract(context,id+("v6WallReliefCut"~uk),head5,ws);
+   }
+  }
   label(context,head5,"H V5 head cup - sleeve, floor, servo ledges, electronics pockets (reusable)",[.2,.45,.75]);
   // ---- LID: disc under the top of the sleeve, four bosses with hexagon nut pockets open to the inside. The set-1 bolts clamp sleeve and lid.
   var lid5=cylinderMM(context,id+"v5Lid",29.7,86.3+hz,88.3+hz);
@@ -913,6 +951,8 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
    radialDrill(context,ls+"clr",lid5,la,82+hz,26.5,33.5,M3_CLR);
    if(definition.hardware) radialBoltHW(context,ls+"hw",la,82+hz,24.4,"head "~(k+1));
   }
+  // K1: 0.8 mm recess in the underside of the lid disc inside R23.5 (disc 2.0 -> 1.2 mm); bosses and rim untouched.
+  if(definition.v6) subtract(context,id+"v6LidRecess",lid5,cylinderMM(context,id+"v6LidRecessTool",23.5,85.8+hz,87.1+hz));
   label(context,lid5,"K V5 head lid - four nut bosses, held by the set-1 bolts",[.2,.45,.75]);
   // Electronics (references): Mercury V1 30 x 16.9 x 10.8, regulator 25 x 15 x 8 stood on its edge, Spektrum 300 mAh 2S 42 x 19 x 12.
   var batt5=radialBox(context,id+"v5Battery",-21,21,-20.2,-1.2,70.6+hz,12,0*degree);

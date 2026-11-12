@@ -3,7 +3,9 @@ import itertools, numpy as np, trimesh
 from shapely.geometry import MultiPoint
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-P = '../exports/v5/print/'; OUT = '../exports/v5/'
+import os
+V = os.environ.get('PRINT_SET', 'v5')
+P = f'../exports/{V}/print/'; OUT = f'../exports/{V}/'
 BED = 256.0; MARGIN = 6.0; GAP = 6.0
 L = lambda f: trimesh.load(P + f)
 # overhang (support) areas from export_print, mm2
