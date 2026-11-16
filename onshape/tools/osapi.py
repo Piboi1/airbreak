@@ -6,17 +6,41 @@ AUTH = (os.environ["ONSHAPE_ACCESS_KEY"], os.environ["ONSHAPE_SECRET_KEY"])
 JSON = {"Accept": "application/json;charset=UTF-8; qs=0.09", "Content-Type": "application/json"}
 
 
+# API budget (see docs/ONSHAPE_API_BUDGET.md): every request is logged to $AIRBRAKE_WORK/api_calls.log, and
+# ONSHAPE_CALL_BUDGET (default 150) caps the calls one Python process may make, so a runaway loop cannot burn the quota.
+_LOG = os.path.join(os.environ.get("AIRBRAKE_WORK", "."), "api_calls.log")
+_BUDGET = int(os.environ.get("ONSHAPE_CALL_BUDGET", "150"))
+_count = 0
+
+
+def _log(method, path, status):
+    global _count
+    _count += 1
+    try:
+        with open(_LOG, "a") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')}\t{method}\t{status}\t{path.split('?')[0][:120]}\n")
+    except OSError:
+        pass
+
+
+def calls_made():
+    return _count
+
+
 def call(method, path, *, params=None, body=None, accept=None, raw=False, timeout=300):
+    if _count >= _BUDGET:
+        raise RuntimeError(f"Onshape call budget of {_BUDGET} reached for this run (set ONSHAPE_CALL_BUDGET to raise it on purpose)")
     url = path if path.startswith("http") else BASE + path
     headers = dict(JSON)
     if accept:
         headers["Accept"] = accept
-    for attempt in range(6):
+    for attempt in range(2):          # every retry is a billed call: retry a 429 once only
         r = requests.request(method, url, auth=AUTH, headers=headers, params=params,
                              data=json.dumps(body) if body is not None else None,
                              timeout=timeout, allow_redirects=True)
-        if r.status_code == 429:
-            time.sleep(2 ** attempt)
+        _log(method, path, r.status_code)
+        if r.status_code == 429 and attempt == 0:
+            time.sleep(5)
             continue
         break
     if r.status_code >= 400:

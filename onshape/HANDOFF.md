@@ -8,6 +8,8 @@ Read this first. It is written so a new agent can continue with no other context
 V1 to V4 are built (sections 2 to 7). The user wanted a **modular** version because the airbrake will break every flight and they want to swap the whole module. After a long design conversation and the go-ahead
 ("go ahead and build V5") it was built as **mode 5** of the same FeatureScript. Current picture: `docs/V5_assembly_guide.pdf` (what is built) and `docs/V5_complete_concept.pdf` (the idea and the decisions).
 
+**Onshape API budget:** the quota runs out. Read `docs/ONSHAPE_API_BUDGET.md` before any Onshape call (costs per job, rules, the per-run cap in `tools/osapi.py` and the call log).
+
 ### 0.1 What V5 is (all numbers from the CAD model; V4 frame: rotor axis z, module bottom z = -10, housing top 58.8)
 
 * **Stack, nose up:** upper airframe, then **one BT80 tube cut once** (R32.51/R33.02, the skin) around the **head** (z 59.0..88.3) and the **module** (z -10..58.8), then the **transition** (BT80 side: shoulder R26.0..32.2 z -34..-22, plug R26.0..29.6 z -22..-10.2 = the module seat). The BT70 side is **not touched**; the cone is a placeholder.
