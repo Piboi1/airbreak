@@ -195,26 +195,44 @@ V5MODE = r""" if(definition.mode==5) {
   opBoolean(context,id+"v5FloorJoin",{"tools":qUnion([head5,cylinderMM(context,id+"v5HeadFloor",30.1,68.5+hz,70.3+hz)]),"operationType":BooleanOperationType.UNION});
   for(var k=0;k<2;k+=1) {
    var pa=(135+180*k)*degree;var ps5=id+("v5Post"~k);
-   // V5.7 (arm broke at the cup): each arm is now a wide curved web (+-11 deg, about 10 mm across) that follows the sleeve and is buried 1.1 mm into the sleeve wall for its whole 18 mm height, instead of a 7 mm post touching the wall by 0.2 mm.
-   var postLow=sector(context,ps5+"low",25.5,28.9,11,51.9+hz,7.6-hz);
-   turn(context,ps5+"lowT",postLow,pa);
-   var postUp=sector(context,ps5+"up",25.5,31.0,11,59.0,11.0+hz);
-   turn(context,ps5+"upT",postUp,pa);
-   var ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,3.1,pa);   // V5.8: ledge top lowered 1.2 mm (z 55.0) so the screw passes through; 1.2 mm roof left over the 2.0 mm nut recess
+   var postLow;var postUp;var ledge5;
+   if(definition.headfix) {
+    // V5.7 (arm broke at the cup): each arm is a wide curved web (+-11 deg, about 10 mm across) buried 1.1 mm into the sleeve wall for its whole 18 mm height.
+    postLow=sector(context,ps5+"low",25.5,28.9,11,51.9+hz,7.6-hz);
+    turn(context,ps5+"lowT",postLow,pa);
+    postUp=sector(context,ps5+"up",25.5,31.0,11,59.0,11.0+hz);
+    turn(context,ps5+"upT",postUp,pa);
+    ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.0,-4.5,4.5,51.9+hz,3.1,pa);   // V5.8: ledge top lowered 1.2 mm (z 55.0)
+   } else {
+    postLow=radialBox(context,ps5+"low",25.5,28.9,-3.5,3.5,51.9+hz,7.6-hz,pa);
+    postUp=radialBox(context,ps5+"up",25.5,30.1,-3.5,3.5,59.0,11.0+hz,pa);
+    ledge5=radialBox(context,ps5+"ledge",k==0?16.3:6.8,28.9,-3.5,3.5,51.9+hz,4.3,pa);
+   }
    opBoolean(context,ps5+"join",{"tools":qUnion([head5,postLow,postUp,ledge5]),"operationType":BooleanOperationType.UNION});
-   // V5.9: no nut recess (the screw goes straight into the servo tab), plain O2.4 clearance hole through the ledge.
    var hr5=k==0?18.8:9.3;
-   var ch5=cylinderMM(context,ps5+"holeTool",1.2,51.8+hz,56.3+hz);
+   if(!definition.headfix) {
+    // M2 nut recess in the UNDERSIDE of the ledge (the servo tab then covers it), clearance hole up through the ledge.
+    var np5=hexPrism(context,ps5+"nutTool",vector(hr5,0,51.8+hz),vector(0,0,1),4.2,2.0);
+    turn(context,ps5+"nutTurn",np5,pa);
+    subtract(context,ps5+"nutCut",head5,np5);
+   }
+   // V5.9 (headfix): no nut recess, the screw goes straight into the servo tab, O2.4 clearance hole.
+   var ch5=cylinderMM(context,ps5+"holeTool",definition.headfix?1.2:1.1,51.8+hz,56.3+hz);
    opTransform(context,ps5+"holeMove",{"bodies":ch5,"transform":transform(vector(hr5,0,0)*millimeter)});
    turn(context,ps5+"holeTurn",ch5,pa);
    subtract(context,ps5+"holeCut",head5,ch5);
    // V5.6: no screwdriver holes in the floor any more: the servo is pushed up into the cup from below, its tabs against the UNDERSIDE of the ledges, screws from below.
    if(definition.hardware) {
     var sc5=screwHW(context,ps5+"hw",vector(hr5*cos(pa),hr5*sin(pa),49.4+hz),vector(0,0,1),"M2BH",8,"HW servo flange bolt "~(k+1)~" - M2x8 button head, from below, head under the servo tab");
+    if(!definition.headfix) {
+     var sn5=nutHW(context,ps5+"nutHW",vector(hr5,0,51.95+hz),vector(0,0,1),4.0,1.6,1.0,"HW servo flange nut "~(k+1)~" - M2 hex");
+     turn(context,ps5+"nutHWTurn",sn5,pa);
+    }
    }
   }
   // Servo cable slot through the floor. V5.10: moved from R2..10 (directly over the servo body) to x -20.8..-17.3, y 3.5..11.5 (CAD frame): beside the servo corner, over neither the servo body nor a ledge, clear of the pocket rims.
-  subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",-20.8,-17.3,3.5,11.5,68.4+hz,2,0*degree));
+  if(definition.headfix) subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",-20.8,-17.3,3.5,11.5,68.4+hz,2,0*degree));
+  else subtract(context,id+"v5CableSlot",head5,radialBox(context,id+"v5CableTool",2,10,-1.75,1.75,68.4+hz,2,135*degree));
   if(definition.v6) {
    // U1: two O14 holes through the head floor, inside the Mercury and battery pockets, clear of the rims, the servo ledges and the cable slot.
    var u1=[[8,9],[-10,-12]];
@@ -442,7 +460,7 @@ P('  annotation { "Name" : "V5 one-piece module (no seam, limiter above the ring
 P(' var mono=definition.mono;\n', ' var mono=definition.mono;\n var v6=mono && definition.v6;\n')
 P('"mono":definition.mode==5,"hardware":definition.hardware', '"mono":definition.mode==5,"v6":definition.mode==5 && definition.v6,"hardware":definition.hardware')
 P('  annotation {"Name":"Show BT80 tube references and cut-out pieces","Default":true} definition.tubes is boolean;\n }\n {\n var stage="initial";',
-  '  annotation {"Name":"Show BT80 tube references and cut-out pieces","Default":true} definition.tubes is boolean;\n  annotation {"Name":"V6 weight reduction (mode 5 only)","Default":false} definition.v6 is boolean;\n }\n {\n var stage="initial";')
+  '  annotation {"Name":"Show BT80 tube references and cut-out pieces","Default":true} definition.tubes is boolean;\n  annotation {"Name":"V6 weight reduction (mode 5 only)","Default":false} definition.v6 is boolean;\n  annotation {"Name":"Head cup fixes after the first print (wide servo arms, thin ledge, no nut recess, cable slot beside the servo)","Default":false} definition.headfix is boolean;\n }\n {\n var stage="initial";')
 # F1 + F2: pockets in the inner face of every fin (outer face, rails, spine/web, cam pad, hook, hinge untouched).
 P('''   opBoolean(context,sub+"ribJoin",{"tools":qUnion(ribAll),"operationType":BooleanOperationType.UNION});
   }''', '''   opBoolean(context,sub+"ribJoin",{"tools":qUnion(ribAll),"operationType":BooleanOperationType.UNION});
