@@ -8,9 +8,19 @@ JSON = {"Accept": "application/json;charset=UTF-8; qs=0.09", "Content-Type": "ap
 
 # API budget (see docs/ONSHAPE_API_BUDGET.md): every request is logged to $AIRBRAKE_WORK/api_calls.log, and
 # ONSHAPE_CALL_BUDGET (default 150) caps the calls one Python process may make, so a runaway loop cannot burn the quota.
-_LOG = os.path.join(os.environ.get("AIRBRAKE_WORK", "."), "api_calls.log")
-_BUDGET = int(os.environ.get("ONSHAPE_CALL_BUDGET", "150"))
+# The log lives in the repo (committed) so the count survives new sessions: onshape/api_calls.log.
+_LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "api_calls.log")
+_BUDGET = int(os.environ.get("ONSHAPE_CALL_BUDGET", "100"))      # per run
+TOTAL = 2500                                                      # all the extra quota there is (granted 2026-11-16, no more coming)
+RESERVE = 200                                                     # never spent without the user's explicit OK
 _count = 0
+
+
+def total_used():
+    try:
+        return sum(1 for _ in open(_LOG))
+    except OSError:
+        return 0
 
 
 def _log(method, path, status):
@@ -30,6 +40,11 @@ def calls_made():
 def call(method, path, *, params=None, body=None, accept=None, raw=False, timeout=300):
     if _count >= _BUDGET:
         raise RuntimeError(f"Onshape call budget of {_BUDGET} reached for this run (set ONSHAPE_CALL_BUDGET to raise it on purpose)")
+    if _count == 0:
+        used = total_used()
+        if used >= TOTAL - RESERVE and os.environ.get("ONSHAPE_USE_RESERVE") != "yes":
+            raise RuntimeError(f"Only the {RESERVE}-call reserve is left ({used}/{TOTAL} used). Ask the user, then set ONSHAPE_USE_RESERVE=yes.")
+        print(f"[onshape api] {used}/{TOTAL} calls used so far, {TOTAL - used} left")
     url = path if path.startswith("http") else BASE + path
     headers = dict(JSON)
     if accept:
