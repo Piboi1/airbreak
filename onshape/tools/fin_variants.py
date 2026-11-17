@@ -83,7 +83,9 @@ VARIANTS = {
     'EF: + skin taper 2.4->1.2': dict(ribs=False, lips=True, taper=True),
     'EFI: + gusset windows':     dict(ribs=False, lips=True, taper=True, gusset='windowed'),
     'J: 1.2 skin + 1.5 CF rod':  dict(ribs=False, lips=True, uniform=1.2, rod=True),
+    'T: 1.2 skin, no rod':       dict(ribs=False, lips=True, uniform=1.2),
 }
+ONLY = None
 OPEN = trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0], point=[25, 0, 0])
 
 if __name__ == '__main__':

@@ -23,7 +23,7 @@ def asm_with_rod(form, basis, *a, **k):        # wraps the stiffness assembly in
 fea_fin.asm = asm_with_rod
 
 out = []
-for name, kw in fv.VARIANTS.items():
+for name, kw in [(n, k) for n, k in fv.VARIANTS.items() if (len(sys.argv) < 2 or n.startswith(sys.argv[1]))]:
     t0 = time.time()
     fin, rod = fv.build(**kw)
     vol = fin.volume
@@ -36,4 +36,4 @@ for name, kw in fv.VARIANTS.items():
         r, _ = fea_fin.run(geo, hous, F=F, load=ld, label=name, verbose=False)
         row[f'{ld}{int(F)}'] = dict(vm_max=round(r['vm_max'], 1), p99=round(r['vm_p99'], 1), tip=round(r['tip_mm'], 2), at=r['at'])
     out.append(row); print(json.dumps(row), round(time.time() - t0), 's', flush=True)
-json.dump(out, open(W + '/fin_compare.json', 'w'), indent=1)
+json.dump(out, open(W + '/fin_compare%s.json' % ('_' + sys.argv[1][0] if len(sys.argv) > 1 else ''), 'w'), indent=1)
