@@ -66,7 +66,7 @@ def build(ribs=True, lips=False, taper=False, uniform=None, gusset='wide', rod=F
     f = U([f, sector(29, 31.5, 24, 4, 4)])                       # landing
     f = D(f, rbox(31.58, 35, -6, 6, 4, 4))                       # landing flat
     f = D(f, yc(1.7, -7.5, 7.5)); f = D(f, yc(5.5, -12.3, -7.7)); f = D(f, yc(5.5, 7.7, 12.3))
-    lug = U([rbox(20.0, 22.8, -3, 3, 41.6, 8.4), rbox(20.0, 30.6, -3, 3, 47, 3)])
+    lug = U([rbox(20.0, 22.8, -3, 3, 41.6, 8.4), rbox(20.0, 31.4 if uniform else 30.6, -3, 3, 47, 3)])
     f = U([f, lug, rbox(23, 31.3, -4, 4, 20, 9)])                # lock lug + push pad (follower)
     rodm = None
     if rod:

@@ -250,6 +250,8 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   definition.mono is boolean;
   annotation { "Name" : "V6 weight reduction (with V5 only)", "Default" : false }
   definition.v6 is boolean;
+  annotation { "Name" : "Thin fin T (1.2 mm skin, no ribs)", "Default" : false }
+  definition.thinfin is boolean;
   annotation { "Name" : "Show fastener hardware", "Default" : true }
   definition.hardware is boolean;
   annotation { "Name" : "Show BT80 tube references and cut-out pieces", "Default" : true }
@@ -261,6 +263,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
  var flip=definition.flip;
  var mono=definition.mono;
  var v6=mono && definition.v6;
+ var thin=mono && definition.thinfin;
  // V2: the outer skin group (housing wall, fins, hook, stops) moves in 0.72 mm so the fin outer face is 64.6 mm OD
  // and the glued 0.52 mm BT80 cut-out brings it back to 66.04 mm.
  var dr=mono?-0.82:(compact?-0.72:0);
@@ -415,6 +418,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    subtract(context,sub+"tailPocketCut",carrier,tailPocket);
   }
   var panel=sector(context,sub+"shell",30.62+dr,rOut,32.5,4,50);
+  if(thin) subtract(context,sub+"thinSkin",panel,sector(context,sub+"thinSkinTool",10,rOut-1.2,34,11,44));
   var barrel=yc(context,sub+"barrel",4.8, -7.4,7.4);
   var web=radialBox(context,sub+"web",24,31.5,-7.4,7.4,0,10,0*degree);
   var pad=mono?sector(context,sub+"rootPad",27.8,31.3,27,4,16):sector(context,sub+"rootPad",28.8,31.3,22,4,14);
@@ -424,7 +428,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
   if(mono) leafParts=append(leafParts,radialBox(context,sub+"lockTail",22.0,26.5,-6,6,-7.6,4.6,0*degree));
   opBoolean(context,sub+"leafJoin",{"tools":qUnion(leafParts),"operationType":BooleanOperationType.UNION});
   if(mono) subtract(context,sub+"rootClip",panel,tubeMM(context,sub+"rootClipTool",45,32.21,2,26));
-  if(mono) {
+  if(mono && !thin) {
    // spine: z 4..20.5 and 28.5..47 (the follower fills z 20..29 between them); edge ribs: z 4..20 and 30..54 at +-27.5 deg, 2.2 deep from the shell
    var ribs=[radialBox(context,sub+"ribSpineA",26.8,30.0,-0.9,0.9,4,16.5,0*degree),radialBox(context,sub+"ribSpineB",27.5,30.0,-0.9,0.9,28.5,18.5,0*degree)];
    for(var rs=0;rs<2;rs+=1) for(var rz=0;rz<2;rz+=1) {
@@ -435,6 +439,16 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    var ribAll=[panel];
    for(var rb in ribs) ribAll=append(ribAll,rb);
    opBoolean(context,sub+"ribJoin",{"tools":qUnion(ribAll),"operationType":BooleanOperationType.UNION});
+  }
+  if(thin) {
+   // edge lips on the two long edges, inside only: R28.3..30.1, +-1.2 deg about +-31.3 deg, z 11..54
+   var lipAll=[panel];
+   for(var ls=0;ls<2;ls+=1) {
+    var lp=sector(context,sub+("thinLip"~ls),28.3,30.1,1.2,11,43);
+    turn(context,sub+("thinLipTurn"~ls),lp,(ls==0?31.3:-31.3)*degree);
+    lipAll=append(lipAll,lp);
+   }
+   opBoolean(context,sub+"thinLipJoin",{"tools":qUnion(lipAll),"operationType":BooleanOperationType.UNION});
   }
   if(v6) {
    // F1: two pockets y +-3.8..10.5, z 21.8..50.8, floor R30.7 (1.5 mm skin). F2: two pockets y +-2.0..10.5, z 11.3..18.8, floor R30.2 (2.0 mm skin).
@@ -459,7 +473,7 @@ export const camKickBrake = defineFeature(function(context is Context,id is Id,d
    // V2 catch: an inward lug (plate + inner wall) inside the fin height. The rotor finger stands outside the wall,
    // so the fin cannot move out until the rotor swings the finger away (about 16 deg).
    var lugWall=radialBox(context,sub+"lugWall",20.0,22.8,-3,3,41.6,8.4,0*degree);
-   var lugPlate=radialBox(context,sub+"lugPlate",20.0,30.6,-3,3,47,3,0*degree);
+   var lugPlate=radialBox(context,sub+"lugPlate",20.0,thin?31.4:30.6,-3,3,47,3,0*degree);
    opBoolean(context,sub+"lugJoin",{"tools":qUnion([lugPlate,lugWall]),"operationType":BooleanOperationType.UNION});
    tip=lugPlate;
   } else {
@@ -788,6 +802,7 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
   annotation {"Name":"Show fastener hardware","Default":true} definition.hardware is boolean;
   annotation {"Name":"Show BT80 tube references and cut-out pieces","Default":true} definition.tubes is boolean;
   annotation {"Name":"V6 weight reduction (mode 5 only)","Default":false} definition.v6 is boolean;
+  annotation {"Name":"Thin fin T: 1.2 mm skin, no ribs (mode 5 only)","Default":false} definition.thinfin is boolean;
   annotation {"Name":"Head cup fixes after the first print (wide servo arms, thin ledge, no nut recess, cable slot beside the servo)","Default":false} definition.headfix is boolean;
  }
  {
@@ -804,7 +819,7 @@ export const modularBrake = defineFeature(function(context is Context,id is Id,d
  }
  stage="base feature";
  camKickBrake(context,id+"brake",{"opening":definition.opening,"release":definition.release,"cords":false,
-  "compact":definition.compact,"direct":definition.mode==3,"flip":definition.mode>=4,"mono":definition.mode==5,"v6":definition.mode==5 && definition.v6,"hardware":definition.hardware,"tubes":definition.tubes && definition.mode!=5});
+  "compact":definition.compact,"direct":definition.mode==3,"flip":definition.mode>=4,"mono":definition.mode==5,"v6":definition.mode==5 && definition.v6,"thinfin":definition.mode==5 && definition.thinfin,"hardware":definition.hardware,"tubes":definition.tubes && definition.mode!=5});
  stage="base query";
  var baseBodies=qUnion(evaluateQuery(context,qBodyType(qEverything(EntityType.BODY),BodyType.SOLID)));
  var rotor=solid(id+"brake"+"rotorShaft");

@@ -483,3 +483,30 @@ P('  subtract(context,id+"v5FloorHole",carrier,cylinderMM(context,id+"v5FloorHol
    turn(context,id+("v6FloorWinTurn"~wk),win,(90*wk)*degree);
    subtract(context,id+("v6FloorWinCut"~wk),carrier,win);
   }''')
+
+# ================================================================== V6 fin "T" (2026-11-17): 1.2 mm skin above the root, no ribs, two edge lips; push pad, lock lug, tail and root unchanged.
+P('  annotation { "Name" : "V6 weight reduction (with V5 only)", "Default" : false }\n  definition.v6 is boolean;',
+  '  annotation { "Name" : "V6 weight reduction (with V5 only)", "Default" : false }\n  definition.v6 is boolean;\n  annotation { "Name" : "Thin fin T (1.2 mm skin, no ribs)", "Default" : false }\n  definition.thinfin is boolean;')
+P(' var v6=mono && definition.v6;\n', ' var v6=mono && definition.v6;\n var thin=mono && definition.thinfin;\n')
+P('"v6":definition.mode==5 && definition.v6,', '"v6":definition.mode==5 && definition.v6,"thinfin":definition.mode==5 && definition.thinfin,')
+P('  annotation {"Name":"V6 weight reduction (mode 5 only)","Default":false} definition.v6 is boolean;\n',
+  '  annotation {"Name":"V6 weight reduction (mode 5 only)","Default":false} definition.v6 is boolean;\n  annotation {"Name":"Thin fin T: 1.2 mm skin, no ribs (mode 5 only)","Default":false} definition.thinfin is boolean;\n')
+P('  var panel=sector(context,sub+"shell",30.62+dr,rOut,32.5,4,50);\n',
+  '  var panel=sector(context,sub+"shell",30.62+dr,rOut,32.5,4,50);\n  if(thin) subtract(context,sub+"thinSkin",panel,sector(context,sub+"thinSkinTool",10,rOut-1.2,34,11,44));\n')
+P('  if(mono) {\n   // spine: z 4..20.5', '  if(mono && !thin) {\n   // spine: z 4..20.5')
+P('''  if(v6) {
+   // F1: two pockets''', '''  if(thin) {
+   // edge lips on the two long edges, inside only: R28.3..30.1, +-1.2 deg about +-31.3 deg, z 11..54
+   var lipAll=[panel];
+   for(var ls=0;ls<2;ls+=1) {
+    var lp=sector(context,sub+("thinLip"~ls),28.3,30.1,1.2,11,43);
+    turn(context,sub+("thinLipTurn"~ls),lp,(ls==0?31.3:-31.3)*degree);
+    lipAll=append(lipAll,lp);
+   }
+   opBoolean(context,sub+"thinLipJoin",{"tools":qUnion(lipAll),"operationType":BooleanOperationType.UNION});
+  }
+  if(v6) {
+   // F1: two pockets''')
+# thin fin: the lock-lug plate must reach into the 1.2 mm skin (R31.0..32.2), otherwise it is a loose body
+P('   var lugPlate=radialBox(context,sub+"lugPlate",20.0,30.6,-3,3,47,3,0*degree);',
+  '   var lugPlate=radialBox(context,sub+"lugPlate",20.0,thin?31.4:30.6,-3,3,47,3,0*degree);')

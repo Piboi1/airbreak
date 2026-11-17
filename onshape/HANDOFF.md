@@ -109,6 +109,13 @@ Problems reported by the user: (1) fins very flimsy, nearly snap when pushed pas
 * Removed volumes vs PDF: fin 676 (PDF 702: Onshape keeps the cam pad sides that the PDF pocket shaved by 0.4 mm), housing 765 (766), lid 1385 (1395), head U1 554 + U2 ~790 (U2 kept off the lid seat).
 * STLs exported from V6-A: `exports/v6/print/`, plates `exports/v6/P1S_plate*.3mf`. The user pasted the new source into a new tab "Feature Studio 1" once (a part built from it defaults to mode 0, which is why it looked nothing like V5); that tab is unused and can be deleted.
 
+### 0.13 V6 changed to "V5 + thin fin T" (user decision 2026-11-17)
+
+* V6-A / V6-B were switched IN PLACE (endpoint `POST .../features/updates`, which allows a new feature-studio namespace; the single-feature update endpoint refuses a namespace change with "Feature does not match"): mode 5, `v6` (PDF cuts) OFF, `headfix` ON, new `thinfin` ON. ASM-V6 kept all 32 mates (all OK). Script `tools/v6_thinfin.py ps_v6|ps_v6b`.
+* Fin T: 1.2 mm skin above z 11, no spine/edge ribs, two edge lips (R28.3..30.1, +-1.2 deg at +-31.3 deg, z 11..54); push pad, lock lug, tail, hinge root unchanged, so the V5 rotor is unchanged. The lug plate now reaches R31.4 under `thin` (at R30.6 it no longer touched the 1.2 mm skin and Onshape left four loose "Part N" bodies; fixed).
+* Selection: `tools/fin_variants.py` (offline rebuild of the V5 fin, matches Onshape within 4 mm3) + `tools/fin_compare.py` (voxel FEA, 0.8 mm). Peak stress at the hinge root for every variant: V5 10.2 MPa, PDF pockets 16.0 (pocket corner), no ribs 9.7, + taper 10.3, carbon rod 10.3, T 10.5 (30 N face load). The 0.8 mm voxels resolve the 1.2 mm skin only roughly.
+* Fin 7,862 -> 6,202 mm3 (Onshape). STLs `exports/v6/print/`, plates `exports/v6/P1S_plate*.3mf`. API calls used for this: about 27 (log `api_calls.log`).
+
 ### 0.6 Superseded concept documents (kept in `docs/` for the history)
 
 `V5_sketch4_how_it_fits.pdf`, `V5_sketch3_*`, `V5_sketch2_*`, `V5_final_plan.pdf`, `V5_insert_*`, `V5_modular_concept.pdf`, `V5_choice*`, `V5_skin_cutting_template_1to1.pdf`, `V5_sketch_transition.pdf`: concept sheets from before the build (see the old list in the git history of this file). `V5_complete_concept.pdf` is the one-document summary of the idea and decisions; `V5_assembly_guide.pdf` is current.
