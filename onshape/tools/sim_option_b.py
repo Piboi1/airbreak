@@ -116,9 +116,9 @@ def draw(k):
     return []
 
 ani = animation.FuncAnimation(fig, draw, frames=len(FR), interval=90, blit=False)
-ani.save('../docs/option_B_simulation.gif', writer=animation.PillowWriter(fps=11))
-ani.save('../docs/option_B_simulation.mp4', writer=animation.FFMpegWriter(fps=11, bitrate=2400))
-draw(14); fig.savefig('../docs/option_B_simulation_still.png', dpi=80)
+ani.save('../docs/weight/option_B_simulation.gif', writer=animation.PillowWriter(fps=11))
+ani.save('../docs/weight/option_B_simulation.mp4', writer=animation.FFMpegWriter(fps=11, bitrate=2400))
+draw(14); fig.savefig('../docs/weight/option_B_simulation_still.png', dpi=80)
 # numbers for the write-up
 twist = 90.0
 print('lever %.2f mm; ball closed R %.1f z %.1f, open R %.1f z %.1f; peak fin deg per rotor deg %.2f; neck direction twists %d deg along the track'

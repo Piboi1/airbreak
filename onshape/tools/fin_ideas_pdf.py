@@ -208,7 +208,7 @@ idea('K', 'Magnet lock: a 3 x 2 mm magnet replaces the lock lug (and the rotor c
 # ---------------------------------------------------------------- write
 pages = [IDEAS[i:i + 2] for i in range(0, len(IDEAS), 2)]
 N = 2 + len(pages)
-with PdfPages('../docs/V6_fin_weight_ideas.pdf') as pdf:
+with PdfPages('../docs/weight/V6_fin_weight_ideas.pdf') as pdf:
     fig = plt.figure(figsize=(16.5, 11.7)); frame(fig, 'Sheet 1: today\'s fin and where its 8.9 g is', 1, N)
     a1 = fig.add_axes([0.05, 0.12, 0.27, 0.78]); side(a1, 'side section (fin closed)')
     a2 = fig.add_axes([0.36, 0.12, 0.27, 0.78]); face(a2, 'inner face (ribs hatched, V6 pockets dashed)')
